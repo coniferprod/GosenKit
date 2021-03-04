@@ -50,7 +50,7 @@ enum EffectType: String, Codable, CaseIterable {
     case overdriveAndDelay
     case distortionAndDelay
     
-    init?(index: Int) {
+    public init?(index: Int) {
         switch index {
         case 0: self = .hall1
         case 1: self = .hall2
@@ -166,7 +166,7 @@ struct EffectDefinition: Codable {
     }
 }
 
-struct EffectSettings: Codable {
+public struct EffectSettings: Codable {
     var algorithm: Int  // 1...4
     var reverb: EffectDefinition
     var effect1: EffectDefinition
@@ -224,7 +224,7 @@ struct EffectSettings: Codable {
 }
 
 extension EffectSettings: CustomStringConvertible {
-    var description: String {
+    public var description: String {
         var s = ""
         s += "Effect Settings:\n"
         s += "Algorithm = \(algorithm)\n"

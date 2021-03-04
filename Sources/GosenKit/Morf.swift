@@ -1,15 +1,15 @@
 import Foundation
 
-struct MorfHarmonicEnvelope: Codable {
-    var time1: Int  // all times 0~127
-    var time2: Int
-    var time3: Int
-    var time4: Int
-    var loopType: EnvelopeLoopType
+public struct MorfHarmonicEnvelope: Codable {
+    public var time1: Int  // all times 0~127
+    public var time2: Int
+    public var time3: Int
+    public var time4: Int
+    public var loopType: EnvelopeLoopType
     
     static let dataLength = 5
     
-    init() {
+    public init() {
         time1 = 0
         time2 = 0
         time3 = 0
@@ -17,7 +17,7 @@ struct MorfHarmonicEnvelope: Codable {
         loopType = .off
     }
     
-    init(data d: ByteArray) {
+    public init(data d: ByteArray) {
         var offset: Int = 0
         var b: Byte = 0
     
@@ -41,7 +41,7 @@ struct MorfHarmonicEnvelope: Codable {
         loopType = EnvelopeLoopType(index: Int(b))!
     }
     
-    func asData() -> ByteArray {
+    public func asData() -> ByteArray {
         var data = ByteArray()
         
         data.append(Byte(time1))
@@ -54,18 +54,18 @@ struct MorfHarmonicEnvelope: Codable {
     }
 }
 
-struct MorfHarmonicCopyParameters: Codable {
-    var patchNumber: Int  // 0~127
-    var sourceNumber: Int  // 0~11 (0~5:soft, 6~11:loud)
+public struct MorfHarmonicCopyParameters: Codable {
+    public var patchNumber: Int  // 0~127
+    public var sourceNumber: Int  // 0~11 (0~5:soft, 6~11:loud)
     
     static let dataLength = 2
     
-    init() {
+    public init() {
         patchNumber = 0
         sourceNumber = 0
     }
     
-    init(data d: ByteArray) {
+    public init(data d: ByteArray) {
         var offset: Int = 0
         var b: Byte = 0
     
@@ -78,7 +78,7 @@ struct MorfHarmonicCopyParameters: Codable {
         offset += 1
     }
     
-    func asData() -> ByteArray {
+    public func asData() -> ByteArray {
         var data = ByteArray()
         
         data.append(Byte(patchNumber))
@@ -88,16 +88,16 @@ struct MorfHarmonicCopyParameters: Codable {
     }
 }
 
-struct MorfHarmonicSettings: Codable {
-    var copy1: MorfHarmonicCopyParameters
-    var copy2: MorfHarmonicCopyParameters
-    var copy3: MorfHarmonicCopyParameters
-    var copy4: MorfHarmonicCopyParameters
-    var envelope: MorfHarmonicEnvelope
+public struct MorfHarmonicSettings: Codable {
+    public var copy1: MorfHarmonicCopyParameters
+    public var copy2: MorfHarmonicCopyParameters
+    public var copy3: MorfHarmonicCopyParameters
+    public var copy4: MorfHarmonicCopyParameters
+    public var envelope: MorfHarmonicEnvelope
     
     static let dataLength = 13
     
-    init() {
+    public init() {
         copy1 = MorfHarmonicCopyParameters()
         copy2 = MorfHarmonicCopyParameters()
         copy3 = MorfHarmonicCopyParameters()
@@ -105,7 +105,7 @@ struct MorfHarmonicSettings: Codable {
         envelope = MorfHarmonicEnvelope()
     }
     
-    init(data d: ByteArray) {
+    public init(data d: ByteArray) {
         var offset: Int = 0
         var b: Byte = 0
         
@@ -125,7 +125,7 @@ struct MorfHarmonicSettings: Codable {
         offset += MorfHarmonicEnvelope.dataLength
     }
     
-    func asData() -> ByteArray {
+    public func asData() -> ByteArray {
         var data = ByteArray()
         
         data.append(contentsOf: copy1.asData())

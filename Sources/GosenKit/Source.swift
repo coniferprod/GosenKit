@@ -1,12 +1,11 @@
 import Foundation
 
-
-enum VelocitySwitchType: String, Codable, CaseIterable {
+public enum VelocitySwitchType: String, Codable, CaseIterable {
     case off
     case loud
     case soft
     
-    init?(index: Int) {
+    public init?(index: Int) {
         switch index {
         case 0: self = .off
         case 1: self = .loud
@@ -20,9 +19,9 @@ enum VelocitySwitchType: String, Codable, CaseIterable {
 // So as the SysEx spec says, the value of 0 means 4, 1 means 8, and so on... and 31 means 127.
 // I guess that 30 must mean 124 then. So the actual value in the SysEx should be 0...31, but it should be
 // translated on input from 0...31 to 4...127, and on output from 4...127 to 0...31 again.
-struct VelocitySwitchSettings: Codable {
-    var switchType: VelocitySwitchType
-    var threshold: Int  // store as a value in the conversion table
+public struct VelocitySwitchSettings: Codable {
+    public var switchType: VelocitySwitchType
+    public var threshold: Int  // store as a value in the conversion table
     
     static let dataLength = 1
     
@@ -35,12 +34,12 @@ struct VelocitySwitchSettings: Codable {
         100, 104, 108, 112, 116, 120, 124, 127
     ]
     
-    init(switchType: VelocitySwitchType, threshold: Int) {
+    public init(switchType: VelocitySwitchType, threshold: Int) {
         self.switchType = switchType
         self.threshold = VelocitySwitchSettings.conversionTable[threshold]
     }
     
-    init(fromSystemExclusive d: Data) {
+    public init(fromSystemExclusive d: Data) {
         var offset: Int = 0
         var b: Byte = 0
     
@@ -51,7 +50,7 @@ struct VelocitySwitchSettings: Codable {
         threshold = VelocitySwitchSettings.conversionTable[n]
     }
     
-    func asData() -> ByteArray {
+    public func asData() -> ByteArray {
         var data = ByteArray()
         let t = VelocitySwitchSettings.conversionTable.firstIndex(of: threshold)!
         let value = t | (self.switchType.index! << 5)
@@ -62,28 +61,28 @@ struct VelocitySwitchSettings: Codable {
 }
 
 extension VelocitySwitchSettings: CustomStringConvertible {
-    var description: String {
+    public var description: String {
         var s = ""
         s += "\(switchType.rawValue), threshold=\(threshold)"
         return s
     }
 }
 
-struct SourceControlSettings: Codable {
-    var zoneLow: Int
-    var zoneHigh: Int   // TODO: make a MIDI note type
-    var velocitySwitch: VelocitySwitchSettings
-    var effectPath: Int
-    var volume: Int
-    var benderPitch: Int
-    var benderCutoff: Int
-    var modulations: ModulationSettings
-    var keyOnDelay: Int
-    var pan: PanSettings
+public struct SourceControlSettings: Codable {
+    public var zoneLow: Int
+    public var zoneHigh: Int   // TODO: make a MIDI note type
+    public var velocitySwitch: VelocitySwitchSettings
+    public var effectPath: Int
+    public var volume: Int
+    public var benderPitch: Int
+    public var benderCutoff: Int
+    public var modulations: ModulationSettings
+    public var keyOnDelay: Int
+    public var pan: PanSettings
     
     static let dataLength = 28
     
-    init() {
+    public init() {
         zoneLow = 0
         zoneHigh = 127
         velocitySwitch = VelocitySwitchSettings(switchType: .off, threshold: 4)
@@ -96,7 +95,7 @@ struct SourceControlSettings: Codable {
         pan = PanSettings(panType: .normal, panValue: 0)
     }
     
-    init(data d: ByteArray) {
+    public init(data d: ByteArray) {
         var offset: Int = 0
         var b: Byte = 0
         
@@ -140,7 +139,7 @@ struct SourceControlSettings: Codable {
         pan = PanSettings(data: ByteArray(d[offset ..< offset + PanSettings.dataLength]))
     }
     
-    func asData() -> ByteArray {
+    public func asData() -> ByteArray {
         var data = ByteArray()
         
         data.append(Byte(zoneLow))
@@ -159,7 +158,7 @@ struct SourceControlSettings: Codable {
 }
 
 extension SourceControlSettings: CustomStringConvertible {
-    var description: String {
+    public var description: String {
         var s = ""
         s += "ZoneLow=\(zoneLow) ZoneHigh=\(zoneHigh)\n"
         s += "Velocity Switch: \(velocitySwitch)\n"
@@ -173,16 +172,16 @@ extension SourceControlSettings: CustomStringConvertible {
     }
 }
 
-struct Source: Codable {
-    var oscillator: Oscillator
-    var filter: Filter
-    var amplifier: Amplifier
-    var lfo: LFO
-    var control: SourceControlSettings
+public struct Source: Codable {
+    public var oscillator: Oscillator
+    public var filter: Filter
+    public var amplifier: Amplifier
+    public var lfo: LFO
+    public var control: SourceControlSettings
 
     static let dataLength = 86
     
-    init() {
+    public init() {
         oscillator = Oscillator()
         filter = Filter()
         amplifier = Amplifier()
@@ -191,7 +190,7 @@ struct Source: Codable {
     }
     
     /// Initializes a source from system exclusive data.
-    init(data d: ByteArray) {
+    public init(data d: ByteArray) {
         var offset: Int = 0
         var b: Byte = 0
         
@@ -219,7 +218,7 @@ struct Source: Codable {
         //harmonics = HarmonicSettings(fromSystemExclusive: d.suffix(from: offset))
     }
 
-    func asData() -> ByteArray {
+    public func asData() -> ByteArray {
         var data = ByteArray()
         
         data.append(contentsOf: control.asData())
@@ -236,7 +235,7 @@ struct Source: Codable {
 }
 
 extension Source: CustomStringConvertible {
-    var description: String {
+    public var description: String {
         var s = ""
         
         s += "Control:\n\(control)\n"

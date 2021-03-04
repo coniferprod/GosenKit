@@ -1,16 +1,16 @@
 import Foundation
 
-struct AdditiveKit: Codable {
+public struct AdditiveKit: Codable {
     static let harmonicCount = 64
     static let dataLength = 806
     
-    var common: HarmonicCommonSettings
-    var morf: MorfHarmonicSettings
-    var formantFilter: FormantFilterSettings
-    var levels: HarmonicLevels
-    var envelopes: [HarmonicEnvelope]
+    public var common: HarmonicCommonSettings
+    public var morf: MorfHarmonicSettings
+    public var formantFilter: FormantFilterSettings
+    public var levels: HarmonicLevels
+    public var envelopes: [HarmonicEnvelope]
     
-    init() {
+    public init() {
         common = HarmonicCommonSettings()
         morf = MorfHarmonicSettings()
         formantFilter = FormantFilterSettings()
@@ -21,7 +21,7 @@ struct AdditiveKit: Codable {
         }
     }
     
-    init(data d: ByteArray) {
+    public init(data d: ByteArray) {
         var offset: Int = 0
         var b: Byte = 0
         
@@ -61,7 +61,7 @@ struct AdditiveKit: Codable {
 
     }
     
-    func asData() -> ByteArray {
+    public func asData() -> ByteArray {
         var data = ByteArray()
         
         data.append(checksum)
@@ -173,7 +173,7 @@ struct AdditiveKit: Codable {
 }
 
 extension AdditiveKit: CustomStringConvertible {
-    var description: String {
+    public var description: String {
         var s = ""
         s += "Common: \(common)\n"
         s += "MORF: \(morf)\n"

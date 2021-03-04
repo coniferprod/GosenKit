@@ -1,17 +1,17 @@
 import Foundation
 
-enum WaveType: String, Codable, CaseIterable {
+public enum WaveType: String, Codable, CaseIterable {
     case additive
     case pcm
 }
 
-enum KeyScalingType: String, Codable, CaseIterable {
+public enum KeyScalingType: String, Codable, CaseIterable {
     case zeroCent
     case twentyFiveCent
     case thirtyTreeCent
     case fiftyCent
     
-    init?(index: Int) {
+    public init?(index: Int) {
         switch index {
         case 0: self = .zeroCent
         case 1: self = .twentyFiveCent
@@ -22,17 +22,17 @@ enum KeyScalingType: String, Codable, CaseIterable {
     }
 }
 
-struct PitchEnvelope: Codable {
-    var start: Int
-    var attackTime: Int
-    var attackLevel: Int
-    var decayTime: Int
-    var timeVelocitySensitivity: Int
-    var levelVelocitySensitivity: Int
+public struct PitchEnvelope: Codable {
+    public var start: Int
+    public var attackTime: Int
+    public var attackLevel: Int
+    public var decayTime: Int
+    public var timeVelocitySensitivity: Int
+    public var levelVelocitySensitivity: Int
     
     static let dataLength = 6
     
-    init() {
+    public init() {
         start = 0
         attackTime = 0
         attackLevel = 127
@@ -41,7 +41,7 @@ struct PitchEnvelope: Codable {
         levelVelocitySensitivity = 0
     }
     
-    init(data d: ByteArray) {
+    public init(data d: ByteArray) {
         var offset: Int = 0
         var b: Byte = 0
         
@@ -70,7 +70,7 @@ struct PitchEnvelope: Codable {
         offset += 1
     }
     
-    func asData() -> ByteArray {
+    public func asData() -> ByteArray {
         var data = ByteArray()
      
         data.append(Byte(start + 64))
@@ -85,7 +85,7 @@ struct PitchEnvelope: Codable {
 }
 
 extension PitchEnvelope: CustomStringConvertible {
-    var description: String {
+    public var description: String {
         var s = ""
         s += "start=\(start), attackTime=\(attackTime), attackLevel=\(attackLevel), decayTime=\(decayTime)\n"
         s += "timeVelSens=\(timeVelocitySensitivity) levelVelSens=\(levelVelocitySensitivity)\n"
@@ -93,18 +93,18 @@ extension PitchEnvelope: CustomStringConvertible {
     }
 }
 
-struct Oscillator: Codable {
-    var waveType: WaveType  // TODO: is this necessary? Maybe just use the wave number?
-    var waveNumber: Int
-    var coarse: Int
-    var fine: Int
-    var keyScalingToPitch: KeyScalingType
-    var fixedKey: Int  // TODO: OFF / MIDI note
-    var pitchEnvelope: PitchEnvelope
+public struct Oscillator: Codable {
+    public var waveType: WaveType  // TODO: is this necessary? Maybe just use the wave number?
+    public var waveNumber: Int
+    public var coarse: Int
+    public var fine: Int
+    public var keyScalingToPitch: KeyScalingType
+    public var fixedKey: Int  // TODO: OFF / MIDI note
+    public var pitchEnvelope: PitchEnvelope
     
     static let dataLength = 12
     
-    init() {
+    public init() {
         waveType = .pcm
         waveNumber = 412
         coarse = 0
@@ -114,7 +114,7 @@ struct Oscillator: Codable {
         pitchEnvelope = PitchEnvelope()
     }
     
-    init(data d: ByteArray) {
+    public init(data d: ByteArray) {
         var offset: Int = 0
         var b: Byte = 0
         
@@ -157,7 +157,7 @@ struct Oscillator: Codable {
         }
     }
     
-    func asData() -> ByteArray {
+    public func asData() -> ByteArray {
         var data = ByteArray()
         
         // Wave type is not emitted in System Exclusive
@@ -187,7 +187,7 @@ struct Oscillator: Codable {
 }
 
 extension Oscillator: CustomStringConvertible {
-    var description: String {
+    public var description: String {
         var s = ""
         if waveType == .pcm {
             s += "PCM"

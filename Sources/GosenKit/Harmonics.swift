@@ -1,10 +1,10 @@
 import Foundation
 
-enum HarmonicGroupType: String, Codable, CaseIterable {
+public enum HarmonicGroupType: String, Codable, CaseIterable {
     case low
     case high
     
-    init?(index: Int) {
+    public init?(index: Int) {
         switch index {
         case 0: self = .low
         case 1: self = .high
@@ -13,17 +13,17 @@ enum HarmonicGroupType: String, Codable, CaseIterable {
     }
 }
 
-struct HarmonicCommonSettings: Codable {
-    var isMorfEnabled: Bool
-    var totalGain: Int // 1~63
-    var group: HarmonicGroupType
-    var keyScalingToGain: Int // -63(1)~+63(127)
-    var velocityCurve: Int  // 1~12 (stored in SysEx as 0~11)
-    var velocityDepth: Int  // 0~127
+public struct HarmonicCommonSettings: Codable {
+    public var isMorfEnabled: Bool
+    public var totalGain: Int // 1~63
+    public var group: HarmonicGroupType
+    public var keyScalingToGain: Int // -63(1)~+63(127)
+    public var velocityCurve: Int  // 1~12 (stored in SysEx as 0~11)
+    public var velocityDepth: Int  // 0~127
     
     static let dataLength = 6
     
-    init() {
+    public init() {
         isMorfEnabled = false
         totalGain = 0x33
         group = .low
@@ -32,7 +32,7 @@ struct HarmonicCommonSettings: Codable {
         velocityDepth = 0
     }
     
-    init(data d: ByteArray) {
+    public init(data d: ByteArray) {
         var offset: Int = 0
         var b: Byte = 0
         
@@ -61,7 +61,7 @@ struct HarmonicCommonSettings: Codable {
         offset += 1
     }
     
-    func asData() -> ByteArray {
+    public func asData() -> ByteArray {
         var data = ByteArray()
         
         data.append(isMorfEnabled ? 1 : 0)
@@ -75,18 +75,18 @@ struct HarmonicCommonSettings: Codable {
     }
 }
 
-struct EnvelopeSegment: Codable {
-    var rate: Int  // 0~127
-    var level: Int // -63(1)~+63(127)
+public struct EnvelopeSegment: Codable {
+    public var rate: Int  // 0~127
+    public var level: Int // -63(1)~+63(127)
     
     static let dataLength = 2
     
-    init(rate: Int, level: Int) {
+    public init(rate: Int, level: Int) {
         self.rate = rate
         self.level = level
     }
     
-    init(data d: ByteArray) {
+    public init(data d: ByteArray) {
         var offset: Int = 0
         var b: Byte = 0
         
@@ -99,7 +99,7 @@ struct EnvelopeSegment: Codable {
         offset += 1
     }
         
-    func asData() -> ByteArray {
+    public func asData() -> ByteArray {
         var data = ByteArray()
         
         data.append(Byte(rate))
@@ -110,23 +110,23 @@ struct EnvelopeSegment: Codable {
 }
 
 extension EnvelopeSegment: CustomStringConvertible {
-    var description: String {
+    public var description: String {
         return "L\(level) R\(rate)"
     }
 }
 
-struct HarmonicEnvelopeSegment: Codable {
-    var rate: Int  // 0~127
-    var level: Int // 0~63
+public struct HarmonicEnvelopeSegment: Codable {
+    public var rate: Int  // 0~127
+    public var level: Int // 0~63
     
     static let dataLength = 2
     
-    init(rate: Int, level: Int) {
+    public init(rate: Int, level: Int) {
         self.rate = rate
         self.level = level
     }
     
-    init(fromSystemExclusive d: Data) {
+    public init(fromSystemExclusive d: Data) {
         var offset: Int = 0
         var b: Byte = 0
         
@@ -150,17 +150,17 @@ struct HarmonicEnvelopeSegment: Codable {
 }
 
 extension HarmonicEnvelopeSegment: CustomStringConvertible {
-    var description: String {
+    public var description: String {
         return "L\(level) R\(rate)"
     }
 }
 
-enum EnvelopeLoopType: String, Codable, CaseIterable {
+public enum EnvelopeLoopType: String, Codable, CaseIterable {
     case off
     case loop1
     case loop2
     
-    init?(index: Int) {
+    public init?(index: Int) {
         switch index {
         case 0: self = .off
         case 1: self = .loop1
@@ -170,16 +170,16 @@ enum EnvelopeLoopType: String, Codable, CaseIterable {
     }
 }
 
-struct HarmonicEnvelope: Codable {
-    var segment0: HarmonicEnvelopeSegment
-    var segment1: HarmonicEnvelopeSegment
-    var segment2: HarmonicEnvelopeSegment
-    var segment3: HarmonicEnvelopeSegment
-    var loopType: EnvelopeLoopType
+public struct HarmonicEnvelope: Codable {
+    public var segment0: HarmonicEnvelopeSegment
+    public var segment1: HarmonicEnvelopeSegment
+    public var segment2: HarmonicEnvelopeSegment
+    public var segment3: HarmonicEnvelopeSegment
+    public var loopType: EnvelopeLoopType
     
     static let dataLength = 4 * HarmonicEnvelopeSegment.dataLength
     
-    init() {
+    public init() {
         self.segment0 = HarmonicEnvelopeSegment(rate: 127, level: 63)
         self.segment1 = HarmonicEnvelopeSegment(rate: 127, level: 63)
         self.segment2 = HarmonicEnvelopeSegment(rate: 127, level: 63)
@@ -187,7 +187,7 @@ struct HarmonicEnvelope: Codable {
         self.loopType = .off
     }
     
-    init(segment0: HarmonicEnvelopeSegment, segment1: HarmonicEnvelopeSegment, segment2: HarmonicEnvelopeSegment, segment3: HarmonicEnvelopeSegment, loopType: EnvelopeLoopType) {
+    public init(segment0: HarmonicEnvelopeSegment, segment1: HarmonicEnvelopeSegment, segment2: HarmonicEnvelopeSegment, segment3: HarmonicEnvelopeSegment, loopType: EnvelopeLoopType) {
         self.segment0 = segment0
         self.segment1 = segment1
         self.segment2 = segment2
@@ -195,7 +195,7 @@ struct HarmonicEnvelope: Codable {
         self.loopType = loopType
     }
     
-    init(data d: ByteArray) {
+    public init(data d: ByteArray) {
         var offset: Int = 0
         var b: Byte = 0
 
@@ -281,7 +281,7 @@ struct HarmonicEnvelope: Codable {
         }
     }
 
-    func asData() -> ByteArray {
+    public func asData() -> ByteArray {
         var data = ByteArray()
         
         data.append(contentsOf: segment0.asData())
@@ -324,7 +324,7 @@ struct HarmonicEnvelope: Codable {
 }
 
 extension HarmonicEnvelope: CustomStringConvertible {
-    var description: String {
+    public var description: String {
         var s = ""
         s += "  Atk  DC1  DC2  RLS\n"
         s += "    Lvl  \(segment0.level)   \(segment1.level)   \(segment2.level)   \(segment3.level)\n"
@@ -334,16 +334,16 @@ extension HarmonicEnvelope: CustomStringConvertible {
     }
 }
 
-struct HarmonicLevels: Codable {
-    var soft: [Int]  // 1~64
-    var loud: [Int]  // 65~128
+public struct HarmonicLevels: Codable {
+    public var soft: [Int]  // 1~64
+    public var loud: [Int]  // 65~128
     // all values are 0~127
     
     static let harmonicCount = 64
     
     static let dataLength = 128
     
-    init() {
+    public init() {
         soft = [Int]()
         soft.append(127)
         for _ in 1..<HarmonicLevels.harmonicCount {
@@ -357,7 +357,7 @@ struct HarmonicLevels: Codable {
         }
     }
     
-    init(data d: ByteArray) {
+    public init(data d: ByteArray) {
         var offset: Int = 0
         var b: Byte = 0
 
@@ -380,7 +380,7 @@ struct HarmonicLevels: Codable {
         }
     }
     
-    func asData() -> ByteArray {
+    public func asData() -> ByteArray {
         var data = ByteArray()
         
         for i in 0..<HarmonicLevels.harmonicCount {

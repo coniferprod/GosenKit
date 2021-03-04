@@ -1,6 +1,6 @@
 import Foundation
 
-enum ControlDestination: String, Codable, CaseIterable {
+public enum ControlDestination: String, Codable, CaseIterable {
     case pitchOffset
     case cutoffOffset
     case level
@@ -22,7 +22,7 @@ enum ControlDestination: String, Codable, CaseIterable {
     case harmonicEvenOffset
     case harmonicOddOffset
     
-    init?(index: Int) {
+    public init?(index: Int) {
         switch index {
         case 0: self = .pitchOffset
         case 1: self = .cutoffOffset
@@ -49,7 +49,7 @@ enum ControlDestination: String, Codable, CaseIterable {
     }
 }
 
-struct MacroController: Codable {
+public struct MacroController: Codable {
     var destination1: ControlDestination
     var depth1: Int  // -31~+31
     var destination2: ControlDestination
@@ -111,7 +111,7 @@ struct MacroController: Codable {
 }
 
 extension MacroController: CustomStringConvertible {
-    var description: String {
+    public var description: String {
         var s = ""
         s += "destination1=\(destination1.rawValue), depth1=\(depth1)\n"
         s += "destination2=\(destination2.rawValue), depth1=\(depth2)\n"
@@ -119,7 +119,7 @@ extension MacroController: CustomStringConvertible {
     }
 }
 
-enum SwitchType: String, Codable, CaseIterable {
+public enum SwitchType: String, Codable, CaseIterable {
     case off
     case harmMax
     case harmBright
@@ -138,7 +138,7 @@ enum SwitchType: String, Codable, CaseIterable {
     case ffHiCut
     case ffComb2
     
-    init?(index: Int) {
+    public init?(index: Int) {
         switch index {
         case 0: self = .off
         case 1: self = .harmMax
@@ -162,7 +162,7 @@ enum SwitchType: String, Codable, CaseIterable {
     }
 }
 
-struct SwitchControl: Codable {
+public struct SwitchControl: Codable {
     var switch1: SwitchType
     var switch2: SwitchType
     var footSwitch1: SwitchType
@@ -180,7 +180,7 @@ struct SwitchControl: Codable {
     }
 }
 
-enum ControlSource: String, Codable, CaseIterable {
+public enum ControlSource: String, Codable, CaseIterable {
     case bender
     case channelPressure
     case wheel
@@ -196,7 +196,7 @@ enum ControlSource: String, Codable, CaseIterable {
     case generalController7
     case generalController8
     
-    init?(index: Int) {
+    public init?(index: Int) {
         switch index {
         case 0: self = .bender
         case 1: self = .channelPressure
@@ -217,7 +217,7 @@ enum ControlSource: String, Codable, CaseIterable {
     }
 }
 
-enum EffectDestinationType: String, Codable, CaseIterable {
+public enum EffectDestinationType: String, Codable, CaseIterable {
     case effect1DryWet
     case effect1Parameter
     case effect2DryWet
@@ -229,7 +229,7 @@ enum EffectDestinationType: String, Codable, CaseIterable {
     case reverbDryWet1
     case reverbDryWet2
     
-    init?(index: Int) {
+    public init?(index: Int) {
         switch index {
         case 0: self = .effect1DryWet
         case 1: self = .effect1Parameter
@@ -246,7 +246,7 @@ enum EffectDestinationType: String, Codable, CaseIterable {
     }
 }
 
-struct EffectControlSourceSettings: Codable {
+public struct EffectControlSourceSettings: Codable {
     var sourceType: ControlSource
     var destinationType: EffectDestinationType
     var depth: Int
@@ -287,14 +287,14 @@ struct EffectControlSourceSettings: Codable {
 }
 
 extension EffectControlSourceSettings: CustomStringConvertible {
-    var description: String {
+    public var description: String {
         var s = ""
         s += "source=\(sourceType.rawValue), destination=\(destinationType.rawValue), depth=\(depth)"
         return s
     }
 }
 
-struct EffectControlSettings: Codable {
+public struct EffectControlSettings: Codable {
     var source1: EffectControlSourceSettings
     var source2: EffectControlSourceSettings
     
@@ -324,7 +324,7 @@ struct EffectControlSettings: Codable {
 }
 
 extension EffectControlSettings: CustomStringConvertible {
-    var description: String {
+    public var description: String {
         var s = "Effect Control:\n"
         s += "    Source1: \(source1)\n"
         s += "    Source2: \(source2)\n"
@@ -332,7 +332,7 @@ extension EffectControlSettings: CustomStringConvertible {
     }
 }
 
-struct AssignableController: Codable {
+public struct AssignableController: Codable {
     var sourceType: ControlSource
     var destination: ControlDestination
     var depth: Int
@@ -374,14 +374,14 @@ struct AssignableController: Codable {
 }
 
 extension AssignableController: CustomStringConvertible {
-    var description: String {
+    public var description: String {
         var s = ""
         s += "source=\(sourceType.rawValue), destination=\(destination.rawValue), depth=\(depth)"
         return s
     }
 }
 
-struct ModulationSettings: Codable {
+public struct ModulationSettings: Codable {
     var pressure: MacroController
     var wheel: MacroController
     var expression: MacroController
@@ -436,20 +436,20 @@ struct ModulationSettings: Codable {
 }
 
 extension ModulationSettings: CustomStringConvertible {
-    var description: String {
+    public var description: String {
         var s = ""
         s += "pressure: \(pressure), wheel: \(wheel), expression: \(expression), assignable1: \(assignable1), assignable2: \(assignable2)"
         return s
     }
 }
 
-enum PanType: String, Codable, CaseIterable {
+public enum PanType: String, Codable, CaseIterable {
     case normal
     case random
     case keyScale
     case negativeKeyScale
     
-    init?(index: Int) {
+    public init?(index: Int) {
         switch index {
         case 0: self = .normal
         case 1: self = .random
@@ -460,7 +460,7 @@ enum PanType: String, Codable, CaseIterable {
     }
 }
 
-struct PanSettings: Codable {
+public struct PanSettings: Codable {
     var panType: PanType
     var panValue: Int
     
@@ -494,7 +494,7 @@ struct PanSettings: Codable {
 }
 
 extension PanSettings: CustomStringConvertible {
-    var description: String {
+    public var description: String {
         var s = ""
         s += "type=\(panType.rawValue), value=\(panValue)"
         return s

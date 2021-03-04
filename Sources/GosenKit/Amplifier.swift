@@ -1,16 +1,16 @@
 import Foundation
 
-struct AmplifierEnvelope: Codable {
-    var attackTime: Int
-    var decay1Time: Int
-    var decay1Level: Int
-    var decay2Time: Int
-    var decay2Level: Int
-    var releaseTime: Int
+public struct AmplifierEnvelope: Codable {
+    public var attackTime: Int
+    public var decay1Time: Int
+    public var decay1Level: Int
+    public var decay2Time: Int
+    public var decay2Level: Int
+    public var releaseTime: Int
     
     static let dataLength = 6
     
-    init() {
+    public init() {
         attackTime = 0
         decay1Time = 0
         decay1Level = 127
@@ -19,7 +19,7 @@ struct AmplifierEnvelope: Codable {
         releaseTime = 0
     }
     
-    init(attackTime: Int, decay1Time: Int, decay1Level: Int, decay2Time: Int, decay2Level: Int, releaseTime: Int) {
+    public init(attackTime: Int, decay1Time: Int, decay1Level: Int, decay2Time: Int, decay2Level: Int, releaseTime: Int) {
         self.attackTime = attackTime
         self.decay1Time = decay1Time
         self.decay1Level = decay1Level
@@ -28,7 +28,7 @@ struct AmplifierEnvelope: Codable {
         self.releaseTime = releaseTime
     }
     
-    init(data d: ByteArray) {
+    public init(data d: ByteArray) {
         //print("Amplifier envelope data (\(d.count) bytes): \(d.hexDump)")
 
         var offset: Int = 0
@@ -59,7 +59,7 @@ struct AmplifierEnvelope: Codable {
         offset += 1
     }
     
-    func asData() -> ByteArray {
+    public func asData() -> ByteArray {
         var data = ByteArray()
         
         data.append(Byte(attackTime))
@@ -75,22 +75,22 @@ struct AmplifierEnvelope: Codable {
 
 let organAmplifierEnvelope = AmplifierEnvelope(attackTime: 0, decay1Time: 0, decay1Level: 127, decay2Time: 0, decay2Level: 127, releaseTime: 0)
 
-struct AmplifierKeyScalingControl: Codable {
-    var level: Int
-    var attackTime: Int
-    var decay1Time: Int
-    var release: Int
+public struct AmplifierKeyScalingControl: Codable {
+    public var level: Int
+    public var attackTime: Int
+    public var decay1Time: Int
+    public var release: Int
     
     static let dataLength = 4
 
-    init() {
+    public init() {
         level = 0
         attackTime = 0
         decay1Time = 0
         release = 0
     }
     
-    init(data d: ByteArray) {
+    public init(data d: ByteArray) {
         //print("Amplifier key scaling control data (\(d.count) bytes): \(d.hexDump)")
         
         var offset: Int = 0
@@ -113,7 +113,7 @@ struct AmplifierKeyScalingControl: Codable {
         offset += 1
     }
     
-    func asData() -> ByteArray {
+    public func asData() -> ByteArray {
         var data = ByteArray()
         
         data.append(Byte(level + 64))
@@ -126,22 +126,22 @@ struct AmplifierKeyScalingControl: Codable {
 }
 
 // Almost the same as AmplifierKeyScalingControl, but level is positive only (0...63)
-struct AmplifierVelocityControl: Codable {
-    var level: Int
-    var attackTime: Int
-    var decay1Time: Int
-    var release: Int
+public struct AmplifierVelocityControl: Codable {
+    public var level: Int
+    public var attackTime: Int
+    public var decay1Time: Int
+    public var release: Int
     
     static let dataLength = 4
     
-    init() {
+    public init() {
         level = 0
         attackTime = 0
         decay1Time = 0
         release = 0
     }
     
-    init(data d: ByteArray) {
+    public init(data d: ByteArray) {
         //print("Amplifier velocity control data (\(d.count) bytes): \(d.hexDump)")
         
         var offset: Int = 0
@@ -164,7 +164,7 @@ struct AmplifierVelocityControl: Codable {
         offset += 1
     }
     
-    func asData() -> ByteArray {
+    public func asData() -> ByteArray {
         var data = ByteArray()
         
         data.append(Byte(level))
@@ -176,18 +176,18 @@ struct AmplifierVelocityControl: Codable {
     }
 }
 
-struct AmplifierModulationSettings: Codable {
-    var keyScalingToEnvelope: AmplifierKeyScalingControl
-    var velocityToEnvelope: AmplifierVelocityControl
+public struct AmplifierModulationSettings: Codable {
+    public var keyScalingToEnvelope: AmplifierKeyScalingControl
+    public var velocityToEnvelope: AmplifierVelocityControl
 
     static let dataLength = AmplifierKeyScalingControl.dataLength + AmplifierVelocityControl.dataLength
     
-    init() {
+    public init() {
         keyScalingToEnvelope = AmplifierKeyScalingControl()
         velocityToEnvelope = AmplifierVelocityControl()
     }
     
-    init(data d: ByteArray) {
+    public init(data d: ByteArray) {
         //print("Amplifier modulation data (\(d.count) bytes): \(d.hexDump)")
         
         var offset: Int = 0
@@ -198,7 +198,7 @@ struct AmplifierModulationSettings: Codable {
         velocityToEnvelope = AmplifierVelocityControl(data: ByteArray(d[offset ..< offset + AmplifierVelocityControl.dataLength]))
     }
     
-    func asData() -> ByteArray {
+    public func asData() -> ByteArray {
         var data = ByteArray()
         
         data.append(contentsOf: keyScalingToEnvelope.asData())
@@ -208,20 +208,20 @@ struct AmplifierModulationSettings: Codable {
     }
 }
 
-struct Amplifier: Codable {
-    var velocityCurve: Int  // store as 1~12
-    var envelope: AmplifierEnvelope
-    var modulation: AmplifierModulationSettings
+public struct Amplifier: Codable {
+    public var velocityCurve: Int  // store as 1~12
+    public var envelope: AmplifierEnvelope
+    public var modulation: AmplifierModulationSettings
     
     static let dataLength = 15
     
-    init() {
+    public init() {
         velocityCurve = 1
         envelope = AmplifierEnvelope()
         modulation = AmplifierModulationSettings()
     }
 
-    init(data d: ByteArray) {
+    public init(data d: ByteArray) {
         //print("Amplifier data (\(d.count) bytes): \(d.hexDump)")
         
         var offset: Int = 0
@@ -238,9 +238,8 @@ struct Amplifier: Codable {
         print("Start amplifier envelope modulation, offset = \(offset)")
         modulation = AmplifierModulationSettings(data: ByteArray(d[offset ..< offset + AmplifierModulationSettings.dataLength]))
     }
-    
 
-    func asData() -> ByteArray {
+    public func asData() -> ByteArray {
         var data = ByteArray()
         
         data.append(Byte(velocityCurve - 1)) // 0~11

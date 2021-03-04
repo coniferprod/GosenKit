@@ -1,11 +1,11 @@
 import Foundation
 
-enum PolyphonyType: String, Codable, CaseIterable {
+public enum PolyphonyType: String, Codable, CaseIterable {
     case poly
     case solo1
     case solo2
     
-    init?(index: Int) {
+    public init?(index: Int) {
         switch index {
         case 0: self = .poly
         case 1: self = .solo1
@@ -15,7 +15,7 @@ enum PolyphonyType: String, Codable, CaseIterable {
     }
 }
 
-enum AmplitudeModulationType: String, Codable, CaseIterable {
+public enum AmplitudeModulationType: String, Codable, CaseIterable {
     case off
     case source2
     case source3
@@ -23,7 +23,7 @@ enum AmplitudeModulationType: String, Codable, CaseIterable {
     case source5
     case source6
 
-    init?(index: Int) {
+    public init?(index: Int) {
         switch index {
         case 0: self = .off
         case 1: self = .source2
@@ -36,20 +36,20 @@ enum AmplitudeModulationType: String, Codable, CaseIterable {
     }
 }
 
-struct SingleCommon: Codable {
-    var name: String
-    var volume: Int
-    var polyphony: PolyphonyType
-    var sourceCount: Int
-    var sourceMutes: [Bool]
-    var isPortamentoActive: Bool
-    var portamentoSpeed: Int
-    var amplitudeModulation: AmplitudeModulationType
-    var macros: [MacroController]
-    var switches: SwitchControl
-    var effects: EffectSettings
-    var geq: [Int]  // 58(-6) ~ 70(+6), so 64 is zero
-    var effectControl: EffectControlSettings
+public struct SingleCommon: Codable {
+    public var name: String
+    public var volume: Int
+    public var polyphony: PolyphonyType
+    public var sourceCount: Int
+    public var sourceMutes: [Bool]
+    public var isPortamentoActive: Bool
+    public var portamentoSpeed: Int
+    public var amplitudeModulation: AmplitudeModulationType
+    public var macros: [MacroController]
+    public var switches: SwitchControl
+    public var effects: EffectSettings
+    public var geq: [Int]  // 58(-6) ~ 70(+6), so 64 is zero
+    public var effectControl: EffectControlSettings
     
     static let sourceCountOffset = 50
     static let geqBandCount = 7
@@ -58,7 +58,7 @@ struct SingleCommon: Codable {
     
     static let dataSize = 82
     
-    init() {
+    public init() {
         name = "NewSound"
         volume = 115
         polyphony = .poly
@@ -349,7 +349,7 @@ struct SingleCommon: Codable {
 }
 
 extension SingleCommon: CustomStringConvertible {
-    var description: String {
+    public var description: String {
         var s = ""
         s += "Name = '\(name)' Volume = \(volume) Polyphony = \(polyphony.rawValue)\n"
         let portamentoStatus = isPortamentoActive ? "ON" : "OFF"

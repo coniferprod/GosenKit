@@ -1,17 +1,17 @@
 import Foundation
 
-struct FormantFilterEnvelope: Codable {
-    var attack: EnvelopeSegment
-    var decay1: EnvelopeSegment
-    var decay2: EnvelopeSegment
-    var release: EnvelopeSegment
-    var decayLoop: EnvelopeLoopType
-    var velocityDepth: Int // -63(1)~+63(127)
-    var keyScalingDepth: Int // -63(1)~+63(127)
+public struct FormantFilterEnvelope: Codable {
+    public var attack: EnvelopeSegment
+    public var decay1: EnvelopeSegment
+    public var decay2: EnvelopeSegment
+    public var release: EnvelopeSegment
+    public var decayLoop: EnvelopeLoopType
+    public var velocityDepth: Int // -63(1)~+63(127)
+    public var keyScalingDepth: Int // -63(1)~+63(127)
     
     static let dataLength = 11
     
-    init() {
+    public init() {
         attack = EnvelopeSegment(rate: 127, level: 63)
         decay1 = EnvelopeSegment(rate: 127, level: 63)
         decay2 = EnvelopeSegment(rate: 127, level: 63)
@@ -21,7 +21,7 @@ struct FormantFilterEnvelope: Codable {
         keyScalingDepth = 0
     }
     
-    init(data d: ByteArray) {
+    public init(data d: ByteArray) {
         var offset: Int = 0
         var b: Byte = 0
 
@@ -50,7 +50,7 @@ struct FormantFilterEnvelope: Codable {
         offset += 1
     }
     
-    func asData() -> ByteArray {
+    public func asData() -> ByteArray {
         var data = ByteArray()
         
         data.append(contentsOf: attack.asData())
@@ -66,12 +66,12 @@ struct FormantFilterEnvelope: Codable {
     }
 }
 
-enum FormantFilterLFOShape: String, Codable, CaseIterable {
+public enum FormantFilterLFOShape: String, Codable, CaseIterable {
     case triangle
     case sawtooth
     case random
     
-    init?(index: Int) {
+    public init?(index: Int) {
         switch index {
         case 0: self = .triangle
         case 1: self = .sawtooth
@@ -81,20 +81,20 @@ enum FormantFilterLFOShape: String, Codable, CaseIterable {
     }
 }
 
-struct FormantFilterLFO: Codable {
-    var speed: Int  // 0~127
-    var shape: FormantFilterLFOShape
-    var depth: Int  // 0~63
+public struct FormantFilterLFO: Codable {
+    public var speed: Int  // 0~127
+    public var shape: FormantFilterLFOShape
+    public var depth: Int  // 0~63
     
     static let dataLength = 3
     
-    init() {
+    public init() {
         shape = .triangle
         speed = 0
         depth = 0
     }
     
-    init(data d: ByteArray) {
+    public init(data d: ByteArray) {
         var offset: Int = 0
         var b: Byte = 0
         
@@ -111,7 +111,7 @@ struct FormantFilterLFO: Codable {
         offset += 1
     }
     
-    func asData() -> ByteArray {
+    public func asData() -> ByteArray {
         var data = ByteArray()
         
         data.append(Byte(speed))
@@ -122,11 +122,11 @@ struct FormantFilterLFO: Codable {
     }
 }
 
-enum FormantFilterMode: String, Codable, CaseIterable {
+public enum FormantFilterMode: String, Codable, CaseIterable {
     case envelope
     case lfo
     
-    init?(index: Int) {
+    public init?(index: Int) {
         switch index {
         case 0: self = .envelope
         case 1: self = .lfo
@@ -135,20 +135,20 @@ enum FormantFilterMode: String, Codable, CaseIterable {
     }
 }
 
-struct FormantFilterBands: Codable {
+public struct FormantFilterBands: Codable {
     var levels: [Int]  // all 0~127
 
     static let bandCount = 128
     static let dataLength = 128
 
-    init() {
+    public init() {
         levels = [Int]()
         for _ in 0..<FormantFilterBands.bandCount {
             levels.append(127)
         }
     }
        
-    init(data d: ByteArray) {
+    public init(data d: ByteArray) {
         var offset: Int = 0
         var b: Byte = 0
         
@@ -160,7 +160,7 @@ struct FormantFilterBands: Codable {
         }
     }
         
-    func asData() -> ByteArray {
+    public func asData() -> ByteArray {
         var data = ByteArray()
     
         for (_, element) in levels.enumerated() {
@@ -171,17 +171,17 @@ struct FormantFilterBands: Codable {
     }
 }
 
-struct FormantFilterSettings: Codable {
-    var bands: FormantFilterBands
-    var bias: Int  // -63(1)~+63(127)
-    var mode: FormantFilterMode  // 0=ENV, 1=LFO
-    var envelopeDepth: Int // -63(1)~+63(127)
-    var envelope: FormantFilterEnvelope
-    var lfo: FormantFilterLFO
+public struct FormantFilterSettings: Codable {
+    public var bands: FormantFilterBands
+    public var bias: Int  // -63(1)~+63(127)
+    public var mode: FormantFilterMode  // 0=ENV, 1=LFO
+    public var envelopeDepth: Int // -63(1)~+63(127)
+    public var envelope: FormantFilterEnvelope
+    public var lfo: FormantFilterLFO
     
     static let dataLength = 17  // does not include the bands!
     
-    init() {
+    public init() {
         bands = FormantFilterBands()
         bias = -10
         mode = .envelope
@@ -190,7 +190,7 @@ struct FormantFilterSettings: Codable {
         lfo = FormantFilterLFO()
     }
     
-    init(data d: ByteArray) {
+    public init(data d: ByteArray) {
         var offset: Int = 0
         var b: Byte = 0
     
@@ -218,7 +218,7 @@ struct FormantFilterSettings: Codable {
         bands = FormantFilterBands()
     }
     
-    func asData() -> ByteArray {
+    public func asData() -> ByteArray {
         var data = ByteArray()
      
         data.append(Byte(bias + 64))

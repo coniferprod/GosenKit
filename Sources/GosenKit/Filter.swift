@@ -1,10 +1,10 @@
 import Foundation
 
-enum FilterModeType: String, Codable, CaseIterable {
+public enum FilterModeType: String, Codable, CaseIterable {
     case lowPass
     case highPass
     
-    init?(index: Int) {
+    public init?(index: Int) {
         switch index {
         case 0: self = .lowPass
         case 1: self = .highPass
@@ -13,7 +13,7 @@ enum FilterModeType: String, Codable, CaseIterable {
     }
 }
 
-struct FilterEnvelope: Codable {
+public struct FilterEnvelope: Codable {
     var attackTime: Int
     var decay1Time: Int
     var decay1Level: Int
@@ -28,7 +28,7 @@ struct FilterEnvelope: Codable {
     
     static let dataLength = 11
     
-    init() {
+    public init() {
         attackTime = 0
         decay1Time = 0
         decay1Level = 0
@@ -42,7 +42,7 @@ struct FilterEnvelope: Codable {
         velocityToDecay1 = 0
     }
     
-    init(data d: ByteArray) {
+    public init(data d: ByteArray) {
         var offset: Int = 0
         var b: Byte = 0
     
@@ -91,7 +91,7 @@ struct FilterEnvelope: Codable {
         offset += 1
     }
     
-    func asData() -> ByteArray {
+    public func asData() -> ByteArray {
         var data = ByteArray()
         
         data.append(Byte(attackTime))
@@ -111,7 +111,7 @@ struct FilterEnvelope: Codable {
 }
 
 extension FilterEnvelope: CustomStringConvertible {
-    var description: String {
+    public var description: String {
         var s = ""
         s += "attackTime=\(attackTime) decay1Time=\(decay1Time) decay1Level=\(decay1Level)\n"
         s += "decay2Time=\(decay2Time) decay2Level=\(decay2Level) releaseTime=\(releaseTime)\n"
@@ -121,21 +121,21 @@ extension FilterEnvelope: CustomStringConvertible {
     }
 }
 
-struct Filter: Codable {
-    var isActive: Bool
-    var cutoff: Int
-    var resonance: Int
-    var mode: FilterModeType
-    var velocityCurve: Int  // 1...12
-    var level: Int
-    var keyScalingToCutoff: Int
-    var velocityToCutoff: Int
-    var envelopeDepth: Int
-    var envelope: FilterEnvelope
+public struct Filter: Codable {
+    public var isActive: Bool
+    public var cutoff: Int
+    public var resonance: Int
+    public var mode: FilterModeType
+    public var velocityCurve: Int  // 1...12
+    public var level: Int
+    public var keyScalingToCutoff: Int
+    public var velocityToCutoff: Int
+    public var envelopeDepth: Int
+    public var envelope: FilterEnvelope
     
     static let dataLength = 20
     
-    init() {
+    public init() {
         isActive = false
         cutoff = 127
         resonance = 0
@@ -148,7 +148,7 @@ struct Filter: Codable {
         envelope = FilterEnvelope()
     }
     
-    init(data d: ByteArray) {
+    public init(data d: ByteArray) {
         var offset: Int = 0
         var b: Byte = 0
     
@@ -192,7 +192,7 @@ struct Filter: Codable {
         offset += FilterEnvelope.dataLength
     }
     
-    func asData() -> ByteArray {
+    public func asData() -> ByteArray {
         var data = ByteArray()
         
         data.append(isActive ? 0 : 1)  // note that we need to flip the values for the SysEx!
@@ -211,7 +211,7 @@ struct Filter: Codable {
 }
 
 extension Filter: CustomStringConvertible {
-    var description: String {
+    public var description: String {
         var s = ""
         s += "Active=" + (isActive ? "YES" : "NO") + " Mode=\(mode.rawValue)\n"
         s += "Cutoff=\(cutoff) Resonance=\(resonance) Level=\(level)\n"

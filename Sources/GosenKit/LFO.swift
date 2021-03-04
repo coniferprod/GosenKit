@@ -1,13 +1,13 @@
 import Foundation
 
-enum LFOWaveformType: String, Codable, CaseIterable {
+public enum LFOWaveformType: String, Codable, CaseIterable {
     case triangle
     case square
     case sawtooth
     case sine
     case random
     
-    init?(index: Int) {
+    public init?(index: Int) {
         switch index {
         case 0: self = .triangle
         case 1: self = .square
@@ -19,11 +19,11 @@ enum LFOWaveformType: String, Codable, CaseIterable {
     }
 }
 
-struct LFOControl: Codable {
-    var depth: Int
-    var keyScaling: Int
+public struct LFOControl: Codable {
+    public var depth: Int
+    public var keyScaling: Int
     
-    func asData() -> ByteArray {
+    public func asData() -> ByteArray {
         var data = ByteArray()
         
         data.append(Byte(depth))
@@ -33,20 +33,20 @@ struct LFOControl: Codable {
     }
 }
 
-struct LFO: Codable {
-    var waveform: LFOWaveformType
-    var speed: Int
-    var fadeInTime: Int
-    var fadeInToSpeed: Int
-    var delayOnset: Int
+public struct LFO: Codable {
+    public var waveform: LFOWaveformType
+    public var speed: Int
+    public var fadeInTime: Int
+    public var fadeInToSpeed: Int
+    public var delayOnset: Int
     
-    var vibrato: LFOControl
-    var growl: LFOControl
-    var tremolo: LFOControl
+    public var vibrato: LFOControl
+    public var growl: LFOControl
+    public var tremolo: LFOControl
     
     static let dataLength = 11
     
-    init() {
+    public init() {
         waveform = .square
         speed = 0
         fadeInTime = 0
@@ -58,7 +58,7 @@ struct LFO: Codable {
         tremolo = LFOControl(depth: 0, keyScaling: 0)
     }
     
-    init(data d: ByteArray) {
+    public init(data d: ByteArray) {
         //print("LFO data (\(d.count) bytes): \(d.hexDump)")
 
         var offset: Int = 0
@@ -115,7 +115,7 @@ struct LFO: Codable {
         tremolo = LFOControl(depth: tremoloDepth, keyScaling: tremoloKeyScaling)
     }
         
-    func asData() -> ByteArray {
+    public func asData() -> ByteArray {
         var data = ByteArray()
         
         data.append(Byte(waveform.index!))
