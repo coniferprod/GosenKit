@@ -1,3 +1,6 @@
 struct GosenKit {
-    var text = "Hello, World!"
+    var text = "GosenKit"
 }
+
+public typealias Byte = UInt8
+public typealias ByteArray = [Byte]

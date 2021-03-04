@@ -1,0 +1,190 @@
+import Foundation
+
+struct AdditiveKit: Codable {
+    static let harmonicCount = 64
+    static let dataLength = 806
+    
+    var common: HarmonicCommonSettings
+    var morf: MorfHarmonicSettings
+    var formantFilter: FormantFilterSettings
+    var levels: HarmonicLevels
+    var envelopes: [HarmonicEnvelope]
+    
+    init() {
+        common = HarmonicCommonSettings()
+        morf = MorfHarmonicSettings()
+        formantFilter = FormantFilterSettings()
+        levels = HarmonicLevels()
+        envelopes = [HarmonicEnvelope]()
+        for _ in 0..<AdditiveKit.harmonicCount {
+            envelopes.append(HarmonicEnvelope(segment0: HarmonicEnvelopeSegment(rate: 127, level: 63), segment1: HarmonicEnvelopeSegment(rate: 127, level: 63), segment2: HarmonicEnvelopeSegment(rate: 127, level: 63), segment3: HarmonicEnvelopeSegment(rate: 127, level: 63), loopType: .off))
+        }
+    }
+    
+    init(data d: ByteArray) {
+        var offset: Int = 0
+        var b: Byte = 0
+        
+        b = d[offset]
+        let originalChecksum = b
+        print("From SysEx, ADD kit checksum = \(String(originalChecksum, radix: 16))")
+        offset += 1
+        
+        common = HarmonicCommonSettings(data: ByteArray(d[offset ..< offset + HarmonicCommonSettings.dataLength]))
+        offset += HarmonicCommonSettings.dataLength
+        
+        morf = MorfHarmonicSettings(data: ByteArray(d[offset ..< offset + MorfHarmonicSettings.dataLength]))
+        offset += MorfHarmonicSettings.dataLength
+
+        formantFilter = FormantFilterSettings(data: ByteArray(d[offset ..< offset + FormantFilterSettings.dataLength]))
+        offset += FormantFilterSettings.dataLength
+        
+        levels = HarmonicLevels(data: ByteArray(d[offset ..< offset + HarmonicLevels.dataLength]))
+        offset += HarmonicLevels.dataLength
+        
+        let bands = FormantFilterBands(data: ByteArray(d[offset ..< offset + FormantFilterBands.dataLength]))
+        offset += FormantFilterBands.dataLength
+        formantFilter.bands = bands
+        //print("formant filter bands set to: \(bands)")
+        
+        envelopes = [HarmonicEnvelope]()
+        var envelopeBytes = ByteArray()
+        for i in 0 ..< AdditiveKit.harmonicCount {
+            let envelopeData = ByteArray(d[offset ..< offset + HarmonicEnvelope.dataLength])
+            let envelope = HarmonicEnvelope(data: envelopeData)
+            envelopeBytes.append(contentsOf: envelopeData)
+            envelopes.append(envelope)
+            offset += HarmonicEnvelope.dataLength
+        }
+        
+        //print("> HARM ENV = \(Data(envelopeBytes).hexDump)")
+
+    }
+    
+    func asData() -> ByteArray {
+        var data = ByteArray()
+        
+        data.append(checksum)
+        
+        data.append(contentsOf: common.asData())
+        data.append(contentsOf: morf.asData())
+        data.append(contentsOf: formantFilter.asData())  // does not include the bands!
+        data.append(contentsOf: levels.asData())
+        data.append(contentsOf: formantFilter.bands.asData())
+        
+        var envelopeBytes = ByteArray()
+        for env in envelopes {
+            let ed = env.asData()
+            for e in ed {
+                data.append(Byte(e))
+                envelopeBytes.append(e)
+            }
+        }
+        
+        //print("< HARM ENV = \(Data(envelopeBytes).hexDump)")
+        
+        data.append(0)  // "loud sens" select WTF?
+
+        //print("harmonics.asData is \(data.count) bytes, should be 806 bytes")
+        return data
+    }
+    
+    // Additive kit checksum:
+    // {(HCKIT sum) + (HCcode1 sum) + (HCcode2 sum) + (FF sum) + (HCenv sum) + (loud sense select) + 0xA5} & 0x7F
+    var checksum: Byte {
+        var totalSum: Int = 0
+        var byteCount = 0
+        
+        // HCKIT sum:
+        let commonData = common.asData()
+        var commonSum: Int = 0
+        for d in commonData {
+            commonSum += Int(d) & 0xFF
+            byteCount += 1
+        }
+        let morfData = morf.asData()
+        for d in morfData {
+            commonSum += Int(d) & 0xFF
+            byteCount += 1
+        }
+        let formantData = formantFilter.asData()
+        for d in formantData {
+            commonSum += Int(d) & 0xFF
+            byteCount += 1
+        }
+        //print("checksum: added common data (\(commonData.count) bytes), MORF data (\(morfData.count) bytes) and formant data (\(formantData.count) bytes), total = \(byteCount)")
+        //print("checksum: common sum = \(commonSum)")
+        totalSum += commonSum & 0xFF
+        
+        // HCcode1 sum:
+        var hc1Sum = 0
+        for h in levels.soft {
+            hc1Sum += h & 0xFF
+            byteCount += 1
+        }
+        totalSum += hc1Sum & 0xFF
+        //print("checksum: added soft harmonic data (\(levels.soft.count) bytes), total = \(byteCount)")
+
+        // HCcode2 sum:
+        var hc2Sum = 0
+        for h in levels.loud {
+            hc2Sum += h & 0xFF
+            byteCount += 1
+        }
+        totalSum += hc2Sum & 0xFF
+        //print("checksum: added loud harmonic data (\(levels.loud.count) bytes), total = \(byteCount)")
+
+        // FF sum:
+        var ffSum = 0
+        for f in formantFilter.bands.levels {
+            ffSum += f & 0xFF
+            byteCount += 1
+        }
+        totalSum += ffSum & 0xFF
+        //print("checksum: added formant filter data (\(formantFilter.bands.levels.count) bytes), total = \(byteCount)")
+
+        // HCenv sum:
+        var hcEnvSum = 0
+        var envByteCount = 0
+        for env in envelopes {
+            let ed = env.asData()
+            for e in ed {
+                hcEnvSum += Int(e) & 0xFF
+                byteCount += 1
+                envByteCount += 1
+            }
+        }
+        //print("checksum: added harmonic envelope data (\(envByteCount) bytes), total = \(byteCount)")
+
+        totalSum += hcEnvSum & 0xFF
+
+        // TODO: figure out the "loud sens select"
+        
+        totalSum += 0xA5
+        byteCount += 1
+        //print("checksum: added 0xA5, total = \(byteCount)")
+        
+        let result = Byte(totalSum & 0x7F)
+        print("checksum: byteCount = \(byteCount), result = 0x\(String(result, radix: 16))")
+
+        return result
+    }
+    
+}
+
+extension AdditiveKit: CustomStringConvertible {
+    var description: String {
+        var s = ""
+        s += "Common: \(common)\n"
+        s += "MORF: \(morf)\n"
+        s += "Formant filter: \(formantFilter)\n"
+        s += "Harmonic levels: \(levels)\n"
+        
+        s += "Harmonic envelopes:\n"
+        for (index, e) in envelopes.enumerated() {
+            s += "\(index + 1): \(e)\n"
+        }
+        
+        return s
+    }
+}
