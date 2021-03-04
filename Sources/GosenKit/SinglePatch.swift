@@ -382,7 +382,7 @@ extension SingleCommon: CustomStringConvertible {
 // Additive kits keyed by source ("s1": ... etc.)
 typealias AdditiveKitDictionary = [String: AdditiveKit]
 
-struct SinglePatch: Codable {
+public struct SinglePatch: Codable {
     var common: SingleCommon
     var sources: [Source]
     var additiveKits: AdditiveKitDictionary
@@ -500,7 +500,7 @@ struct SinglePatch: Codable {
 }
 
 extension SinglePatch: CustomStringConvertible {
-    var description: String {
+    public var description: String {
         var s = ""
         
         s += "\(common)\n"
