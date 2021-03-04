@@ -389,7 +389,7 @@ public struct SinglePatch: Codable {
     
     static let maxSourceCount = 6
     
-    init() {
+    public init() {
         common = SingleCommon()
         sources = [Source]()
         sources.append(Source())
@@ -400,7 +400,7 @@ public struct SinglePatch: Codable {
     }
     
     /// Initializes a single patch from system exclusive data.
-    init(data d: ByteArray) {
+    public init(data d: ByteArray) {
         var offset: Int = 0
         var b: Byte = 0
         
@@ -429,7 +429,7 @@ public struct SinglePatch: Codable {
         print("Got \(additiveKits.count) ADD kits")
     }
     
-    func asData() -> ByteArray {
+    public func asData() -> ByteArray {
         var data = ByteArray()
         
         print("SINGLE PATCH DATA:")
