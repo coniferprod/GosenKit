@@ -79,7 +79,7 @@ public struct SingleCommon: Codable {
     }
     
     /// Initializes a single patch from system exclusive data.
-    init(data d: ByteArray) {
+    public init(data d: ByteArray) {
         var offset: Int = 0
         var b: Byte = 0
         
@@ -383,9 +383,9 @@ extension SingleCommon: CustomStringConvertible {
 typealias AdditiveKitDictionary = [String: AdditiveKit]
 
 public struct SinglePatch: Codable {
-    var common: SingleCommon
-    var sources: [Source]
-    var additiveKits: AdditiveKitDictionary
+    public var common: SingleCommon
+    public var sources: [Source]
+    private var additiveKits: AdditiveKitDictionary
     
     static let maxSourceCount = 6
     
