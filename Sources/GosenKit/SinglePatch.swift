@@ -36,6 +36,7 @@ public enum AmplitudeModulationType: String, Codable, CaseIterable {
     }
 }
 
+/// The common settings for a single patch.
 public struct SingleCommon: Codable {
     public var name: String
     public var volume: Int
@@ -58,6 +59,7 @@ public struct SingleCommon: Codable {
     
     static let dataSize = 82
     
+    /// Initializes the common part with default values.
     public init() {
         name = "NewSound"
         volume = 115
@@ -78,7 +80,8 @@ public struct SingleCommon: Codable {
         effectControl = EffectControlSettings()
     }
     
-    /// Initializes a single patch from system exclusive data.
+    /// Initializes the common part of a single patch from MIDI System Exclusive data.
+    /// - Parameter d: A byte array with the System Exclusive data.
     public init(data d: ByteArray) {
         var offset: Int = 0
         var b: Byte = 0
@@ -86,7 +89,7 @@ public struct SingleCommon: Codable {
         let checksum = d[offset]
         offset += 1
         
-        print("Original checksum = \(String(checksum, radix: 16))")
+        //print("Original checksum = \(String(checksum, radix: 16))")
         
         effects = EffectSettings(data: ByteArray(d[offset ..< offset + EffectSettings.dataLength]))
         offset += EffectSettings.dataLength
@@ -103,7 +106,7 @@ public struct SingleCommon: Codable {
         // Eat the drum mark (39)
         offset += 1
         
-        print("Start name, offset = \(offset)")
+        //print("Start name, offset = \(offset)")
 
         name = String(data: Data(d[offset ..< offset + SingleCommon.nameLength]), encoding: .ascii) ?? "--------"
         offset += SingleCommon.nameLength
@@ -122,7 +125,7 @@ public struct SingleCommon: Codable {
         sourceCount = Int(b)
         offset += 1
         
-        print("Start source mutes, offset = \(offset)")
+        //print("Start source mutes, offset = \(offset)")
 
         b = d[offset]
         // Unpack the source mutes into a Bool array. Spec says "0:mute".
@@ -150,7 +153,7 @@ public struct SingleCommon: Codable {
         portamentoSpeed = Int(b)
         offset += 1
 
-        print("Start macros, offset = \(offset)")
+        //print("Start macros, offset = \(offset)")
         
         var macroDestinations = [Int]()
         
@@ -250,7 +253,7 @@ public struct SingleCommon: Codable {
             depth2: macroDepths[7])
         macros.append(macro4)
         
-        print("Start switches, offset = \(offset)")
+        //print("Start switches, offset = \(offset)")
         
         b = d[offset]
         let sw1t = SwitchType(index: Int(b))!
@@ -271,6 +274,8 @@ public struct SingleCommon: Codable {
         switches = SwitchControl(switch1: sw1t, switch2: sw2t, footSwitch1: fsw1t, footSwitch2: fsw2t)
     }
     
+    /// Gets the common part as MIDI System Exclusive data.
+    /// - Returns: A byte array with the common part data.
     func asData() -> ByteArray {
         var data = ByteArray()
         
@@ -380,15 +385,17 @@ extension SingleCommon: CustomStringConvertible {
 }
 
 // Additive kits keyed by source ("s1": ... etc.)
-typealias AdditiveKitDictionary = [String: AdditiveKit]
+public typealias AdditiveKitDictionary = [String: AdditiveKit]
 
+/// A Kawai K5000 single patch.
 public struct SinglePatch: Codable {
     public var common: SingleCommon
     public var sources: [Source]
-    private var additiveKits: AdditiveKitDictionary
+    public var additiveKits: AdditiveKitDictionary
     
     static let maxSourceCount = 6
-    
+
+    /// Initializes a single patch.
     public init() {
         common = SingleCommon()
         sources = [Source]()
@@ -399,10 +406,10 @@ public struct SinglePatch: Codable {
         additiveKits = AdditiveKitDictionary()
     }
     
-    /// Initializes a single patch from system exclusive data.
+    /// Initializes a single patch from MIDI System Exclusive data.
+    /// - Parameter d: A byte array with the System Exclusive data.
     public init(data d: ByteArray) {
         var offset: Int = 0
-        var b: Byte = 0
         
         common = SingleCommon(data: d)
         offset += SingleCommon.dataSize
@@ -426,25 +433,23 @@ public struct SinglePatch: Codable {
             offset += AdditiveKit.dataLength
         }
         
-        print("Got \(additiveKits.count) ADD kits")
+        //print("Got \(additiveKits.count) ADD kits")
     }
     
+    /// Gets the single patch as MIDI System Exclusive data.
+    /// Collects and arranges the data for the various components of the patch.
+    /// - Returns: A byte array with the patch data, without the System Exclusive header.
     public func asData() -> ByteArray {
         var data = ByteArray()
         
-        print("SINGLE PATCH DATA:")
         data.append(checksum)
-        print("checksum = 0x\(String(checksum, radix: 16))")
+
         let commonData = common.asData()
         data.append(contentsOf: commonData)
-        print("single patch: common: \(commonData.count) bytes")
-        print(Data(commonData).hexDump)
 
-        for (index, source) in sources.enumerated() {
+        for (_, source) in sources.enumerated() {
             let sourceData = source.asData()
             data.append(contentsOf: sourceData)
-            print("single patch: source \(index + 1): \(sourceData.count) bytes")
-            print(Data(sourceData).hexDump)
         }
         
         // Sort the additive kits by source
@@ -452,15 +457,14 @@ public struct SinglePatch: Codable {
         
         for kit in sortedKits {
             let kitData = kit.1.asData()
-            print("single patch: ADD kit for \(kit.0.uppercased()): \(kitData.count) bytes")
-            print(Data(kitData).hexDump)
             data.append(contentsOf: kitData)
         }
         
         return data
     }
     
-    var checksum: Byte {
+    /// Computes the checksum for this patch.
+    public var checksum: Byte {
         // Bank A,D,E,F: check sum = {(common sum) + (source1 sum) [+ (source2~6 sum)] + 0xa5} & 0x7f
         
         var totalSum: Int = 0
@@ -476,7 +480,7 @@ public struct SinglePatch: Codable {
         
         totalSum += commonSum & 0xff
         
-        for (index, source) in sources.enumerated() {
+        for (_, source) in sources.enumerated() {
             var sourceSum: Int = 0
             let sourceData = source.asData()
             for d in sourceData {
@@ -493,13 +497,16 @@ public struct SinglePatch: Codable {
         //print("checksum: final total sum = \(totalSum)")
         
         let result = Byte(totalSum & 0x7F)
-        print("checksum: result = 0x\(String(result, radix: 16))")
+        //print("checksum: result = 0x\(String(result, radix: 16))")
 
         return result
     }
 }
 
+// MARK: - CustomStringConvertible
+
 extension SinglePatch: CustomStringConvertible {
+    /// Provides a printable description for this patch.
     public var description: String {
         var s = ""
         

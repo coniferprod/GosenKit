@@ -1,13 +1,13 @@
 import Foundation
 
 extension CaseIterable where Self: Equatable {
-    var index: Self.AllCases.Index? {
+    public var index: Self.AllCases.Index? {
         return Self.allCases.firstIndex { self == $0 }
     }
 }
 
 extension String {
-    func pad(with character: String, toLength length: Int) -> String {
+    public func pad(with character: String, toLength length: Int) -> String {
         let padCount = length - self.count
         guard padCount > 0 else {
             return self
@@ -32,23 +32,34 @@ extension Byte {
 }
 
 extension Byte {
-    func toBinary() -> String {
+    public func toBinary() -> String {
         return String(self, radix: 2)
     }
     
-    func toHex(digits: Int = 2) -> String {
+    public func toHex(digits: Int = 2) -> String {
         return String(format: "%0\(digits)x", self)
     }
 }
 
+extension ByteArray {
+    public var hexDump: String {
+        var s = ""
+        for d in self {
+            s += d.toHex(digits: 2)
+            s += " "
+        }
+        return s
+    }
+}
+
 extension Data {
-    var bytes: ByteArray {
+    public var bytes: ByteArray {
         var byteArray = ByteArray(repeating: 0, count: self.count)
         self.copyBytes(to: &byteArray, count: self.count)
         return byteArray
     }
     
-    var hexDump: String {
+    public var hexDump: String {
         var s = ""
         for d in self {
             s += d.toHex(digits: 2)

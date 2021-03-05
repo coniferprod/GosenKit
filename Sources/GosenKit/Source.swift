@@ -213,9 +213,6 @@ public struct Source: Codable {
         print("SOURCE: Start LFO, offset = \(offset)")
         lfo = LFO(data: ByteArray(d[offset ..< offset + LFO.dataLength]))
         offset += LFO.dataLength
-        
-        // Don't emit the harmonics here; all the additive kits come after the tone data
-        //harmonics = HarmonicSettings(fromSystemExclusive: d.suffix(from: offset))
     }
 
     public func asData() -> ByteArray {
@@ -227,9 +224,6 @@ public struct Source: Codable {
         data.append(contentsOf: amplifier.asData())
         data.append(contentsOf: lfo.asData())
 
-        //data.append(contentsOf: harmonics.asData())  // includes checksum
-        //data.append(0) // dummy
-        
         return data
     }
 }

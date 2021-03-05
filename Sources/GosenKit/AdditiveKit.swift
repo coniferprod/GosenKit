@@ -1,7 +1,7 @@
 import Foundation
 
 public struct AdditiveKit: Codable {
-    static let harmonicCount = 64
+    public static let harmonicCount = 64
     static let dataLength = 806
     
     public var common: HarmonicCommonSettings
@@ -27,7 +27,7 @@ public struct AdditiveKit: Codable {
         
         b = d[offset]
         let originalChecksum = b
-        print("From SysEx, ADD kit checksum = \(String(originalChecksum, radix: 16))")
+        //print("From SysEx, ADD kit checksum = \(String(originalChecksum, radix: 16))")
         offset += 1
         
         common = HarmonicCommonSettings(data: ByteArray(d[offset ..< offset + HarmonicCommonSettings.dataLength]))
@@ -49,16 +49,13 @@ public struct AdditiveKit: Codable {
         
         envelopes = [HarmonicEnvelope]()
         var envelopeBytes = ByteArray()
-        for i in 0 ..< AdditiveKit.harmonicCount {
+        for _ in 0 ..< AdditiveKit.harmonicCount {
             let envelopeData = ByteArray(d[offset ..< offset + HarmonicEnvelope.dataLength])
             let envelope = HarmonicEnvelope(data: envelopeData)
             envelopeBytes.append(contentsOf: envelopeData)
             envelopes.append(envelope)
             offset += HarmonicEnvelope.dataLength
         }
-        
-        //print("> HARM ENV = \(Data(envelopeBytes).hexDump)")
-
     }
     
     public func asData() -> ByteArray {

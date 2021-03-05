@@ -9,6 +9,7 @@ final class GosenKitTests: XCTestCase {
     func testKeyNumber() {
         XCTAssertEqual(keyNumber(for: "C4"), 60)
     }
+    
 
     static var allTests = [
         ("testNoteName", testNoteName),

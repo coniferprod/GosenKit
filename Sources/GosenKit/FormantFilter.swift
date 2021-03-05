@@ -136,7 +136,7 @@ public enum FormantFilterMode: String, Codable, CaseIterable {
 }
 
 public struct FormantFilterBands: Codable {
-    var levels: [Int]  // all 0~127
+    public var levels: [Int]  // all 0~127
 
     static let bandCount = 128
     static let dataLength = 128

@@ -1,6 +1,7 @@
 import Foundation
 
 public struct AmplifierEnvelope: Codable {
+    // All values are 0...127
     public var attackTime: Int
     public var decay1Time: Int
     public var decay1Level: Int
@@ -73,9 +74,8 @@ public struct AmplifierEnvelope: Codable {
     }
 }
 
-let organAmplifierEnvelope = AmplifierEnvelope(attackTime: 0, decay1Time: 0, decay1Level: 127, decay2Time: 0, decay2Level: 127, releaseTime: 0)
-
 public struct AmplifierKeyScalingControl: Codable {
+    // All values are -63...+63
     public var level: Int
     public var attackTime: Int
     public var decay1Time: Int
@@ -88,6 +88,13 @@ public struct AmplifierKeyScalingControl: Codable {
         attackTime = 0
         decay1Time = 0
         release = 0
+    }
+    
+    public init(level: Int, attackTime: Int, decay1Time: Int, release: Int) {
+        self.level = level
+        self.attackTime = attackTime
+        self.decay1Time = decay1Time
+        self.release = release
     }
     
     public init(data d: ByteArray) {
@@ -125,8 +132,9 @@ public struct AmplifierKeyScalingControl: Codable {
     }
 }
 
-// Almost the same as AmplifierKeyScalingControl, but level is positive only (0...63)
 public struct AmplifierVelocityControl: Codable {
+    // Almost the same as AmplifierKeyScalingControl, but level is positive only (0...63),
+    // others are -63...+63.
     public var level: Int
     public var attackTime: Int
     public var decay1Time: Int
@@ -139,6 +147,13 @@ public struct AmplifierVelocityControl: Codable {
         attackTime = 0
         decay1Time = 0
         release = 0
+    }
+    
+    public init(level: Int, attackTime: Int, decay1Time: Int, release: Int) {
+        self.level = level
+        self.attackTime = attackTime
+        self.decay1Time = decay1Time
+        self.release = release
     }
     
     public init(data d: ByteArray) {
@@ -231,11 +246,11 @@ public struct Amplifier: Codable {
         velocityCurve = Int(b) + 1  // 0~11 to 1~12
         offset += 1
         
-        print("Start amplifier envelope, offset = \(offset)")
+        //print("Start amplifier envelope, offset = \(offset)")
         envelope = AmplifierEnvelope(data: ByteArray(d[offset ..< offset + AmplifierEnvelope.dataLength]))
         offset += AmplifierEnvelope.dataLength
         
-        print("Start amplifier envelope modulation, offset = \(offset)")
+        //print("Start amplifier envelope modulation, offset = \(offset)")
         modulation = AmplifierModulationSettings(data: ByteArray(d[offset ..< offset + AmplifierModulationSettings.dataLength]))
     }
 
