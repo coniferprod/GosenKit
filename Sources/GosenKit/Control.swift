@@ -50,21 +50,21 @@ public enum ControlDestination: String, Codable, CaseIterable {
 }
 
 public struct MacroController: Codable {
-    var destination1: ControlDestination
-    var depth1: Int  // -31~+31
-    var destination2: ControlDestination
-    var depth2: Int // -31~+31
+    public var destination1: ControlDestination
+    public var depth1: Int  // -31~+31
+    public var destination2: ControlDestination
+    public var depth2: Int // -31~+31
     
     static let dataLength = 4
     
-    init() {
+    public init() {
         destination1 = .cutoffOffset
         depth1 = 0
         destination2 = .cutoffOffset
         depth2 = 0
     }
     
-    init(
+    public init(
         destination1: ControlDestination,
         depth1: Int,
         destination2: ControlDestination,
@@ -75,7 +75,7 @@ public struct MacroController: Codable {
         self.depth2 = depth2
     }
     
-    init(data d: ByteArray) {
+    public init(data d: ByteArray) {
         var offset: Int = 0
         var b: Byte = 0
         
@@ -98,7 +98,7 @@ public struct MacroController: Codable {
         offset += 1
     }
     
-    func asData() -> ByteArray {
+    public func asData() -> ByteArray {
         var data = ByteArray()
      
         data.append(Byte(destination1.index!))
@@ -163,12 +163,12 @@ public enum SwitchType: String, Codable, CaseIterable {
 }
 
 public struct SwitchControl: Codable {
-    var switch1: SwitchType
-    var switch2: SwitchType
-    var footSwitch1: SwitchType
-    var footSwitch2: SwitchType
+    public var switch1: SwitchType
+    public var switch2: SwitchType
+    public var footSwitch1: SwitchType
+    public var footSwitch2: SwitchType
     
-    func asData() -> ByteArray {
+    public func asData() -> ByteArray {
         var data = ByteArray()
      
         data.append(Byte(switch1.index!))
@@ -247,19 +247,19 @@ public enum EffectDestinationType: String, Codable, CaseIterable {
 }
 
 public struct EffectControlSourceSettings: Codable {
-    var sourceType: ControlSource
-    var destinationType: EffectDestinationType
-    var depth: Int
+    public var sourceType: ControlSource
+    public var destinationType: EffectDestinationType
+    public var depth: Int
     
     static let dataLength = 3
     
-    init() {
+    public init() {
         sourceType = .bender
         destinationType = .reverbDryWet1
         depth = 0
     }
     
-    init(data d: ByteArray) {
+    public init(data d: ByteArray) {
         var offset: Int = 0
         var b: Byte = 0
     
@@ -275,7 +275,7 @@ public struct EffectControlSourceSettings: Codable {
         depth = Int(b) - 64
     }
     
-    func asData() -> ByteArray {
+    public func asData() -> ByteArray {
         var data = ByteArray()
      
         data.append(Byte(sourceType.index!))
@@ -295,17 +295,17 @@ extension EffectControlSourceSettings: CustomStringConvertible {
 }
 
 public struct EffectControlSettings: Codable {
-    var source1: EffectControlSourceSettings
-    var source2: EffectControlSourceSettings
+    public var source1: EffectControlSourceSettings
+    public var source2: EffectControlSourceSettings
     
     static let dataLength = 6
     
-    init() {
+    public init() {
         source1 = EffectControlSourceSettings()
         source2 = EffectControlSourceSettings()
     }
     
-    init(data d: ByteArray) {
+    public init(data d: ByteArray) {
         var offset: Int = 0
     
         source1 = EffectControlSourceSettings(data: ByteArray(d[offset ..< offset + EffectControlSourceSettings.dataLength]))
@@ -313,7 +313,7 @@ public struct EffectControlSettings: Codable {
         source2 = EffectControlSourceSettings(data: ByteArray(d[offset ..< offset + EffectControlSourceSettings.dataLength]))
     }
     
-    func asData() -> ByteArray {
+    public func asData() -> ByteArray {
         var data = ByteArray()
     
         data.append(contentsOf: source1.asData())
@@ -333,19 +333,19 @@ extension EffectControlSettings: CustomStringConvertible {
 }
 
 public struct AssignableController: Codable {
-    var sourceType: ControlSource
-    var destination: ControlDestination
-    var depth: Int
+    public var sourceType: ControlSource
+    public var destination: ControlDestination
+    public var depth: Int
     
     static let dataLength = 3
     
-    init() {
+    public init() {
         sourceType = .bender
         destination = .cutoffOffset
         depth = 0
     }
     
-    init(data d: ByteArray) {
+    public init(data d: ByteArray) {
         var offset: Int = 0
         var b: Byte = 0
         
@@ -362,7 +362,7 @@ public struct AssignableController: Codable {
         offset += 1
     }
     
-    func asData() -> ByteArray {
+    public func asData() -> ByteArray {
         var data = ByteArray()
 
         data.append(Byte(sourceType.index!))
@@ -382,15 +382,15 @@ extension AssignableController: CustomStringConvertible {
 }
 
 public struct ModulationSettings: Codable {
-    var pressure: MacroController
-    var wheel: MacroController
-    var expression: MacroController
-    var assignable1: AssignableController
-    var assignable2: AssignableController
+    public var pressure: MacroController
+    public var wheel: MacroController
+    public var expression: MacroController
+    public var assignable1: AssignableController
+    public var assignable2: AssignableController
     
     static let dataLength = 18
     
-    init() {
+    public init() {
         pressure = MacroController()
         wheel = MacroController()
         expression = MacroController()
@@ -398,7 +398,7 @@ public struct ModulationSettings: Codable {
         assignable2 = AssignableController()
     }
     
-    init(data d: ByteArray) {
+    public init(data d: ByteArray) {
         var offset: Int = 0
 
         let pressureData = d[offset ..< offset + MacroController.dataLength]
@@ -422,7 +422,7 @@ public struct ModulationSettings: Codable {
         offset += AssignableController.dataLength
     }
     
-    func asData() -> ByteArray {
+    public func asData() -> ByteArray {
         var data = ByteArray()
         
         data.append(contentsOf: pressure.asData())
@@ -461,17 +461,17 @@ public enum PanType: String, Codable, CaseIterable {
 }
 
 public struct PanSettings: Codable {
-    var panType: PanType
-    var panValue: Int
+    public var panType: PanType
+    public var panValue: Int
     
     static let dataLength = 2
     
-    init(panType: PanType, panValue: Int) {
+    public init(panType: PanType, panValue: Int) {
         self.panType = panType
         self.panValue = panValue        
     }
     
-    init(data d: ByteArray) {
+    public init(data d: ByteArray) {
         var offset: Int = 0
         var b: Byte = 0
         
@@ -483,7 +483,7 @@ public struct PanSettings: Codable {
         panValue = Int(b) - 64
     }
 
-    func asData() -> ByteArray {
+    public func asData() -> ByteArray {
         var data = ByteArray()
         
         data.append(Byte(panType.index!))
