@@ -168,6 +168,20 @@ public struct SwitchControl: Codable {
     public var footSwitch1: SwitchType
     public var footSwitch2: SwitchType
     
+    public init() {
+        switch1 = .off
+        switch2 = .off
+        footSwitch1 = .off
+        footSwitch2 = .off
+    }
+    
+    public init(switch1: SwitchType, switch2: SwitchType, footSwitch1: SwitchType, footSwitch2: SwitchType) {
+        self.switch1 = switch1
+        self.switch2 = switch2
+        self.footSwitch1 = footSwitch1
+        self.footSwitch2 = footSwitch2
+    }
+    
     public func asData() -> ByteArray {
         var data = ByteArray()
      
