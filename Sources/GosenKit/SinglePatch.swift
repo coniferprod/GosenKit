@@ -463,6 +463,37 @@ public struct SinglePatch: Codable {
         return data
     }
     
+    public func asSystemExclusiveMessage(channel: Byte, bank: String) -> ByteArray {
+        var data = ByteArray()
+        
+        var header = SystemExclusiveHeader(
+            manufacturerIdentifier: 0x40,
+            channel: channel,
+            function: SystemExclusiveFunction.oneBlockDump.rawValue,
+            group: 0x00,
+            machineIdentifier: 0x0a,
+            substatus1: 0x00, substatus2: 0x00)
+
+        switch bank {
+        case "a":
+            header.substatus2 = 0x00
+        case "d":
+            header.substatus2 = 0x02
+        case "e":
+            header.substatus2 = 0x03
+        case "f":
+            header.substatus2 = 0x04
+        default:
+            header.substatus2 = 0x00
+        }
+
+        data.append(contentsOf: header.asData())
+        data.append(contentsOf: self.asData())
+        data.append(SystemExclusiveHeader.terminator)
+        
+        return data
+    }
+    
     /// Computes the checksum for this patch.
     public var checksum: Byte {
         // Bank A,D,E,F: check sum = {(common sum) + (source1 sum) [+ (source2~6 sum)] + 0xa5} & 0x7f

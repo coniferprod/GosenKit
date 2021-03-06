@@ -105,6 +105,63 @@ public enum EffectType: String, Codable, CaseIterable {
     }
 }
 
+public struct EffectName {
+    public var name: String
+    public var parameterNames: [String]
+}
+
+public var effectNames = [EffectName]([
+    /*  0 */ EffectName(name: "Hall 1", parameterNames: ["Dry/Wet 2", "Reverb Time", "Predelay Time", "High Frequency Damping"]),
+    /*  1 */ EffectName(name: "Hall 2", parameterNames: ["Dry/Wet 2", "Reverb Time", "Predelay Time", "High Frequency Damping"]),
+    /*  2 */ EffectName(name: "Hall 3", parameterNames: ["Dry/Wet 2", "Reverb Time", "Predelay Time", "High Frequency Damping"]),
+    /*  3 */ EffectName(name: "Room 1", parameterNames: ["Dry/Wet 2", "Reverb Time", "Predelay Time", "High Frequency Damping"]),
+    /*  4 */ EffectName(name: "Room 2", parameterNames: ["Dry/Wet 2", "Reverb Time", "Predelay Time", "High Frequency Damping"]),
+    /*  5 */ EffectName(name: "Room 3", parameterNames: ["Dry/Wet 2", "Reverb Time", "Predelay Time", "High Frequency Damping"]),
+    /*  6 */ EffectName(name: "Plate 1", parameterNames: ["Dry/Wet 2", "Reverb Time", "Predelay Time", "High Frequency Damping"]),
+    /*  7 */ EffectName(name: "Plate 2", parameterNames: ["Dry/Wet 2", "Reverb Time", "Predelay Time", "High Frequency Damping"]),
+    /*  8 */ EffectName(name: "Plate 3", parameterNames: ["Dry/Wet 2", "Reverb Time", "Predelay Time", "High Frequency Damping"]),
+    /*  9 */ EffectName(name: "Reverse", parameterNames: ["Dry/Wet 2", "Feedback", "Predelay Time", "High Frequency Damping"]),
+    /* 10 */ EffectName(name: "Long Delay", parameterNames: ["Dry/Wet 2", "Feedback", "Delay Time", "High Frequency Damping"]),
+    /* 11 */ EffectName(name: "Early Reflection 1", parameterNames: ["Slope", "Predelay Time", "Feedback", "?"]),
+    /* 12 */ EffectName(name: "Early Reflection 2", parameterNames: ["Slope", "Predelay Time", "Feedback", "?"]),
+    /* 13 */ EffectName(name: "Tap Delay 1", parameterNames: ["Delay Time 1", "Tap Level", "Delay Time 2", "?"]),
+    /* 14 */ EffectName(name: "Tap Delay 2", parameterNames: ["Delay Time 1", "Tap Level", "Delay Time 2", "?"]),
+    /* 15 */ EffectName(name: "Single Delay", parameterNames: ["Delay Time Fine", "Delay Time Coarse", "Feedback", "?"]),
+    /* 16 */ EffectName(name: "Dual Delay", parameterNames: ["Delay Time Left", "Feedback Left", "Delay Time Right", "Feedback Right"]),
+    /* 17 */ EffectName(name: "Stereo Delay", parameterNames: ["Delay Time", "Feedback", "?", "?"]),
+    /* 18 */ EffectName(name: "Cross Delay", parameterNames: ["Delay Time", "Feedback", "?", "?"]),
+    /* 19 */ EffectName(name: "Auto Pan", parameterNames: ["Speed", "Depth", "Predelay Time", "Wave"]),
+    /* 20 */ EffectName(name: "Auto Pan & Delay", parameterNames: ["Speed", "Depth", "Delay Time", "Wave"]),
+    /* 21 */ EffectName(name: "Chorus 1", parameterNames: ["Speed", "Depth", "Predelay Time", "Wave"]),
+    /* 22 */ EffectName(name: "Chorus 2", parameterNames: ["Speed", "Depth", "Predelay Time", "Wave"]),
+    /* 23 */ EffectName(name: "Chorus 1 & Delay", parameterNames: ["Speed", "Depth", "Delay Time", "Wave"]),
+    /* 24 */ EffectName(name: "Chorus 2 & Delay", parameterNames: ["Speed", "Depth", "Delay Time", "Wave"]),
+    /* 25 */ EffectName(name: "Flanger 1", parameterNames: ["Speed", "Depth", "Predelay Time", "Feedback"]),
+    /* 26 */ EffectName(name: "Flanger 2", parameterNames: ["Speed", "Depth", "Predelay Time", "Feedback"]),
+    /* 27 */ EffectName(name: "Flanger 1 & Delay", parameterNames: ["Speed", "Depth", "Delay Time", "Feedback"]),
+    /* 28 */ EffectName(name: "Flanger 2 & Delay", parameterNames: ["Speed", "Depth", "Delay Time", "Feedback"]),
+    /* 29 */ EffectName(name: "Ensemble", parameterNames: ["Depth", "Predelay Time", "?", "?"]),
+    /* 30 */ EffectName(name: "Ensemble & Delay", parameterNames: ["Depth", "Delay Time", "?", "?"]),
+    /* 31 */ EffectName(name: "Celeste", parameterNames: ["Speed", "Depth", "Predelay Time", "?"]),
+    /* 32 */ EffectName(name: "Celeste & Delay", parameterNames: [ "Speed", "Depth", "Delay Time", "?"]),
+    /* 33 */ EffectName(name: "Tremolo", parameterNames: [ "Speed", "Depth", "Predelay Time", "Wave"]),
+    /* 34 */ EffectName(name: "Tremolo & Delay", parameterNames: [ "Speed", "Depth", "Delay Time", "Wave"]),
+    /* 35 */ EffectName(name: "Phaser 1", parameterNames: ["Speed", "Depth", "Predelay Time", "Feedback"]),
+    /* 36 */ EffectName(name: "Phaser 2", parameterNames: ["Speed", "Depth", "Predelay Time", "Feedback"]),
+    /* 37 */ EffectName(name: "Phaser 1 & Delay", parameterNames: ["Speed", "Depth", "Delay Time", "Feedback"]),
+    /* 38 */ EffectName(name: "Phaser 2 & Delay", parameterNames: ["Speed", "Depth", "Delay Time", "Feedback"]),
+    /* 39 */ EffectName(name: "Rotary", parameterNames: ["Slow Speed", "Fast Speed", "Acceleration", "Slow/Fast Switch"]),
+    /* 40 */ EffectName(name: "Auto Wah", parameterNames: ["Sense", "Frequency Bottom", "Frequency Top", "Resonance"]),
+    /* 41 */ EffectName(name: "Bandpass", parameterNames: ["Center Frequency", "Bandwidth", "?", "?"]),
+    /* 42 */ EffectName(name: "Exciter", parameterNames: ["EQ Low", "EQ High", "Intensity", "?"]),
+    /* 43 */ EffectName(name: "Enhancer", parameterNames: ["EQ Low", "EQ High", "Intensity", "?"]),
+    /* 44 */ EffectName(name: "Overdrive", parameterNames: ["EQ Low", "EQ High", "Output Level", "Drive"]),
+    /* 45 */ EffectName(name: "Distortion", parameterNames: ["EQ Low", "EQ High", "Output Level", "Drive"]),
+    /* 46 */ EffectName(name: "Overdrive & Delay", parameterNames: ["EQ Low", "EQ High", "Delay Time", "Drive"]),
+    /* 47 */ EffectName(name: "Distortion & Delay", parameterNames: ["EQ Low", "EQ High", "Delay Time", "Drive"]),
+])
+
+// Create an effect with sensible default settings.
 public struct EffectDefinition: Codable {
     static let dataLength = 6
     
