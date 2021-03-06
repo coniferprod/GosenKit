@@ -14,17 +14,17 @@ public enum FilterModeType: String, Codable, CaseIterable {
 }
 
 public struct FilterEnvelope: Codable {
-    var attackTime: Int
-    var decay1Time: Int
-    var decay1Level: Int
-    var decay2Time: Int
-    var decay2Level: Int
-    var releaseTime: Int
-    var keyScalingToAttack: Int
-    var keyScalingToDecay1: Int
-    var velocityToEnvelope: Int
-    var velocityToAttack: Int
-    var velocityToDecay1: Int
+    public var attackTime: Int
+    public var decay1Time: Int
+    public var decay1Level: Int
+    public var decay2Time: Int
+    public var decay2Level: Int
+    public var releaseTime: Int
+    public var keyScalingToAttack: Int
+    public var keyScalingToDecay1: Int
+    public var velocityToEnvelope: Int
+    public var velocityToAttack: Int
+    public var velocityToDecay1: Int
     
     static let dataLength = 11
     

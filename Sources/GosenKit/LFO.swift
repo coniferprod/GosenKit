@@ -23,6 +23,16 @@ public struct LFOControl: Codable {
     public var depth: Int
     public var keyScaling: Int
     
+    public init() {
+        self.depth = 0
+        self.keyScaling = 0
+    }
+    
+    public init(depth: Int, keyScaling: Int) {
+        self.depth = depth
+        self.keyScaling = keyScaling
+    }
+    
     public func asData() -> ByteArray {
         var data = ByteArray()
         

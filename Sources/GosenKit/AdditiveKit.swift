@@ -88,7 +88,7 @@ public struct AdditiveKit: Codable {
     
     // Additive kit checksum:
     // {(HCKIT sum) + (HCcode1 sum) + (HCcode2 sum) + (FF sum) + (HCenv sum) + (loud sense select) + 0xA5} & 0x7F
-    var checksum: Byte {
+    public var checksum: Byte {
         var totalSum: Int = 0
         var byteCount = 0
         
@@ -166,7 +166,6 @@ public struct AdditiveKit: Codable {
 
         return result
     }
-    
 }
 
 extension AdditiveKit: CustomStringConvertible {

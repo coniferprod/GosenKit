@@ -183,7 +183,7 @@ public struct HarmonicEnvelope: Codable {
         self.segment0 = HarmonicEnvelopeSegment(rate: 127, level: 63)
         self.segment1 = HarmonicEnvelopeSegment(rate: 127, level: 63)
         self.segment2 = HarmonicEnvelopeSegment(rate: 127, level: 63)
-        self.segment3 = HarmonicEnvelopeSegment(rate: 127, level: 63)
+        self.segment3 = HarmonicEnvelopeSegment(rate: 0, level: 0)
         self.loopType = .off
     }
     
