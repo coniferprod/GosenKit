@@ -1,6 +1,6 @@
 import Foundation
 
-enum EffectType: String, Codable, CaseIterable {
+public enum EffectType: String, Codable, CaseIterable {
     case hall1
     case hall2
     case hall3
@@ -105,17 +105,17 @@ enum EffectType: String, Codable, CaseIterable {
     }
 }
 
-struct EffectDefinition: Codable {
+public struct EffectDefinition: Codable {
     static let dataLength = 6
     
-    var effectType: EffectType  // reverb = 0...10, other effects = 11...47
-    var depth: Int  // 0~100  // reverb dry/wet1 = depth
-    var parameter1: Int  // all parameters are 0~127, except reverb param1 = 0~100
-    var parameter2: Int
-    var parameter3: Int
-    var parameter4: Int
+    public var effectType: EffectType  // reverb = 0...10, other effects = 11...47
+    public var depth: Int  // 0~100  // reverb dry/wet1 = depth
+    public var parameter1: Int  // all parameters are 0~127, except reverb param1 = 0~100
+    public var parameter2: Int
+    public var parameter3: Int
+    public var parameter4: Int
     
-    init() {
+    public init() {
         effectType = .room1
         depth = 0
         parameter1 = 0
@@ -124,7 +124,7 @@ struct EffectDefinition: Codable {
         parameter4 = 0
     }
     
-    init(data d: ByteArray) {
+    public init(data d: ByteArray) {
         var offset: Int = 0
         var b: Byte = 0
         
@@ -152,7 +152,7 @@ struct EffectDefinition: Codable {
         parameter4 = Int(b)
     }
     
-    func asData() -> ByteArray {
+    public func asData() -> ByteArray {
         var data = ByteArray()
         
         data.append(Byte(effectType.index!))
@@ -167,16 +167,16 @@ struct EffectDefinition: Codable {
 }
 
 public struct EffectSettings: Codable {
-    var algorithm: Int  // 1...4
-    var reverb: EffectDefinition
-    var effect1: EffectDefinition
-    var effect2: EffectDefinition
-    var effect3: EffectDefinition
-    var effect4: EffectDefinition
+    public var algorithm: Int  // 1...4
+    public var reverb: EffectDefinition
+    public var effect1: EffectDefinition
+    public var effect2: EffectDefinition
+    public var effect3: EffectDefinition
+    public var effect4: EffectDefinition
     
     static let dataLength = 31
     
-    init() {
+    public init() {
         algorithm = 1
         reverb = EffectDefinition()
         effect1 = EffectDefinition()
@@ -185,7 +185,7 @@ public struct EffectSettings: Codable {
         effect4 = EffectDefinition()
     }
     
-    init(data d: ByteArray) {
+    public init(data d: ByteArray) {
         var offset: Int = 0
         var b: Byte = 0
         
@@ -209,7 +209,7 @@ public struct EffectSettings: Codable {
         offset += EffectDefinition.dataLength
     }
         
-    func asData() -> ByteArray {
+    public func asData() -> ByteArray {
         var data = ByteArray()
         
         data.append(Byte(algorithm - 1))  // offset one to make the value 0~3
