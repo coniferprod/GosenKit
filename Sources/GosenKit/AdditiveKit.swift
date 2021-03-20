@@ -8,6 +8,7 @@ public struct AdditiveKit: Codable {
     public var morf: MorfHarmonicSettings
     public var formantFilter: FormantFilterSettings
     public var levels: HarmonicLevels
+    public var bands: FormantFilterBands
     public var envelopes: [HarmonicEnvelope]
     
     public init() {
@@ -15,6 +16,7 @@ public struct AdditiveKit: Codable {
         morf = MorfHarmonicSettings()
         formantFilter = FormantFilterSettings()
         levels = HarmonicLevels()
+        bands = FormantFilterBands()
         envelopes = [HarmonicEnvelope]()
         for _ in 0..<AdditiveKit.harmonicCount {
             envelopes.append(HarmonicEnvelope(segment0: HarmonicEnvelopeSegment(rate: 127, level: 63), segment1: HarmonicEnvelopeSegment(rate: 127, level: 63), segment2: HarmonicEnvelopeSegment(rate: 127, level: 63), segment3: HarmonicEnvelopeSegment(rate: 127, level: 63), loopType: .off))
@@ -27,31 +29,31 @@ public struct AdditiveKit: Codable {
         let originalChecksum = d.next(&offset)
         //print("From SysEx, ADD kit checksum = \(String(originalChecksum, radix: 16))")
         
-        common = HarmonicCommonSettings(data: ByteArray(d[offset ..< offset + HarmonicCommonSettings.dataLength]))
+        common = HarmonicCommonSettings(data: d.slice(from: offset, length: HarmonicCommonSettings.dataLength))
         offset += HarmonicCommonSettings.dataLength
         
-        morf = MorfHarmonicSettings(data: ByteArray(d[offset ..< offset + MorfHarmonicSettings.dataLength]))
+        morf = MorfHarmonicSettings(data: d.slice(from: offset, length: MorfHarmonicSettings.dataLength))
         offset += MorfHarmonicSettings.dataLength
 
-        formantFilter = FormantFilterSettings(data: ByteArray(d[offset ..< offset + FormantFilterSettings.dataLength]))
+        formantFilter = FormantFilterSettings(data: d.slice(from: offset, length: FormantFilterSettings.dataLength))
         offset += FormantFilterSettings.dataLength
         
-        levels = HarmonicLevels(data: ByteArray(d[offset ..< offset + HarmonicLevels.dataLength]))
+        levels = HarmonicLevels(data: d.slice(from: offset, length: HarmonicLevels.dataLength))
         offset += HarmonicLevels.dataLength
         
-        let bands = FormantFilterBands(data: ByteArray(d[offset ..< offset + FormantFilterBands.dataLength]))
+        bands = FormantFilterBands(data: d.slice(from: offset, length: FormantFilterBands.dataLength))
         offset += FormantFilterBands.dataLength
-        formantFilter.bands = bands
-        //print("formant filter bands set to: \(bands)")
         
         envelopes = [HarmonicEnvelope]()
         var envelopeBytes = ByteArray()
         for _ in 0 ..< AdditiveKit.harmonicCount {
-            let envelopeData = ByteArray(d[offset ..< offset + HarmonicEnvelope.dataLength])
+            let envelopeData = d.slice(from: offset, length: HarmonicEnvelope.dataLength)
+            offset += HarmonicEnvelope.dataLength
+
             let envelope = HarmonicEnvelope(data: envelopeData)
             envelopeBytes.append(contentsOf: envelopeData)
+
             envelopes.append(envelope)
-            offset += HarmonicEnvelope.dataLength
         }
     }
     
@@ -62,9 +64,9 @@ public struct AdditiveKit: Codable {
         
         data.append(contentsOf: common.asData())
         data.append(contentsOf: morf.asData())
-        data.append(contentsOf: formantFilter.asData())  // does not include the bands!
+        data.append(contentsOf: formantFilter.asData())
         data.append(contentsOf: levels.asData())
-        data.append(contentsOf: formantFilter.bands.asData())
+        data.append(contentsOf: bands.asData())
         
         var envelopeBytes = ByteArray()
         for env in envelopes {
@@ -130,7 +132,7 @@ public struct AdditiveKit: Codable {
 
         // FF sum:
         var ffSum = 0
-        for f in formantFilter.bands.levels {
+        for f in bands.levels {
             ffSum += f & 0xFF
             byteCount += 1
         }

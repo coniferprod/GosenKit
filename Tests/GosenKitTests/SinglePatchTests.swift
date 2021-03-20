@@ -71,7 +71,7 @@ final class SinglePatchTests: XCTestCase {
                                                 26, 23, 18, 14, 11, 5, 2, 0
             ])
         )
-        add1.formantFilter.bands = ff
+        add1.bands = ff
 
         var levels = HarmonicLevels()
         levels.soft = [

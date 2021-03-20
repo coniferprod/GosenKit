@@ -66,13 +66,11 @@ public struct PitchEnvelope: Codable {
     
     public func asData() -> ByteArray {
         var data = ByteArray()
-     
-        data.append(Byte(start + 64))
-        data.append(Byte(attackTime))
-        data.append(Byte(attackLevel + 64))
-        data.append(Byte(decayTime))
-        data.append(Byte(timeVelocitySensitivity + 64))
-        data.append(Byte(levelVelocitySensitivity + 64))
+        
+        [start + 64, attackTime, attackLevel + 64, decayTime,
+         timeVelocitySensitivity + 64, levelVelocitySensitivity + 64].forEach {
+            data.append(Byte($0))
+        }
 
         return data
     }
@@ -135,7 +133,7 @@ public struct Oscillator: Codable {
         b = d.next(&offset)
         keyScalingToPitch = KeyScalingType(index: Int(b))!
 
-        pitchEnvelope = PitchEnvelope(data: ByteArray(d[offset ..< offset + PitchEnvelope.dataLength]))
+        pitchEnvelope = PitchEnvelope(data: d.slice(from: offset, length: PitchEnvelope.dataLength))
         
         if waveNumber == 512 {
             waveType = .additive
@@ -148,7 +146,7 @@ public struct Oscillator: Codable {
     public func asData() -> ByteArray {
         var data = ByteArray()
         
-        // Wave type is not emitted in System Exclusive
+        // NOTE: Wave type is not emitted in System Exclusive
         
         // Convert wave kit number to binary string with 10 digits
         // using a String extension (see Helpers.swift).
@@ -164,10 +162,10 @@ public struct Oscillator: Codable {
         let lsb = Byte(lsbBitString, radix: 2)
         data.append(lsb!)
 
-        data.append(Byte(coarse + 24))
-        data.append(Byte(fine + 64))
-        data.append(Byte(fixedKey))
-        data.append(Byte(keyScalingToPitch.index!))
+        [coarse + 24, fine + 64, fixedKey, keyScalingToPitch.index!].forEach {
+            data.append(Byte($0))
+        }
+        
         data.append(contentsOf: pitchEnvelope.asData())
         
         return data

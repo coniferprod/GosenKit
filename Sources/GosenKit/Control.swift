@@ -96,12 +96,9 @@ public struct MacroController: Codable {
     
     public func asData() -> ByteArray {
         var data = ByteArray()
-     
-        data.append(Byte(destination1.index!))
-        data.append(Byte(depth1 + 64))  // -31(33)~+31(95)
-        data.append(Byte(destination2.index!))
-        data.append(Byte(depth2 + 64))  // -31(33)~+31(95)
-
+        [destination1.index!, depth1 + 64, destination2.index!, depth2 + 64].forEach {
+            data.append(Byte($0))
+        }
         return data
     }
 }
@@ -180,12 +177,9 @@ public struct SwitchControl: Codable {
     
     public func asData() -> ByteArray {
         var data = ByteArray()
-     
-        data.append(Byte(switch1.index!))
-        data.append(Byte(switch2.index!))
-        data.append(Byte(footSwitch1.index!))
-        data.append(Byte(footSwitch2.index!))
-
+        [switch1.index!, switch2.index!, footSwitch1.index!, footSwitch2.index!].forEach {
+            data.append(Byte($0))
+        }
         return data
     }
 }
@@ -285,11 +279,9 @@ public struct EffectControlSourceSettings: Codable {
     
     public func asData() -> ByteArray {
         var data = ByteArray()
-     
-        data.append(Byte(sourceType.index!))
-        data.append(Byte(destinationType.index!))
-        data.append(Byte(depth + 64))
-        
+        [sourceType.index!, destinationType.index!, depth + 64].forEach {
+            data.append(Byte($0))
+        }
         return data
     }
 }
@@ -316,9 +308,9 @@ public struct EffectControlSettings: Codable {
     public init(data d: ByteArray) {
         var offset: Int = 0
     
-        source1 = EffectControlSourceSettings(data: ByteArray(d[offset ..< offset + EffectControlSourceSettings.dataLength]))
+        source1 = EffectControlSourceSettings(data: d.slice(from: offset, length:  EffectControlSourceSettings.dataLength))
         offset += EffectControlSourceSettings.dataLength
-        source2 = EffectControlSourceSettings(data: ByteArray(d[offset ..< offset + EffectControlSourceSettings.dataLength]))
+        source2 = EffectControlSourceSettings(data: d.slice(from: offset, length:  EffectControlSourceSettings.dataLength))
     }
     
     public func asData() -> ByteArray {
@@ -341,14 +333,14 @@ extension EffectControlSettings: CustomStringConvertible {
 }
 
 public struct AssignableController: Codable {
-    public var sourceType: ControlSource
+    public var source: ControlSource
     public var destination: ControlDestination
     public var depth: Int
     
     static let dataLength = 3
     
     public init() {
-        sourceType = .bender
+        source = .bender
         destination = .cutoffOffset
         depth = 0
     }
@@ -358,7 +350,7 @@ public struct AssignableController: Codable {
         var b: Byte = 0
         
         b = d.next(&offset)
-        sourceType = ControlSource(index: Int(b))!
+        source = ControlSource(index: Int(b))!
         
         b = d.next(&offset)
         destination = ControlDestination(index: Int(b))!
@@ -369,11 +361,9 @@ public struct AssignableController: Codable {
     
     public func asData() -> ByteArray {
         var data = ByteArray()
-
-        data.append(Byte(sourceType.index!))
-        data.append(Byte(destination.index!))
-        data.append(Byte(depth))
-
+        [source.index!, destination.index!, depth].forEach {
+            data.append(Byte($0))
+        }
         return data
     }
 }
@@ -381,7 +371,7 @@ public struct AssignableController: Codable {
 extension AssignableController: CustomStringConvertible {
     public var description: String {
         var s = ""
-        s += "source=\(sourceType.rawValue), destination=\(destination.rawValue), depth=\(depth)"
+        s += "source=\(source.rawValue), destination=\(destination.rawValue), depth=\(depth)"
         return s
     }
 }
@@ -406,24 +396,19 @@ public struct ModulationSettings: Codable {
     public init(data d: ByteArray) {
         var offset: Int = 0
 
-        let pressureData = d[offset ..< offset + MacroController.dataLength]
-        //print("pressure data = \(pressureData.hexDump)")
-        pressure = MacroController(data: ByteArray(pressureData))
+        pressure = MacroController(data: d.slice(from: offset, length: MacroController.dataLength))
         offset += MacroController.dataLength
 
-        let wheelData = d[offset ..< offset + MacroController.dataLength]
-        //print("wheel data = \(wheelData.hexDump)")
-        wheel = MacroController(data: ByteArray(wheelData))
+        wheel = MacroController(data: d.slice(from: offset, length: MacroController.dataLength))
         offset += MacroController.dataLength
         
-        let expressionData = d[offset ..< offset + MacroController.dataLength]
-        expression = MacroController(data: ByteArray(expressionData))
+        expression = MacroController(data: d.slice(from: offset, length: MacroController.dataLength))
         offset += MacroController.dataLength
     
-        assignable1 = AssignableController(data: ByteArray(d[offset ..< offset + AssignableController.dataLength]))
+        assignable1 = AssignableController(data: d.slice(from: offset, length: AssignableController.dataLength))
         offset += AssignableController.dataLength
         
-        assignable2 = AssignableController(data: ByteArray(d[offset ..< offset + AssignableController.dataLength]))
+        assignable2 = AssignableController(data: d.slice(from: offset, length: AssignableController.dataLength))
         offset += AssignableController.dataLength
     }
     

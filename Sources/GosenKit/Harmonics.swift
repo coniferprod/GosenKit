@@ -58,12 +58,9 @@ public struct HarmonicCommonSettings: Codable {
     public func asData() -> ByteArray {
         var data = ByteArray()
         
-        data.append(isMorfEnabled ? 1 : 0)
-        data.append(Byte(totalGain))
-        data.append(Byte(group.index!))
-        data.append(Byte(keyScalingToGain + 64))
-        data.append(Byte(velocityCurve - 1))
-        data.append(Byte(velocityDepth))
+        [isMorfEnabled ? 1 : 0, totalGain, group.index!, keyScalingToGain + 64, velocityCurve - 1, velocityDepth].forEach {
+            data.append(Byte($0))
+        }
         
         return data
     }
@@ -92,12 +89,7 @@ public struct EnvelopeSegment: Codable {
     }
         
     public func asData() -> ByteArray {
-        var data = ByteArray()
-        
-        data.append(Byte(rate))
-        data.append(Byte(level + 64))
-        
-        return data
+        return ByteArray(arrayLiteral: Byte(rate), Byte(level + 64))
     }
 }
 
@@ -184,22 +176,9 @@ public struct HarmonicEnvelope: Codable {
         var offset: Int = 0
         var b: Byte = 0
 
-        //print("> HARM ENV = \(d.hexDump)")
-        
-        // I'm just going to test out my new ByteArray extension
-        // to see how it feels like...
-        
-        // Old code:
-        //b = d[offset]
-        //let segment0Rate = Int(b)
-        //offset += 1
-
-        // New code:
         b = d.next(&offset)
         let segment0Rate = Int(b)
 
-        // You just need to remember to use & for the inout parameter
-        
         b = d.next(&offset)
         let segment0Level = Int(b)
         
@@ -244,18 +223,16 @@ public struct HarmonicEnvelope: Codable {
         var bitString = ""
         bitString += segment1LevelBit6 ? "1" : "0"
         bitString += segment2LevelBit6 ? "1" : "0"
-        print(bitString)
-        if bitString == "10" {
+        //print(bitString)
+        switch bitString {
+        case "10":
             print("warning: impossible loop type value '\(bitString)', setting loop to OFF")
             loopType = .off
-        }
-        else if bitString == "11" {
+        case "11":
             loopType = .loop1
-        }
-        else if bitString == "01" {
+        case "01":
             loopType = .loop2
-        }
-        else {
+        default:
             loopType = .off
         }
     }
@@ -295,8 +272,6 @@ public struct HarmonicEnvelope: Codable {
         data.append(contentsOf: segment2Data)
 
         data.append(contentsOf: segment3.asData())
-
-        //print("< HARM ENV = \(Data(data).hexDump)")
 
         return data
     }
@@ -359,15 +334,8 @@ public struct HarmonicLevels: Codable {
     
     public func asData() -> ByteArray {
         var data = ByteArray()
-        
-        for i in 0..<HarmonicLevels.harmonicCount {
-            data.append(Byte(soft[i]))
-        }
-
-        for i in 0..<HarmonicLevels.harmonicCount {
-            data.append(Byte(loud[i]))
-        }
-
+        soft.forEach { data.append(Byte($0)) }
+        loud.forEach { data.append(Byte($0)) }
         return data
     }
 }

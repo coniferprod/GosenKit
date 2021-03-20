@@ -39,13 +39,9 @@ public struct MorfHarmonicEnvelope: Codable {
     
     public func asData() -> ByteArray {
         var data = ByteArray()
-        
-        data.append(Byte(time1))
-        data.append(Byte(time2))
-        data.append(Byte(time3))
-        data.append(Byte(time4))
-        data.append(Byte(loopType.index!))
-
+        [time1, time2, time3, time4, loopType.index!].forEach {
+            data.append(Byte($0))
+        }
         return data
     }
 }
@@ -73,12 +69,7 @@ public struct MorfHarmonicCopyParameters: Codable {
     }
     
     public func asData() -> ByteArray {
-        var data = ByteArray()
-        
-        data.append(Byte(patchNumber))
-        data.append(Byte(sourceNumber))
-
-        return data
+        return ByteArray(arrayLiteral: Byte(patchNumber), Byte(sourceNumber))
     }
 }
 
@@ -102,19 +93,20 @@ public struct MorfHarmonicSettings: Codable {
     public init(data d: ByteArray) {
         var offset: Int = 0
         
-        copy1 = MorfHarmonicCopyParameters(data: ByteArray(d[offset ..< offset + MorfHarmonicCopyParameters.dataLength]))
-        offset += MorfHarmonicCopyParameters.dataLength
+        let length = MorfHarmonicCopyParameters.dataLength
+        copy1 = MorfHarmonicCopyParameters(data: d.slice(from: offset, length: length))
+        offset += length
 
-        copy2 = MorfHarmonicCopyParameters(data: ByteArray(d[offset ..< offset + MorfHarmonicCopyParameters.dataLength]))
-        offset += MorfHarmonicCopyParameters.dataLength
+        copy2 = MorfHarmonicCopyParameters(data: d.slice(from: offset, length: length))
+        offset += length
 
-        copy3 = MorfHarmonicCopyParameters(data: ByteArray(d[offset ..< offset + MorfHarmonicCopyParameters.dataLength]))
-        offset += MorfHarmonicCopyParameters.dataLength
+        copy3 = MorfHarmonicCopyParameters(data: d.slice(from: offset, length: length))
+        offset += length
 
-        copy4 = MorfHarmonicCopyParameters(data: ByteArray(d[offset ..< offset + MorfHarmonicCopyParameters.dataLength]))
-        offset += MorfHarmonicCopyParameters.dataLength
+        copy4 = MorfHarmonicCopyParameters(data: d.slice(from: offset, length: length))
+        offset += length
 
-        envelope = MorfHarmonicEnvelope(data: ByteArray(d[offset ..< offset + MorfHarmonicEnvelope.dataLength]))
+        envelope = MorfHarmonicEnvelope(data: d.slice(from: offset, length: length))
         offset += MorfHarmonicEnvelope.dataLength
     }
     

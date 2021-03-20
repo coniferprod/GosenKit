@@ -119,13 +119,13 @@ public struct SourceControlSettings: Codable {
         b = d.next(&offset)
         benderCutoff = Int(b)
         
-        modulations = ModulationSettings(data: ByteArray(d[offset ..< offset + ModulationSettings.dataLength]))
+        modulations = ModulationSettings(data: d.slice(from: offset, length: ModulationSettings.dataLength))
         offset += ModulationSettings.dataLength
         
         b = d.next(&offset)
         keyOnDelay = Int(b)
         
-        pan = PanSettings(data: ByteArray(d[offset ..< offset + PanSettings.dataLength]))
+        pan = PanSettings(data: d.slice(from: offset, length: PanSettings.dataLength))
     }
     
     public func asData() -> ByteArray {
@@ -183,24 +183,23 @@ public struct Source: Codable {
         var offset: Int = 0
         
         print("SOURCE: Start Control, offset = \(offset)")
-        control = SourceControlSettings(data: ByteArray(d[offset ..< offset + SourceControlSettings.dataLength]))
+        control = SourceControlSettings(data: d.slice(from: offset, length: SourceControlSettings.dataLength))
         offset += SourceControlSettings.dataLength
         
         print("SOURCE: Start DCO, offset = \(offset)")
-        oscillator = Oscillator(data: ByteArray(d[offset ..< offset + Oscillator.dataLength]))
+        oscillator = Oscillator(data: d.slice(from: offset, length:Oscillator.dataLength))
         offset += Oscillator.dataLength
         
         print("SOURCE: Start DCF, offset = \(offset)")
-        filter = Filter(data: ByteArray(d[offset ..< offset + Filter.dataLength]))
+        filter = Filter(data: d.slice(from: offset, length: Filter.dataLength))
         offset += Filter.dataLength
 
         print("SOURCE: Start DCA, offset = \(offset)")
-        amplifier = Amplifier(data: ByteArray(d[offset ..< offset + Amplifier.dataLength]))
+        amplifier = Amplifier(data: d.slice(from: offset, length: Amplifier.dataLength))
         offset += Amplifier.dataLength
         
         print("SOURCE: Start LFO, offset = \(offset)")
-        lfo = LFO(data: ByteArray(d[offset ..< offset + LFO.dataLength]))
-        offset += LFO.dataLength
+        lfo = LFO(data: d.slice(from: offset, length: LFO.dataLength))
     }
 
     public func asData() -> ByteArray {

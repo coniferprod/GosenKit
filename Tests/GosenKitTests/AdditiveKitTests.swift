@@ -13,7 +13,7 @@ final class AdditiveKitTests: XCTestCase {
         
         var add1 = AdditiveKit()  // use default settings
         
-        var ff = FormantFilterBands(
+        let ff = FormantFilterBands(
             data: ByteArray([
                                 127, 127, 127, 127, 127, 127, 127, 127,
                                                 127, 127, 127, 127, 127, 127, 127, 127,
@@ -34,7 +34,7 @@ final class AdditiveKitTests: XCTestCase {
                                                 26, 23, 18, 14, 11, 5, 2, 0
             ])
         )
-        add1.formantFilter.bands = ff
+        add1.bands = ff
         
         var levels = HarmonicLevels()
         levels.soft = [

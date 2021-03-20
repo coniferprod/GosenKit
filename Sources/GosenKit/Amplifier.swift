@@ -56,14 +56,9 @@ public struct AmplifierEnvelope: Codable {
     
     public func asData() -> ByteArray {
         var data = ByteArray()
-        
-        data.append(Byte(attackTime))
-        data.append(Byte(decay1Time))
-        data.append(Byte(decay1Level))
-        data.append(Byte(decay2Time))
-        data.append(Byte(decay2Level))
-        data.append(Byte(releaseTime))
-
+        [attackTime, decay1Time, decay1Level, decay2Time, decay2Level, releaseTime].forEach {
+            data.append(Byte($0))
+        }
         return data
     }
 }
@@ -112,12 +107,9 @@ public struct AmplifierKeyScalingControl: Codable {
     
     public func asData() -> ByteArray {
         var data = ByteArray()
-        
-        data.append(Byte(level + 64))
-        data.append(Byte(attackTime + 64))
-        data.append(Byte(decay1Time + 64))
-        data.append(Byte(release + 64))
-        
+        [level, attackTime, decay1Time, release].forEach {
+            data.append(Byte($0 + 64))
+        }
         return data
     }
 }
@@ -167,12 +159,9 @@ public struct AmplifierVelocityControl: Codable {
     
     public func asData() -> ByteArray {
         var data = ByteArray()
-        
-        data.append(Byte(level))
-        data.append(Byte(attackTime + 64))
-        data.append(Byte(decay1Time + 64))
-        data.append(Byte(release + 64))
-        
+        [level, attackTime + 64, decay1Time + 64, release + 64].forEach {
+            data.append(Byte($0))
+        }
         return data
     }
 }
@@ -193,10 +182,10 @@ public struct AmplifierModulationSettings: Codable {
         
         var offset: Int = 0
         
-        keyScalingToEnvelope = AmplifierKeyScalingControl(data: ByteArray(d[offset ..< offset + AmplifierKeyScalingControl.dataLength]))
+        keyScalingToEnvelope = AmplifierKeyScalingControl(data: d.slice(from: offset, length: AmplifierKeyScalingControl.dataLength))
         offset += AmplifierKeyScalingControl.dataLength
         
-        velocityToEnvelope = AmplifierVelocityControl(data: ByteArray(d[offset ..< offset + AmplifierVelocityControl.dataLength]))
+        velocityToEnvelope = AmplifierVelocityControl(data: d.slice(from: offset, length: AmplifierVelocityControl.dataLength))
     }
     
     public func asData() -> ByteArray {
@@ -232,11 +221,11 @@ public struct Amplifier: Codable {
         velocityCurve = Int(b) + 1  // 0~11 to 1~12
         
         //print("Start amplifier envelope, offset = \(offset)")
-        envelope = AmplifierEnvelope(data: ByteArray(d[offset ..< offset + AmplifierEnvelope.dataLength]))
+        envelope = AmplifierEnvelope(data: d.slice(from: offset, length: AmplifierEnvelope.dataLength))
         offset += AmplifierEnvelope.dataLength
         
         //print("Start amplifier envelope modulation, offset = \(offset)")
-        modulation = AmplifierModulationSettings(data: ByteArray(d[offset ..< offset + AmplifierModulationSettings.dataLength]))
+        modulation = AmplifierModulationSettings(data: d.slice(from: offset, length: AmplifierModulationSettings.dataLength))
     }
 
     public func asData() -> ByteArray {

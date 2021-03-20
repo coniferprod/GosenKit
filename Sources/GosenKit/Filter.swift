@@ -83,17 +83,10 @@ public struct FilterEnvelope: Codable {
     public func asData() -> ByteArray {
         var data = ByteArray()
         
-        data.append(Byte(attackTime))
-        data.append(Byte(decay1Time))
-        data.append(Byte(decay1Level + 64))
-        data.append(Byte(decay2Time))
-        data.append(Byte(decay2Level + 64))
-        data.append(Byte(releaseTime))
-        data.append(Byte(keyScalingToAttack + 64))
-        data.append(Byte(keyScalingToDecay1 + 64))
-        data.append(Byte(velocityToEnvelope + 64))
-        data.append(Byte(velocityToAttack + 64))
-        data.append(Byte(velocityToDecay1 + 64))
+        [attackTime, decay1Time, decay1Level + 64, decay2Time, decay2Level + 64, releaseTime,
+         keyScalingToAttack + 64, keyScalingToDecay1 + 64, velocityToEnvelope + 64, velocityToAttack + 64, velocityToDecay1 + 64].forEach {
+            data.append(Byte($0))
+        }
 
         return data
     }
@@ -174,15 +167,11 @@ public struct Filter: Codable {
     public func asData() -> ByteArray {
         var data = ByteArray()
         
-        data.append(isActive ? 0 : 1)  // note that we need to flip the values for the SysEx!
-        data.append(Byte(mode.index!))
-        data.append(Byte(velocityCurve - 1))  // make 0~11
-        data.append(Byte(resonance))
-        data.append(Byte(level))
-        data.append(Byte(cutoff))
-        data.append(Byte(keyScalingToCutoff + 64))
-        data.append(Byte(velocityToCutoff + 64))
-        data.append(Byte(envelopeDepth + 64))
+        [isActive ? 0 : 1, mode.index!, velocityCurve - 1, resonance, level, cutoff,
+         keyScalingToCutoff + 64, velocityToCutoff + 64, envelopeDepth + 64].forEach {
+            data.append(Byte($0))
+        }
+
         data.append(contentsOf: envelope.asData())
         
         return data

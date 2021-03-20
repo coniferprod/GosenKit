@@ -34,12 +34,7 @@ public struct LFOControl: Codable {
     }
     
     public func asData() -> ByteArray {
-        var data = ByteArray()
-        
-        data.append(Byte(depth))
-        data.append(Byte(keyScaling + 64))
-
-        return data
+        return ByteArray(arrayLiteral: Byte(depth), Byte(keyScaling + 64))
     }
 }
 
@@ -117,11 +112,9 @@ public struct LFO: Codable {
     public func asData() -> ByteArray {
         var data = ByteArray()
         
-        data.append(Byte(waveform.index!))
-        data.append(Byte(speed))
-        data.append(Byte(delayOnset))
-        data.append(Byte(fadeInTime))
-        data.append(Byte(fadeInToSpeed))
+        [waveform.index!, speed, delayOnset, fadeInTime, fadeInToSpeed].forEach {
+            data.append(Byte($0))
+        }
 
         data.append(contentsOf: vibrato.asData())
         data.append(contentsOf: growl.asData())

@@ -106,7 +106,7 @@ public struct SingleCommon: Codable {
         
         //print("Start name, offset = \(offset)")
 
-        name = String(data: Data(d[offset ..< offset + SingleCommon.nameLength]), encoding: .ascii) ?? "--------"
+        name = String(data: Data(d.slice(from: offset, length: SingleCommon.nameLength)), encoding: .ascii) ?? "--------"
         offset += SingleCommon.nameLength
         
         b = d.next(&offset)
@@ -148,86 +148,25 @@ public struct SingleCommon: Codable {
         //print("Start macros, offset = \(offset)")
         
         var macroDestinations = [Int]()
+        for _ in 0..<8 {
+            b = d.next(&offset)
+            macroDestinations.append(Int(b))
+        }
         
-        b = d.next(&offset)
-        macroDestinations.append(Int(b))  // 0: Macro1 Destination1
-        
-        b = d.next(&offset)
-        macroDestinations.append(Int(b))  // 1: Macro1 Destination2
-        
-        b = d.next(&offset)
-        macroDestinations.append(Int(b))  // 2: Macro2 Destination1
-        
-        b = d.next(&offset)
-        macroDestinations.append(Int(b))  // 3: Macro2 Destination2
-        
-        b = d.next(&offset)
-        macroDestinations.append(Int(b))  // 4: Macro3 Destination1
-        
-        b = d.next(&offset)
-        macroDestinations.append(Int(b))  // 5: Macro3 Destination2
-
-        b = d.next(&offset)
-        macroDestinations.append(Int(b))  // 6: Macro4 Destination1
-        
-        b = d.next(&offset)
-        macroDestinations.append(Int(b))  // 7: Macro4 Destination2
-
         var macroDepths = [Int]()
-
-        b = d.next(&offset)
-        macroDepths.append(Int(b) - 64)  // 0: Macro1 Depth1
-
-        b = d.next(&offset)
-        macroDepths.append(Int(b) - 64)  // 1: Macro1 Depth2
-
-        b = d.next(&offset)
-        macroDepths.append(Int(b) - 64)  // 2: Macro2 Depth1
-
-        b = d.next(&offset)
-        macroDepths.append(Int(b) - 64)  // 3: Macro2 Depth2
-
-        b = d.next(&offset)
-        macroDepths.append(Int(b) - 64)  // 4: Macro3 Depth1
-
-        b = d.next(&offset)
-        macroDepths.append(Int(b) - 64)  // 5: Macro3 Depth2
-
-        b = d.next(&offset)
-        macroDepths.append(Int(b) - 64)  // 6: Macro4 Depth1
-
-        b = d.next(&offset)
-        macroDepths.append(Int(b) - 64)  // 7: Macro4 Depth2
+        for _ in 0..<8 {
+            b = d.next(&offset)
+            macroDepths.append(Int(b) - 64)
+        }
 
         macros = [MacroController]()
-        
-        let macro1 = MacroController(
-            destination1: ControlDestination(index: macroDestinations[0])!,
-            depth1: macroDepths[0],
-            destination2: ControlDestination(index: macroDestinations[1])!,
-            depth2: macroDepths[1])
-        macros.append(macro1)
-        
-        let macro2 = MacroController(
-            destination1: ControlDestination(index: macroDestinations[2])!,
-            depth1: macroDepths[2],
-            destination2: ControlDestination(index: macroDestinations[3])!,
-            depth2: macroDepths[3])
-        macros.append(macro2)
-
-        let macro3 = MacroController(
-            destination1: ControlDestination(index: macroDestinations[4])!,
-            depth1: macroDepths[4],
-            destination2: ControlDestination(index: macroDestinations[5])!,
-            depth2: macroDepths[5])
-        macros.append(macro3)
-
-        let macro4 = MacroController(
-            destination1: ControlDestination(index: macroDestinations[6])!,
-            depth1: macroDepths[6],
-            destination2: ControlDestination(index: macroDestinations[7])!,
-            depth2: macroDepths[7])
-        macros.append(macro4)
+        for i in stride(from: 0, to: 8, by: 2) {
+            macros.append(MacroController(
+                destination1: ControlDestination(index: macroDestinations[i])!,
+                depth1: macroDepths[i + 1],
+                destination2: ControlDestination(index: macroDestinations[i])!,
+                depth2: macroDepths[i + 1]))
+        }
         
         //print("Start switches, offset = \(offset)")
         
@@ -255,9 +194,7 @@ public struct SingleCommon: Codable {
         
         data.append(contentsOf: self.effects.asData())
         
-        for freq in geq {
-            data.append(Byte(freq + 64))  // 58(-6)~70(+6)
-        }
+        geq.forEach { data.append(Byte($0 + 64)) } // 58(-6)~70(+6)
         
         data.append(0)  // drum_mark
 
@@ -274,11 +211,9 @@ public struct SingleCommon: Codable {
             nameIndex += 1
         }
 
-        data.append(Byte(volume))
-        data.append(Byte(polyphony.index!))
-        data.append(0) // no use
-        
-        data.append(Byte(sourceCount))
+        [volume, polyphony.index!, 0, sourceCount].forEach {
+            data.append(Byte($0))
+        }
         
         var mute: Byte = 0x00
         for (index, element) in sourceMutes.enumerated() {
@@ -294,30 +229,16 @@ public struct SingleCommon: Codable {
         data.append(Byte(portamentoSpeed))
         
         // Pick out the destinations and depths as the SysEx spec wants them.
-        // Surely this could be made much more elegant.
-        data.append(Byte(macros[0].destination1.index!))
-        data.append(Byte(macros[0].destination2.index!))
+        assert(macros.count == SingleCommon.macroCount)
+        for macro in macros {
+            data.append(Byte(macro.destination1.index!))
+            data.append(Byte(macro.destination2.index!))
+        }
 
-        data.append(Byte(macros[1].destination1.index!))
-        data.append(Byte(macros[1].destination2.index!))
-
-        data.append(Byte(macros[2].destination1.index!))
-        data.append(Byte(macros[2].destination2.index!))
-
-        data.append(Byte(macros[3].destination1.index!))
-        data.append(Byte(macros[3].destination2.index!))
-
-        data.append(Byte(macros[0].depth1 + 64))  // -31(33)~+31(95)
-        data.append(Byte(macros[0].depth2 + 64))  // -31(33)~+31(95)
-
-        data.append(Byte(macros[1].depth1 + 64))  // -31(33)~+31(95)
-        data.append(Byte(macros[1].depth2 + 64))  // -31(33)~+31(95)
-
-        data.append(Byte(macros[2].depth1 + 64))  // -31(33)~+31(95)
-        data.append(Byte(macros[2].depth2 + 64))  // -31(33)~+31(95)
-
-        data.append(Byte(macros[3].depth1 + 64))  // -31(33)~+31(95)
-        data.append(Byte(macros[3].depth2 + 64))  // -31(33)~+31(95)
+        for macro in macros {
+            data.append(Byte(macro.depth1 + 64))  // -31(33)~+31(95)
+            data.append(Byte(macro.depth2 + 64))  // -31(33)~+31(95)
+        }
         
         data.append(contentsOf: switches.asData())
         
@@ -388,7 +309,7 @@ public struct SinglePatch: Codable {
         
         sources = [Source]()
         for _ in 0..<common.sourceCount {
-            let source = Source(data: ByteArray(d[offset ..< offset + Source.dataLength]))
+            let source = Source(data: d.slice(from: offset, length: Source.dataLength))
             sources.append(source)
             offset += Source.dataLength
         }
@@ -399,10 +320,11 @@ public struct SinglePatch: Codable {
         let additiveKitCount = sources.filter{ $0.oscillator.waveType == .additive }.count
         var kitIndex = 0
         while kitIndex < additiveKitCount {
-            let kit = AdditiveKit(data: ByteArray(d[offset ..< offset + AdditiveKit.dataLength]))
+            let kit = AdditiveKit(data: d.slice(from: offset, length: AdditiveKit.dataLength))
+            offset += AdditiveKit.dataLength
+
             additiveKits["s\(kitIndex + 1)"] = kit
             kitIndex += 1
-            offset += AdditiveKit.dataLength
         }
         
         //print("Got \(additiveKits.count) ADD kits")

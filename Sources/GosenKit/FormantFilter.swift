@@ -25,17 +25,18 @@ public struct FormantFilterEnvelope: Codable {
         var offset: Int = 0
         var b: Byte = 0
 
-        attack = EnvelopeSegment(data: ByteArray(d[offset ..< offset + EnvelopeSegment.dataLength]))
-        offset += EnvelopeSegment.dataLength
+        let length = EnvelopeSegment.dataLength
+        attack = EnvelopeSegment(data: d.slice(from: offset, length: length))
+        offset += length
 
-        decay1 = EnvelopeSegment(data: ByteArray(d[offset ..< offset + EnvelopeSegment.dataLength]))
-        offset += EnvelopeSegment.dataLength
+        decay1 = EnvelopeSegment(data: d.slice(from: offset, length: length))
+        offset += length
 
-        decay2 = EnvelopeSegment(data: ByteArray(d[offset ..< offset + EnvelopeSegment.dataLength]))
-        offset += EnvelopeSegment.dataLength
+        decay2 = EnvelopeSegment(data: d.slice(from: offset, length: length))
+        offset += length
 
-        release = EnvelopeSegment(data: ByteArray(d[offset ..< offset + EnvelopeSegment.dataLength]))
-        offset += EnvelopeSegment.dataLength
+        release = EnvelopeSegment(data: d.slice(from: offset, length: length))
+        offset += length
 
         b = d.next(&offset)
         decayLoop = EnvelopeLoopType(index: Int(b))!
@@ -54,10 +55,10 @@ public struct FormantFilterEnvelope: Codable {
         data.append(contentsOf: decay1.asData())
         data.append(contentsOf: decay2.asData())
         data.append(contentsOf: release.asData())
-        data.append(Byte(decayLoop.index!))
-
-        data.append(Byte(velocityDepth + 64))
-        data.append(Byte(keyScalingDepth + 64))
+        
+        [decayLoop.index!, velocityDepth + 64, keyScalingDepth + 64].forEach {
+            data.append(Byte($0))
+        }
         
         return data
     }
@@ -107,11 +108,9 @@ public struct FormantFilterLFO: Codable {
     
     public func asData() -> ByteArray {
         var data = ByteArray()
-        
-        data.append(Byte(speed))
-        data.append(Byte(shape.index!))
-        data.append(Byte(depth))
-    
+        [speed, shape.index!, depth].forEach {
+            data.append(Byte($0))
+        }
         return data
     }
 }
@@ -136,10 +135,7 @@ public struct FormantFilterBands: Codable {
     public static let dataLength = 128
 
     public init() {
-        levels = [Int]()
-        for _ in 0..<FormantFilterBands.bandCount {
-            levels.append(127)
-        }
+        levels = Array(repeating: 127, count: FormantFilterBands.bandCount)
     }
        
     public init(data d: ByteArray) {
@@ -154,18 +150,11 @@ public struct FormantFilterBands: Codable {
     }
         
     public func asData() -> ByteArray {
-        var data = ByteArray()
-    
-        for (_, element) in levels.enumerated() {
-            data.append(Byte(element))
-        }
-            
-        return data
+        return levels.map { Byte($0) }
     }
 }
 
 public struct FormantFilterSettings: Codable {
-    public var bands: FormantFilterBands
     public var bias: Int  // -63(1)~+63(127)
     public var mode: FormantFilterMode  // 0=ENV, 1=LFO
     public var envelopeDepth: Int // -63(1)~+63(127)
@@ -175,7 +164,6 @@ public struct FormantFilterSettings: Codable {
     static let dataLength = 17  // does not include the bands!
     
     public init() {
-        bands = FormantFilterBands()
         bias = -10
         mode = .envelope
         envelopeDepth = 0
@@ -187,8 +175,6 @@ public struct FormantFilterSettings: Codable {
         var offset: Int = 0
         var b: Byte = 0
     
-        // the bands are not here!
-        
         b = d.next(&offset)
         bias = Int(b) - 64
         
@@ -203,22 +189,17 @@ public struct FormantFilterSettings: Codable {
         
         lfo = FormantFilterLFO(data: ByteArray(d[offset ..< offset + FormantFilterLFO.dataLength]))
         offset += FormantFilterLFO.dataLength
-
-        // These will be rewritten when they are parsed from SysEx later on
-        bands = FormantFilterBands()
     }
     
     public func asData() -> ByteArray {
         var data = ByteArray()
-     
-        data.append(Byte(bias + 64))
-        data.append(Byte(mode.index!))
-        data.append(Byte(envelopeDepth + 64))
+
+        [bias + 64, mode.index!, envelopeDepth + 64].forEach {
+            data.append(Byte($0))
+        }
+
         data.append(contentsOf: envelope.asData())
         data.append(contentsOf: lfo.asData())
-        
-        // The formant filter band levels are emitted separately,
-        // after the harmonic levels.
         
         return data
     }

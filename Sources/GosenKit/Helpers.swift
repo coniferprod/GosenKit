@@ -57,6 +57,11 @@ extension ByteArray {
         offset += 1
         return b
     }
+    
+    /// Returns a new byte array with `length` bytes starting from `offset`.
+    public func slice(from offset: Int, length: Int) -> ByteArray {
+        return ByteArray(self[offset ..< offset + length])
+    }
 }
 
 extension Data {

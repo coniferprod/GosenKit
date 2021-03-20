@@ -207,12 +207,9 @@ public struct EffectDefinition: Codable {
     public func asData() -> ByteArray {
         var data = ByteArray()
         
-        data.append(Byte(effectType.index!))
-        data.append(Byte(depth))
-        data.append(Byte(parameter1))
-        data.append(Byte(parameter2))
-        data.append(Byte(parameter3))
-        data.append(Byte(parameter4))
+        [effectType.index!, depth, parameter1, parameter2, parameter3, parameter4].forEach {
+            data.append(Byte($0))
+        }
 
         return data
     }
@@ -244,20 +241,19 @@ public struct EffectSettings: Codable {
         b = d.next(&offset)
         algorithm = Int(b + 1)  // adjust 0~3 to 1~4
         
-        reverb = EffectDefinition(data: ByteArray(d[offset ..< offset + EffectDefinition.dataLength]))
+        reverb = EffectDefinition(data: d.slice(from: offset, length: EffectDefinition.dataLength))
         offset += EffectDefinition.dataLength
         
-        effect1 = EffectDefinition(data: ByteArray(d[offset ..< offset + EffectDefinition.dataLength]))
+        effect1 = EffectDefinition(data: d.slice(from: offset, length: EffectDefinition.dataLength))
         offset += EffectDefinition.dataLength
         
-        effect2 = EffectDefinition(data: ByteArray(d[offset ..< offset + EffectDefinition.dataLength]))
+        effect2 = EffectDefinition(data: d.slice(from: offset, length: EffectDefinition.dataLength))
         offset += EffectDefinition.dataLength
         
-        effect3 = EffectDefinition(data: ByteArray(d[offset ..< offset + EffectDefinition.dataLength]))
+        effect3 = EffectDefinition(data: d.slice(from: offset, length: EffectDefinition.dataLength))
         offset += EffectDefinition.dataLength
         
-        effect4 = EffectDefinition(data: ByteArray(d[offset ..< offset + EffectDefinition.dataLength]))
-        offset += EffectDefinition.dataLength
+        effect4 = EffectDefinition(data: d.slice(from: offset, length: EffectDefinition.dataLength))
     }
         
     public func asData() -> ByteArray {
