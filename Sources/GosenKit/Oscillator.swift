@@ -45,29 +45,23 @@ public struct PitchEnvelope: Codable {
         var offset: Int = 0
         var b: Byte = 0
         
-        b = d[offset]
+        b = d.next(&offset)
         start = Int(b) - 64
-        offset += 1
         
-        b = d[offset]
+        b = d.next(&offset)
         attackTime = Int(b)
-        offset += 1
         
-        b = d[offset]
+        b = d.next(&offset)
         attackLevel = Int(b) - 64
-        offset += 1
         
-        b = d[offset]
+        b = d.next(&offset)
         decayTime = Int(b)
-        offset += 1
         
-        b = d[offset]
+        b = d.next(&offset)
         timeVelocitySensitivity = Int(b) - 64
-        offset += 1
         
-        b = d[offset]
+        b = d.next(&offset)
         levelVelocitySensitivity = Int(b) - 64
-        offset += 1
     }
     
     public func asData() -> ByteArray {
@@ -118,12 +112,10 @@ public struct Oscillator: Codable {
         var offset: Int = 0
         var b: Byte = 0
         
-        b = d[offset]
+        b = d.next(&offset)
         let waveMSB = b
-        offset += 1
-        b = d[offset]
+        b = d.next(&offset)
         let waveLSB = b
-        offset += 1
 
         let waveMSBString = String(waveMSB, radix: 2).pad(with: "0", toLength: 3)
         let waveLSBString = String(waveLSB, radix: 2).pad(with: "0", toLength: 7)
@@ -131,21 +123,17 @@ public struct Oscillator: Codable {
         // now we should have a 10-bit binary string, convert it to a decimal number
         waveNumber = Int(waveString, radix: 2) ?? 412
 
-        b = d[offset]
+        b = d.next(&offset)
         coarse = Int(b) - 24
-        offset += 1
 
-        b = d[offset]
+        b = d.next(&offset)
         fine = Int(b) - 64
-        offset += 1
 
-        b = d[offset]
+        b = d.next(&offset)
         fixedKey = Int(b)
-        offset += 1
 
-        b = d[offset]
+        b = d.next(&offset)
         keyScalingToPitch = KeyScalingType(index: Int(b))!
-        offset += 1
 
         pitchEnvelope = PitchEnvelope(data: ByteArray(d[offset ..< offset + PitchEnvelope.dataLength]))
         

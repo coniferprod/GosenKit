@@ -185,27 +185,22 @@ public struct EffectDefinition: Codable {
         var offset: Int = 0
         var b: Byte = 0
         
-        b = d[offset]
+        b = d.next(&offset)
         effectType = EffectType(index: Int(b))!
 
-        offset += 1
-        b = d[offset]
+        b = d.next(&offset)
         depth = Int(b)
 
-        offset += 1
-        b = d[offset]
+        b = d.next(&offset)
         parameter1 = Int(b)
 
-        offset += 1
-        b = d[offset]
+        b = d.next(&offset)
         parameter2 = Int(b)
 
-        offset += 1
-        b = d[offset]
+        b = d.next(&offset)
         parameter3 = Int(b)
 
-        offset += 1
-        b = d[offset]
+        b = d.next(&offset)
         parameter4 = Int(b)
     }
     
@@ -246,9 +241,8 @@ public struct EffectSettings: Codable {
         var offset: Int = 0
         var b: Byte = 0
         
-        b = d[offset]
+        b = d.next(&offset)
         algorithm = Int(b + 1)  // adjust 0~3 to 1~4
-        offset += 1
         
         reverb = EffectDefinition(data: ByteArray(d[offset ..< offset + EffectDefinition.dataLength]))
         offset += EffectDefinition.dataLength

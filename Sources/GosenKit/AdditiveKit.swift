@@ -23,12 +23,9 @@ public struct AdditiveKit: Codable {
     
     public init(data d: ByteArray) {
         var offset: Int = 0
-        var b: Byte = 0
-        
-        b = d[offset]
-        let originalChecksum = b
+
+        let originalChecksum = d.next(&offset)
         //print("From SysEx, ADD kit checksum = \(String(originalChecksum, radix: 16))")
-        offset += 1
         
         common = HarmonicCommonSettings(data: ByteArray(d[offset ..< offset + HarmonicCommonSettings.dataLength]))
         offset += HarmonicCommonSettings.dataLength

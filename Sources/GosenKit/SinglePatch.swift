@@ -86,8 +86,7 @@ public struct SingleCommon: Codable {
         var offset: Int = 0
         var b: Byte = 0
         
-        let checksum = d[offset]
-        offset += 1
+        let checksum = d.next(&offset)
         
         //print("Original checksum = \(String(checksum, radix: 16))")
         
@@ -96,11 +95,10 @@ public struct SingleCommon: Codable {
 
         geq = [Int]()
         for i in 0..<SingleCommon.geqBandCount {
-            b = d[offset]
+            b = d.next(&offset)
             let v: Int = Int(b) - 64  // 58(-6) ~ 70(+6), so 64 is zero
             //print("GEQ band \(i + 1): \(b) --> \(v)")
             geq.append(Int(v))
-            offset += 1
         }
         
         // Eat the drum mark (39)
@@ -111,23 +109,21 @@ public struct SingleCommon: Codable {
         name = String(data: Data(d[offset ..< offset + SingleCommon.nameLength]), encoding: .ascii) ?? "--------"
         offset += SingleCommon.nameLength
         
-        volume = Int(d[offset])
-        offset += 1
+        b = d.next(&offset)
+        volume = Int(b)
         
-        b = d[offset]
+        b = d.next(&offset)
         polyphony = PolyphonyType(index: Int(b))!
-        offset += 1
 
         // Eat the "no use" byte (50)
         offset += 1
         
-        b = d[offset]
+        b = d.next(&offset)
         sourceCount = Int(b)
-        offset += 1
         
         //print("Start source mutes, offset = \(offset)")
 
-        b = d[offset]
+        b = d.next(&offset)
         // Unpack the source mutes into a Bool array. Spec says "0:mute".
         sourceMutes = [Bool]()
         sourceMutes.append(b.isBitSet(0) ? false : true)
@@ -136,92 +132,72 @@ public struct SingleCommon: Codable {
         sourceMutes.append(b.isBitSet(3) ? false : true)
         sourceMutes.append(b.isBitSet(4) ? false : true)
         sourceMutes.append(b.isBitSet(5) ? false : true)
-        offset += 1
 
-        b = d[offset]
+        b = d.next(&offset)
         amplitudeModulation = AmplitudeModulationType(index: Int(b))!
-        offset += 1
 
         effectControl = EffectControlSettings(data: ByteArray(d[offset ..< offset + EffectControlSettings.dataLength]))
         offset += EffectControlSettings.dataLength
 
-        b = d[offset]
+        b = d.next(&offset)
         isPortamentoActive = (b == 1) ? true : false
-        offset += 1
         
-        b = d[offset]
+        b = d.next(&offset)
         portamentoSpeed = Int(b)
-        offset += 1
 
         //print("Start macros, offset = \(offset)")
         
         var macroDestinations = [Int]()
         
-        b = d[offset]
+        b = d.next(&offset)
         macroDestinations.append(Int(b))  // 0: Macro1 Destination1
-        offset += 1
         
-        b = d[offset]
+        b = d.next(&offset)
         macroDestinations.append(Int(b))  // 1: Macro1 Destination2
-        offset += 1
         
-        b = d[offset]
+        b = d.next(&offset)
         macroDestinations.append(Int(b))  // 2: Macro2 Destination1
-        offset += 1
         
-        b = d[offset]
+        b = d.next(&offset)
         macroDestinations.append(Int(b))  // 3: Macro2 Destination2
-        offset += 1
         
-        b = d[offset]
+        b = d.next(&offset)
         macroDestinations.append(Int(b))  // 4: Macro3 Destination1
-        offset += 1
         
-        b = d[offset]
+        b = d.next(&offset)
         macroDestinations.append(Int(b))  // 5: Macro3 Destination2
-        offset += 1
 
-        b = d[offset]
+        b = d.next(&offset)
         macroDestinations.append(Int(b))  // 6: Macro4 Destination1
-        offset += 1
         
-        b = d[offset]
+        b = d.next(&offset)
         macroDestinations.append(Int(b))  // 7: Macro4 Destination2
-        offset += 1
 
         var macroDepths = [Int]()
 
-        b = d[offset]
+        b = d.next(&offset)
         macroDepths.append(Int(b) - 64)  // 0: Macro1 Depth1
-        offset += 1
 
-        b = d[offset]
+        b = d.next(&offset)
         macroDepths.append(Int(b) - 64)  // 1: Macro1 Depth2
-        offset += 1
 
-        b = d[offset]
+        b = d.next(&offset)
         macroDepths.append(Int(b) - 64)  // 2: Macro2 Depth1
-        offset += 1
 
-        b = d[offset]
+        b = d.next(&offset)
         macroDepths.append(Int(b) - 64)  // 3: Macro2 Depth2
-        offset += 1
 
-        b = d[offset]
+        b = d.next(&offset)
         macroDepths.append(Int(b) - 64)  // 4: Macro3 Depth1
-        offset += 1
 
-        b = d[offset]
+        b = d.next(&offset)
         macroDepths.append(Int(b) - 64)  // 5: Macro3 Depth2
-        offset += 1
 
-        b = d[offset]
+        b = d.next(&offset)
         macroDepths.append(Int(b) - 64)  // 6: Macro4 Depth1
-        offset += 1
 
-        b = d[offset]
+        b = d.next(&offset)
         macroDepths.append(Int(b) - 64)  // 7: Macro4 Depth2
-        offset += 1
 
         macros = [MacroController]()
         
@@ -255,21 +231,17 @@ public struct SingleCommon: Codable {
         
         //print("Start switches, offset = \(offset)")
         
-        b = d[offset]
+        b = d.next(&offset)
         let sw1t = SwitchType(index: Int(b))!
-        offset += 1
 
-        b = d[offset]
+        b = d.next(&offset)
         let sw2t = SwitchType(index: Int(b))!
-        offset += 1
         
-        b = d[offset]
+        b = d.next(&offset)
         let fsw1t = SwitchType(index: Int(b))!
-        offset += 1
         
-        b = d[offset]
+        b = d.next(&offset)
         let fsw2t = SwitchType(index: Int(b))!
-        offset += 1
 
         switches = SwitchControl(switch1: sw1t, switch2: sw2t, footSwitch1: fsw1t, footSwitch2: fsw2t)
     }

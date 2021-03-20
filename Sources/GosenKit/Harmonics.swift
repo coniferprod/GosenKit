@@ -36,29 +36,23 @@ public struct HarmonicCommonSettings: Codable {
         var offset: Int = 0
         var b: Byte = 0
         
-        b = d[offset]
+        b = d.next(&offset)
         isMorfEnabled = (b == 1)
-        offset += 1
         
-        b = d[offset]
+        b = d.next(&offset)
         totalGain = Int(b)
-        offset += 1
 
-        b = d[offset]
+        b = d.next(&offset)
         group = HarmonicGroupType(index: Int(b))!
-        offset += 1
         
-        b = d[offset]
+        b = d.next(&offset)
         keyScalingToGain = Int(b) - 64
-        offset += 1
         
-        b = d[offset]
+        b = d.next(&offset)
         velocityCurve = Int(b) + 1 // 0~11 to 1~12
-        offset += 1
         
-        b = d[offset]
+        b = d.next(&offset)
         velocityDepth = Int(b)
-        offset += 1
     }
     
     public func asData() -> ByteArray {
@@ -90,13 +84,11 @@ public struct EnvelopeSegment: Codable {
         var offset: Int = 0
         var b: Byte = 0
         
-        b = d[offset]
+        b = d.next(&offset)
         rate = Int(b)
-        offset += 1
         
-        b = d[offset]
+        b = d.next(&offset)
         level = Int(b) - 64
-        offset += 1
     }
         
     public func asData() -> ByteArray {
@@ -126,26 +118,19 @@ public struct HarmonicEnvelopeSegment: Codable {
         self.level = level
     }
     
-    public init(fromSystemExclusive d: Data) {
+    public init(data d: ByteArray) {
         var offset: Int = 0
         var b: Byte = 0
         
-        b = d[offset]
+        b = d.next(&offset)
         rate = Int(b)
-        offset += 1
         
-        b = d[offset]
+        b = d.next(&offset)
         level = Int(b)
-        offset += 1
     }
         
     func asData() -> ByteArray {
-        var data = ByteArray()
-        
-        data.append(Byte(rate))
-        data.append(Byte(level))
-        
-        return data
+        return ByteArray(arrayLiteral: Byte(rate), Byte(level))
     }
 }
 
@@ -201,59 +186,53 @@ public struct HarmonicEnvelope: Codable {
 
         //print("> HARM ENV = \(d.hexDump)")
         
-        b = d[offset]
+        // I'm just going to test out my new ByteArray extension
+        // to see how it feels like...
+        
+        // Old code:
+        //b = d[offset]
+        //let segment0Rate = Int(b)
+        //offset += 1
+
+        // New code:
+        b = d.next(&offset)
         let segment0Rate = Int(b)
-        offset += 1
+
+        // You just need to remember to use & for the inout parameter
         
-        b = d[offset]
+        b = d.next(&offset)
         let segment0Level = Int(b)
-        offset += 1
         
-        print("segment0 rate = 0x\(String(segment0Rate, radix: 16)) level = 0x\(String(segment0Level, radix: 16))")
+        //print("segment0 rate = 0x\(String(segment0Rate, radix: 16)) level = 0x\(String(segment0Level, radix: 16))")
         
-        b = d[offset]
+        b = d.next(&offset)
         let segment1Rate = Int(b)
-        offset += 1
         
-        b = d[offset]
+        b = d.next(&offset)
         let segment1LevelBit6 = b.isBitSet(6)
-        print("segment1 rate = 0x\(String(segment1Rate, radix: 16)) level = 0x\(String(b, radix: 16)) = 0b\(String(b, radix: 2))")
-        if segment1LevelBit6 {
-            print("bit 6 of segment 1 level is set")
-        }
-        else {
-            print("bit 6 of segment 1 level is NOT set")
-        }
+        //print("segment1 rate = 0x\(String(segment1Rate, radix: 16)) level = 0x\(String(b, radix: 16)) = 0b\(String(b, radix: 2))")
+        //print("bit 6 of segment 1 level set? \(segment1LevelBit6 ? "YES" : "NO")")
+        
         b.unsetBit(6)
         let segment1Level = Int(b)
-        offset += 1
 
-        b = d[offset]
+        b = d.next(&offset)
         let segment2Rate = Int(b)
-        offset += 1
         
-        b = d[offset]
+        b = d.next(&offset)
         let segment2LevelBit6 = b.isBitSet(6)
         print("segment2 rate = 0x\(String(segment2Rate, radix: 16)) level = 0x\(String(b, radix: 16)) = 0b\(String(b, radix: 2))")
-        if segment2LevelBit6 {
-            print("bit 6 of segment 2 level is set")
-        }
-        else {
-            print("bit 6 of segment 2 level is NOT set")
-        }
+        //print("bit 6 of segment 1 level set? \(segment2LevelBit6 ? "YES" : "NO")")
         b.unsetBit(6)
         let segment2Level = Int(b)
-        offset += 1
         
-        b = d[offset]
+        b = d.next(&offset)
         let segment3Rate = Int(b)
-        offset += 1
-        
-        b = d[offset]
+
+        b = d.next(&offset)
         let segment3Level = Int(b)
-        offset += 1
         
-        print("segment3 rate = 0x\(String(segment3Rate, radix: 16)) level = 0x\(String(segment3Level, radix: 16))")
+        //print("segment3 rate = 0x\(String(segment3Rate, radix: 16)) level = 0x\(String(segment3Level, radix: 16))")
 
         segment0 = HarmonicEnvelopeSegment(rate: segment0Rate, level: segment0Level)
         segment1 = HarmonicEnvelopeSegment(rate: segment1Rate, level: segment1Level)
@@ -290,7 +269,7 @@ public struct HarmonicEnvelope: Codable {
         // we need to bake the loop type into the levels.
         
         var segment1Level = Byte(segment1.level)
-        var segment2Level = Byte(segment1.level)
+        var segment2Level = Byte(segment2.level)
 
         if loopType == .loop2 {  // bit pattern from bits 6 of L1 and L2 = "01"
             segment1Level.unsetBit(6)
@@ -364,18 +343,16 @@ public struct HarmonicLevels: Codable {
         var i = 0
         soft = [Int]()
         while i < HarmonicLevels.harmonicCount {
-            b = d[offset]
+            b = d.next(&offset)
             soft.append(Int(b))
-            offset += 1
             i += 1
         }
         
         i = 0
         loud = [Int]()
         while i < HarmonicLevels.harmonicCount {
-            b = d[offset]
+            b = d.next(&offset)
             loud.append(Int(b))
-            offset += 1
             i += 1
         }
     }

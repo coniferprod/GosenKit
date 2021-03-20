@@ -74,53 +74,42 @@ public struct LFO: Codable {
         var offset: Int = 0
         var b: Byte = 0
         
-        b = d[offset]
+        b = d.next(&offset)
         waveform = LFOWaveformType(index: Int(b))!
-        offset += 1
         
-        b = d[offset]
+        b = d.next(&offset)
         speed = Int(b)
-        offset += 1
         
-        b = d[offset]
+        b = d.next(&offset)
         delayOnset = Int(b)
-        offset += 1
 
-        b = d[offset]
+        b = d.next(&offset)
         fadeInTime = Int(b)
-        offset += 1
 
-        b = d[offset]
+        b = d.next(&offset)
         fadeInToSpeed = Int(b)
-        offset += 1
 
-        b = d[offset]
+        b = d.next(&offset)
         let vibratoDepth = Int(b)
-        offset += 1
 
-        b = d[offset]
+        b = d.next(&offset)
         let vibratoKeyScaling = Int(b) - 64
-        offset += 1
 
         vibrato = LFOControl(depth: vibratoDepth, keyScaling: vibratoKeyScaling)
         
-        b = d[offset]
+        b = d.next(&offset)
         let growlDepth = Int(b)
-        offset += 1
 
-        b = d[offset]
+        b = d.next(&offset)
         let growlKeyScaling = Int(b) - 64
-        offset += 1
 
         growl = LFOControl(depth: growlDepth, keyScaling: growlKeyScaling)
         
-        b = d[offset]
+        b = d.next(&offset)
         let tremoloDepth = Int(b)
-        offset += 1
 
-        b = d[offset]
+        b = d.next(&offset)
         let tremoloKeyScaling = Int(b) - 64
-        offset += 1
         
         tremolo = LFOControl(depth: tremoloDepth, keyScaling: tremoloKeyScaling)
     }

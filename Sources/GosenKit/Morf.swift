@@ -21,23 +21,19 @@ public struct MorfHarmonicEnvelope: Codable {
         var offset: Int = 0
         var b: Byte = 0
     
-        b = d[offset]
+        b = d.next(&offset)
         time1 = Int(b)
-        offset += 1
         
-        b = d[offset]
+        b = d.next(&offset)
         time2 = Int(b)
-        offset += 1
 
-        b = d[offset]
+        b = d.next(&offset)
         time3 = Int(b)
-        offset += 1
         
-        b = d[offset]
+        b = d.next(&offset)
         time4 = Int(b)
-        offset += 1
 
-        b = d[offset]
+        b = d.next(&offset)
         loopType = EnvelopeLoopType(index: Int(b))!
     }
     
@@ -69,13 +65,11 @@ public struct MorfHarmonicCopyParameters: Codable {
         var offset: Int = 0
         var b: Byte = 0
     
-        b = d[offset]
+        b = d.next(&offset)
         patchNumber = Int(b)
-        offset += 1
         
-        b = d[offset]
+        b = d.next(&offset)
         sourceNumber = Int(b)
-        offset += 1
     }
     
     public func asData() -> ByteArray {
@@ -107,7 +101,6 @@ public struct MorfHarmonicSettings: Codable {
     
     public init(data d: ByteArray) {
         var offset: Int = 0
-        var b: Byte = 0
         
         copy1 = MorfHarmonicCopyParameters(data: ByteArray(d[offset ..< offset + MorfHarmonicCopyParameters.dataLength]))
         offset += MorfHarmonicCopyParameters.dataLength

@@ -79,23 +79,19 @@ public struct MacroController: Codable {
         var offset: Int = 0
         var b: Byte = 0
         
-        b = d[offset]
+        b = d.next(&offset)
         destination1 = ControlDestination(index: Int(b))!
-        offset += 1
 
-        b = d[offset]
+        b = d.next(&offset)
         depth1 = Int(b) - 64
         //print("depth1 byte = \(String(b, radix: 16))h, converted to \(depth1)")
-        offset += 1
         
-        b = d[offset]
+        b = d.next(&offset)
         destination2 = ControlDestination(index: Int(b))!
-        offset += 1
 
-        b = d[offset]
+        b = d.next(&offset)
         depth2 = Int(b) - 64
         //print("depth2 byte = \(String(b, radix: 16))h, converted to \(depth2)")
-        offset += 1
     }
     
     public func asData() -> ByteArray {
@@ -277,15 +273,13 @@ public struct EffectControlSourceSettings: Codable {
         var offset: Int = 0
         var b: Byte = 0
     
-        b = d[offset]
+        b = d.next(&offset)
         sourceType = ControlSource(index: Int(b))!
-        offset += 1
         
-        b = d[offset]
+        b = d.next(&offset)
         destinationType = EffectDestinationType(index: Int(b))!
-        offset += 1
         
-        b = d[offset]
+        b = d.next(&offset)
         depth = Int(b) - 64
     }
     
@@ -363,17 +357,14 @@ public struct AssignableController: Codable {
         var offset: Int = 0
         var b: Byte = 0
         
-        b = d[offset]
+        b = d.next(&offset)
         sourceType = ControlSource(index: Int(b))!
-        offset += 1
         
-        b = d[offset]
+        b = d.next(&offset)
         destination = ControlDestination(index: Int(b))!
-        offset += 1
         
-        b = d[offset]
+        b = d.next(&offset)
         depth = Int(b)
-        offset += 1
     }
     
     public func asData() -> ByteArray {
@@ -489,11 +480,10 @@ public struct PanSettings: Codable {
         var offset: Int = 0
         var b: Byte = 0
         
-        b = d[offset]
+        b = d.next(&offset)
         panType = PanType(index: Int(b))!
-        offset += 1
         
-        b = d[offset]
+        b = d.next(&offset)
         panValue = Int(b) - 64
     }
 

@@ -39,11 +39,8 @@ public struct VelocitySwitchSettings: Codable {
         self.threshold = VelocitySwitchSettings.conversionTable[threshold]
     }
     
-    public init(fromSystemExclusive d: Data) {
-        var offset: Int = 0
-        var b: Byte = 0
-    
-        b = d[offset]
+    public init(data d: ByteArray) {
+        let b = d[0]
         let vs = Int(b >> 5)   // bits 5-6
         switchType = VelocitySwitchType(index: vs)!
         let n = Int(b & 0b00011111)   // bits 0-4
@@ -101,40 +98,32 @@ public struct SourceControlSettings: Codable {
         
         //print("Source SysEx data = \(d.hexDump)")
         
-        b = d[offset]
+        b = d.next(&offset)
         zoneLow = Int(b)
-        offset += 1
         
-        b = d[offset]
+        b = d.next(&offset)
         zoneHigh = Int(b)
-        offset += 1
         
-        b = d[offset]
-        velocitySwitch = VelocitySwitchSettings(fromSystemExclusive: Data([b]))
-        offset += 1
+        b = d.next(&offset)
+        velocitySwitch = VelocitySwitchSettings(data: [b])
         
-        b = d[offset]
+        b = d.next(&offset)
         effectPath = Int(b)
-        offset += 1
         
-        b = d[offset]
+        b = d.next(&offset)
         volume = Int(b)
-        offset += 1
         
-        b = d[offset]
+        b = d.next(&offset)
         benderPitch = Int(b)
-        offset += 1
         
-        b = d[offset]
+        b = d.next(&offset)
         benderCutoff = Int(b)
-        offset += 1
         
         modulations = ModulationSettings(data: ByteArray(d[offset ..< offset + ModulationSettings.dataLength]))
         offset += ModulationSettings.dataLength
         
-        b = d[offset]
+        b = d.next(&offset)
         keyOnDelay = Int(b)
-        offset += 1
         
         pan = PanSettings(data: ByteArray(d[offset ..< offset + PanSettings.dataLength]))
     }
@@ -192,7 +181,6 @@ public struct Source: Codable {
     /// Initializes a source from system exclusive data.
     public init(data d: ByteArray) {
         var offset: Int = 0
-        var b: Byte = 0
         
         print("SOURCE: Start Control, offset = \(offset)")
         control = SourceControlSettings(data: ByteArray(d[offset ..< offset + SourceControlSettings.dataLength]))

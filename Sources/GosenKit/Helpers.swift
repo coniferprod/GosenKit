@@ -50,6 +50,13 @@ extension ByteArray {
         }
         return s
     }
+    
+    /// Returns the byte at the given offset, then increases the offset by one.
+    public func next(_ offset: inout Int) -> Byte {
+        let b = self[offset]
+        offset += 1
+        return b
+    }
 }
 
 extension Data {

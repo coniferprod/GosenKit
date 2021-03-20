@@ -35,29 +35,23 @@ public struct AmplifierEnvelope: Codable {
         var offset: Int = 0
         var b: Byte = 0
         
-        b = d[offset]
+        b = d.next(&offset)
         attackTime = Int(b)
-        offset += 1
         
-        b = d[offset]
+        b = d.next(&offset)
         decay1Time = Int(b)
-        offset += 1
         
-        b = d[offset]
+        b = d.next(&offset)
         decay1Level = Int(b)
-        offset += 1
         
-        b = d[offset]
+        b = d.next(&offset)
         decay2Time = Int(b)
-        offset += 1
         
-        b = d[offset]
+        b = d.next(&offset)
         decay2Level = Int(b)
-        offset += 1
         
-        b = d[offset]
+        b = d.next(&offset)
         releaseTime = Int(b)
-        offset += 1
     }
     
     public func asData() -> ByteArray {
@@ -103,21 +97,17 @@ public struct AmplifierKeyScalingControl: Codable {
         var offset: Int = 0
         var b: Byte = 0
         
-        b = d[offset]
+        b = d.next(&offset)
         level = Int(b) - 64
-        offset += 1
         
-        b = d[offset]
+        b = d.next(&offset)
         attackTime = Int(b) - 64
-        offset += 1
     
-        b = d[offset]
+        b = d.next(&offset)
         decay1Time = Int(b) - 64
-        offset += 1
         
-        b = d[offset]
+        b = d.next(&offset)
         release = Int(b) - 64
-        offset += 1
     }
     
     public func asData() -> ByteArray {
@@ -162,21 +152,17 @@ public struct AmplifierVelocityControl: Codable {
         var offset: Int = 0
         var b: Byte = 0
         
-        b = d[offset]
+        b = d.next(&offset)
         level = Int(b)
-        offset += 1
         
-        b = d[offset]
+        b = d.next(&offset)
         attackTime = Int(b) - 64
-        offset += 1
         
-        b = d[offset]
+        b = d.next(&offset)
         decay1Time = Int(b) - 64
-        offset += 1
         
-        b = d[offset]
+        b = d.next(&offset)
         release = Int(b) - 64
-        offset += 1
     }
     
     public func asData() -> ByteArray {
@@ -242,9 +228,8 @@ public struct Amplifier: Codable {
         var offset: Int = 0
         var b: Byte = 0
         
-        b = d[offset]
+        b = d.next(&offset)
         velocityCurve = Int(b) + 1  // 0~11 to 1~12
-        offset += 1
         
         //print("Start amplifier envelope, offset = \(offset)")
         envelope = AmplifierEnvelope(data: ByteArray(d[offset ..< offset + AmplifierEnvelope.dataLength]))

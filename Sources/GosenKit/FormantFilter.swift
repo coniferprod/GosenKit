@@ -37,17 +37,14 @@ public struct FormantFilterEnvelope: Codable {
         release = EnvelopeSegment(data: ByteArray(d[offset ..< offset + EnvelopeSegment.dataLength]))
         offset += EnvelopeSegment.dataLength
 
-        b = d[offset]
+        b = d.next(&offset)
         decayLoop = EnvelopeLoopType(index: Int(b))!
-        offset += 1
         
-        b = d[offset]
+        b = d.next(&offset)
         velocityDepth = Int(b) - 64
-        offset += 1
 
-        b = d[offset]
+        b = d.next(&offset)
         keyScalingDepth = Int(b) - 64
-        offset += 1
     }
     
     public func asData() -> ByteArray {
@@ -98,17 +95,14 @@ public struct FormantFilterLFO: Codable {
         var offset: Int = 0
         var b: Byte = 0
         
-        b = d[offset]
+        b = d.next(&offset)
         speed = Int(b)
-        offset += 1
 
-        b = d[offset]
+        b = d.next(&offset)
         shape = FormantFilterLFOShape(index: Int(b))!
-        offset += 1
         
-        b = d[offset]
+        b = d.next(&offset)
         depth = Int(b)
-        offset += 1
     }
     
     public func asData() -> ByteArray {
@@ -154,9 +148,8 @@ public struct FormantFilterBands: Codable {
         
         levels = [Int]()
         for _ in 0..<FormantFilterBands.bandCount {
-            b = d[offset]
+            b = d.next(&offset)
             levels.append(Int(b))
-            offset += 1
         }
     }
         
@@ -196,17 +189,14 @@ public struct FormantFilterSettings: Codable {
     
         // the bands are not here!
         
-        b = d[offset]
+        b = d.next(&offset)
         bias = Int(b) - 64
-        offset += 1
         
-        b = d[offset]
+        b = d.next(&offset)
         mode = FormantFilterMode(index: Int(b))!
-        offset += 1
         
-        b = d[offset]
+        b = d.next(&offset)
         envelopeDepth = Int(b) - 64
-        offset += 1
         
         envelope = FormantFilterEnvelope(data: ByteArray(d[offset ..< offset + FormantFilterEnvelope.dataLength]))
         offset += FormantFilterEnvelope.dataLength
