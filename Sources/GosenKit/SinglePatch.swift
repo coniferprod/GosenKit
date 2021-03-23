@@ -90,7 +90,7 @@ public struct SingleCommon: Codable {
         
         //print("Original checksum = \(String(checksum, radix: 16))")
         
-        effects = EffectSettings(data: ByteArray(d[offset ..< offset + EffectSettings.dataLength]))
+        effects = EffectSettings(data: d.slice(from: offset, length: EffectSettings.dataLength))
         offset += EffectSettings.dataLength
 
         geq = [Int]()
@@ -136,7 +136,7 @@ public struct SingleCommon: Codable {
         b = d.next(&offset)
         amplitudeModulation = AmplitudeModulationType(index: Int(b))!
 
-        effectControl = EffectControlSettings(data: ByteArray(d[offset ..< offset + EffectControlSettings.dataLength]))
+        effectControl = EffectControlSettings(data: d.slice(from: offset, length: EffectControlSettings.dataLength))
         offset += EffectControlSettings.dataLength
 
         b = d.next(&offset)

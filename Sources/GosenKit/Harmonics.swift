@@ -220,17 +220,13 @@ public struct HarmonicEnvelope: Codable {
         
         // Need to post-process segments 1 and 2 to get the loop type
         
-        var bitString = ""
-        bitString += segment1LevelBit6 ? "1" : "0"
-        bitString += segment2LevelBit6 ? "1" : "0"
-        //print(bitString)
-        switch bitString {
-        case "10":
-            print("warning: impossible loop type value '\(bitString)', setting loop to OFF")
-            loopType = .off
-        case "11":
+        switch (segment1LevelBit6, segment2LevelBit6) {
+        case (true, true):
             loopType = .loop1
-        case "01":
+        case (true, false):
+            print("warning: impossible loop type value '0b10', setting loop type to OFF")
+            loopType = .off
+        case (false, true):
             loopType = .loop2
         default:
             loopType = .off

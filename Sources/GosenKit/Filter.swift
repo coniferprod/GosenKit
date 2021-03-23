@@ -161,7 +161,7 @@ public struct Filter: Codable {
         b = d.next(&offset)
         envelopeDepth = Int(b) - 64
         
-        envelope = FilterEnvelope(data: ByteArray(d[offset ..< offset + FilterEnvelope.dataLength]))
+        envelope = FilterEnvelope(data: d.slice(from: offset, length: FilterEnvelope.dataLength))
     }
     
     public func asData() -> ByteArray {

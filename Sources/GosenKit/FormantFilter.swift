@@ -184,10 +184,10 @@ public struct FormantFilterSettings: Codable {
         b = d.next(&offset)
         envelopeDepth = Int(b) - 64
         
-        envelope = FormantFilterEnvelope(data: ByteArray(d[offset ..< offset + FormantFilterEnvelope.dataLength]))
+        envelope = FormantFilterEnvelope(data: d.slice(from: offset, length: FormantFilterEnvelope.dataLength))
         offset += FormantFilterEnvelope.dataLength
         
-        lfo = FormantFilterLFO(data: ByteArray(d[offset ..< offset + FormantFilterLFO.dataLength]))
+        lfo = FormantFilterLFO(data: d.slice(from: offset, length: FormantFilterLFO.dataLength))
         offset += FormantFilterLFO.dataLength
     }
     
