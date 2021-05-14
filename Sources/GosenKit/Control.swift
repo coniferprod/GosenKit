@@ -250,7 +250,7 @@ public enum EffectDestinationType: String, Codable, CaseIterable {
     }
 }
 
-public struct EffectControlSourceSettings: Codable {
+public struct EffectControlSource: Codable {
     public var sourceType: ControlSource
     public var destinationType: EffectDestinationType
     public var depth: Int
@@ -286,7 +286,7 @@ public struct EffectControlSourceSettings: Codable {
     }
 }
 
-extension EffectControlSourceSettings: CustomStringConvertible {
+extension EffectControlSource: CustomStringConvertible {
     public var description: String {
         var s = ""
         s += "source=\(sourceType.rawValue), destination=\(destinationType.rawValue), depth=\(depth)"
@@ -294,23 +294,24 @@ extension EffectControlSourceSettings: CustomStringConvertible {
     }
 }
 
-public struct EffectControlSettings: Codable {
-    public var source1: EffectControlSourceSettings
-    public var source2: EffectControlSourceSettings
+public struct EffectControl: Codable {
+    public var source1: EffectControlSource
+    public var source2: EffectControlSource
     
     static let dataLength = 6
     
     public init() {
-        source1 = EffectControlSourceSettings()
-        source2 = EffectControlSourceSettings()
+        source1 = EffectControlSource()
+        source2 = EffectControlSource()
     }
     
     public init(data d: ByteArray) {
         var offset: Int = 0
     
-        source1 = EffectControlSourceSettings(data: d.slice(from: offset, length:  EffectControlSourceSettings.dataLength))
-        offset += EffectControlSourceSettings.dataLength
-        source2 = EffectControlSourceSettings(data: d.slice(from: offset, length:  EffectControlSourceSettings.dataLength))
+        let length = EffectControlSource.dataLength
+        source1 = EffectControlSource(data: d.slice(from: offset, length: length))
+        offset += length
+        source2 = EffectControlSource(data: d.slice(from: offset, length: length))
     }
     
     public func asData() -> ByteArray {
@@ -323,7 +324,7 @@ public struct EffectControlSettings: Codable {
     }
 }
 
-extension EffectControlSettings: CustomStringConvertible {
+extension EffectControl: CustomStringConvertible {
     public var description: String {
         var s = "Effect Control:\n"
         s += "    Source1: \(source1)\n"

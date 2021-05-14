@@ -1,6 +1,6 @@
 import Foundation
 
-public struct MorfHarmonicSettings: Codable {
+public struct Morf: Codable {
     public struct CopyParameters: Codable {
         public var patchNumber: Int  // 0~127
         public var sourceNumber: Int  // 0~11 (0~5:soft, 6~11:loud)

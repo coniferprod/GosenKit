@@ -243,7 +243,7 @@ public struct Source: Codable {
     public var lfo: LFO
     public var control: Control
 
-    static let dataLength = 86
+    public static let dataLength = 86
     
     public init() {
         oscillator = Oscillator()

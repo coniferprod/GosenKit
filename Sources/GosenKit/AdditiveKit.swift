@@ -2,18 +2,18 @@ import Foundation
 
 public struct AdditiveKit: Codable {
     public static let harmonicCount = 64
-    static let dataLength = 806
+    public static let dataLength = 806
     
-    public var common: HarmonicCommonSettings
-    public var morf: MorfHarmonicSettings
+    public var common: HarmonicCommon
+    public var morf: Morf
     public var formantFilter: FormantFilter
     public var levels: HarmonicLevels
     public var bands: FormantFilter.Bands
     public var envelopes: [HarmonicEnvelope]
     
     public init() {
-        common = HarmonicCommonSettings()
-        morf = MorfHarmonicSettings()
+        common = HarmonicCommon()
+        morf = Morf()
         formantFilter = FormantFilter()
         levels = HarmonicLevels()
         bands = FormantFilter.Bands()
@@ -29,11 +29,11 @@ public struct AdditiveKit: Codable {
         let originalChecksum = d.next(&offset)
         //print("From SysEx, ADD kit checksum = \(String(originalChecksum, radix: 16))")
         
-        common = HarmonicCommonSettings(data: d.slice(from: offset, length: HarmonicCommonSettings.dataLength))
-        offset += HarmonicCommonSettings.dataLength
+        common = HarmonicCommon(data: d.slice(from: offset, length: HarmonicCommon.dataLength))
+        offset += HarmonicCommon.dataLength
         
-        morf = MorfHarmonicSettings(data: d.slice(from: offset, length: MorfHarmonicSettings.dataLength))
-        offset += MorfHarmonicSettings.dataLength
+        morf = Morf(data: d.slice(from: offset, length: Morf.dataLength))
+        offset += Morf.dataLength
 
         formantFilter = FormantFilter(data: d.slice(from: offset, length: FormantFilter.dataLength))
         offset += FormantFilter.dataLength

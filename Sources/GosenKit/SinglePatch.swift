@@ -55,14 +55,14 @@ public struct SinglePatch: Codable {
         public var switches: SwitchControl
         public var effects: EffectSettings
         public var geq: [Int]  // 58(-6) ~ 70(+6), so 64 is zero
-        public var effectControl: EffectControlSettings
+        public var effectControl: EffectControl
         
         static let sourceCountOffset = 50
         static let geqBandCount = 7
         static let nameLength = 8
         static let macroCount = 4
         
-        static let dataSize = 82
+        public static let dataLength = 82
         
         /// Initializes the common part with default values.
         public init() {
@@ -82,7 +82,7 @@ public struct SinglePatch: Codable {
             switches = SwitchControl(switch1: .off, switch2: .off, footSwitch1: .off, footSwitch2: .off)
             effects = EffectSettings()
             geq = [ 2, 1, 0, 0, -1, -2, 1 ]
-            effectControl = EffectControlSettings()
+            effectControl = EffectControl()
         }
         
         /// Initializes the common part of a single patch from MIDI System Exclusive data.
@@ -141,8 +141,8 @@ public struct SinglePatch: Codable {
             b = d.next(&offset)
             amplitudeModulation = AmplitudeModulation(index: Int(b))!
 
-            effectControl = EffectControlSettings(data: d.slice(from: offset, length: EffectControlSettings.dataLength))
-            offset += EffectControlSettings.dataLength
+            effectControl = EffectControl(data: d.slice(from: offset, length: EffectControl.dataLength))
+            offset += EffectControl.dataLength
 
             b = d.next(&offset)
             isPortamentoActive = (b == 1) ? true : false
@@ -274,7 +274,7 @@ public struct SinglePatch: Codable {
         var offset: Int = 0
         
         common = Common(data: d)
-        offset += Common.dataSize
+        offset += Common.dataLength
         
         sources = [Source]()
         for _ in 0..<common.sourceCount {

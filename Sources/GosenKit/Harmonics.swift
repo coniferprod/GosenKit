@@ -1,6 +1,6 @@
 import Foundation
 
-public struct HarmonicCommonSettings: Codable {
+public struct HarmonicCommon: Codable {
     public enum Group: String, Codable, CaseIterable {
         case low
         case high
