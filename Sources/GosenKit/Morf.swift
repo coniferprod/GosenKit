@@ -94,7 +94,7 @@ public struct MorfHarmonicSettings: Codable {
     public init(data d: ByteArray) {
         var offset: Int = 0
         
-        let length = CopyParameters.dataLength
+        var length = CopyParameters.dataLength
         copy1 = CopyParameters(data: d.slice(from: offset, length: length))
         offset += length
 
@@ -107,8 +107,8 @@ public struct MorfHarmonicSettings: Codable {
         copy4 = CopyParameters(data: d.slice(from: offset, length: length))
         offset += length
 
+        length = Envelope.dataLength
         envelope = Envelope(data: d.slice(from: offset, length: length))
-        offset += Envelope.dataLength
     }
     
     public func asData() -> ByteArray {
