@@ -13,7 +13,7 @@ final class AdditiveKitTests: XCTestCase {
         
         var add1 = AdditiveKit()  // use default settings
         
-        let ff = FormantFilterBands(
+        let ff = FormantFilter.Bands(
             data: ByteArray([
                                 127, 127, 127, 127, 127, 127, 127, 127,
                                                 127, 127, 127, 127, 127, 127, 127, 127,
@@ -62,10 +62,10 @@ final class AdditiveKitTests: XCTestCase {
         add1.levels = levels
         
         var envelope = HarmonicEnvelope()
-        envelope.segment0 = HarmonicEnvelopeSegment(rate: 125, level: 63)
-        envelope.segment1 = HarmonicEnvelopeSegment(rate: 92, level: 63)
-        envelope.segment2 = HarmonicEnvelopeSegment(rate: 49, level: 63)
-        envelope.segment3 = HarmonicEnvelopeSegment(rate: 39, level: 49)
+        envelope.segment0 = HarmonicEnvelope.Segment(rate: 125, level: 63)
+        envelope.segment1 = HarmonicEnvelope.Segment(rate: 92, level: 63)
+        envelope.segment2 = HarmonicEnvelope.Segment(rate: 49, level: 63)
+        envelope.segment3 = HarmonicEnvelope.Segment(rate: 39, level: 49)
         envelope.loopType = .off
             
         for i in 0..<AdditiveKit.harmonicCount {

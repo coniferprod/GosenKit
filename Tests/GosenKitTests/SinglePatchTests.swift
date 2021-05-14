@@ -8,7 +8,7 @@ final class SinglePatchTests: XCTestCase {
     }
 
     func testAmplifierEnvelope() {
-        let env = AmplifierEnvelope(attackTime: 0, decay1Time: 0, decay1Level: 127, decay2Time: 0, decay2Level: 127, releaseTime: 0)
+        let env = Amplifier.Envelope(attackTime: 0, decay1Time: 0, decay1Level: 127, decay2Time: 0, decay2Level: 127, releaseTime: 0)
         XCTAssertEqual(env.attackTime, 0)
         XCTAssertEqual(env.decay1Time, 0)
         XCTAssertEqual(env.decay1Level, 127)
@@ -17,17 +17,17 @@ final class SinglePatchTests: XCTestCase {
     }
     
     func testAmplifierEnvelope_asData() {
-        let env = AmplifierEnvelope(attackTime: 0, decay1Time: 0, decay1Level: 127, decay2Time: 0, decay2Level: 127, releaseTime: 0)
+        let env = Amplifier.Envelope(attackTime: 0, decay1Time: 0, decay1Level: 127, decay2Time: 0, decay2Level: 127, releaseTime: 0)
         XCTAssertEqual(env.asData(), [0, 0, 127, 0, 127, 0])
     }
     
     func testAmplifierKeyScalingControl_asData() {
-        let control = AmplifierKeyScalingControl()
+        let control = Amplifier.Modulation.KeyScalingControl()
         XCTAssertEqual(control.asData(), [64, 64, 64, 64])
     }
     
     func testAmplifierVelocityControl_asData() {
-        let control = AmplifierVelocityControl()
+        let control = Amplifier.Modulation.VelocityControl()
         XCTAssertEqual(control.asData(), [0, 64, 64, 64])
     }
     
@@ -50,7 +50,7 @@ final class SinglePatchTests: XCTestCase {
         source1.oscillator.waveNumber = 512
         
         var add1 = AdditiveKit()
-        let ff = FormantFilterBands(
+        let ff = FormantFilter.Bands(
             data: ByteArray([
                                 127, 127, 127, 127, 127, 127, 127, 127,
                                                 127, 127, 127, 127, 127, 127, 127, 127,
@@ -98,10 +98,10 @@ final class SinglePatchTests: XCTestCase {
         add1.levels = levels
 
         var envelope = HarmonicEnvelope()
-        envelope.segment0 = HarmonicEnvelopeSegment(rate: 125, level: 63)
-        envelope.segment1 = HarmonicEnvelopeSegment(rate: 92, level: 63)
-        envelope.segment2 = HarmonicEnvelopeSegment(rate: 49, level: 63)
-        envelope.segment3 = HarmonicEnvelopeSegment(rate: 39, level: 49)
+        envelope.segment0 = HarmonicEnvelope.Segment(rate: 125, level: 63)
+        envelope.segment1 = HarmonicEnvelope.Segment(rate: 92, level: 63)
+        envelope.segment2 = HarmonicEnvelope.Segment(rate: 49, level: 63)
+        envelope.segment3 = HarmonicEnvelope.Segment(rate: 39, level: 49)
         envelope.loopType = .off
 
         for i in 0..<AdditiveKit.harmonicCount {

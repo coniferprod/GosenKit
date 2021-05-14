@@ -1,10 +1,3 @@
-//
-//  File.swift
-//  
-//
-//  Created by Jere Conifer on 6.3.2021.
-//
-
 import Foundation
 
 /*
@@ -157,6 +150,5 @@ final class SystemExclusiveTests: XCTestCase {
         let data = single.asData()
         XCTAssertEqual(data.count, 5434)
     }
-
 
 }

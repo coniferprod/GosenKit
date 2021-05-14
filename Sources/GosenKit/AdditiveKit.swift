@@ -6,20 +6,20 @@ public struct AdditiveKit: Codable {
     
     public var common: HarmonicCommonSettings
     public var morf: MorfHarmonicSettings
-    public var formantFilter: FormantFilterSettings
+    public var formantFilter: FormantFilter
     public var levels: HarmonicLevels
-    public var bands: FormantFilterBands
+    public var bands: FormantFilter.Bands
     public var envelopes: [HarmonicEnvelope]
     
     public init() {
         common = HarmonicCommonSettings()
         morf = MorfHarmonicSettings()
-        formantFilter = FormantFilterSettings()
+        formantFilter = FormantFilter()
         levels = HarmonicLevels()
-        bands = FormantFilterBands()
+        bands = FormantFilter.Bands()
         envelopes = [HarmonicEnvelope]()
         for _ in 0..<AdditiveKit.harmonicCount {
-            envelopes.append(HarmonicEnvelope(segment0: HarmonicEnvelopeSegment(rate: 127, level: 63), segment1: HarmonicEnvelopeSegment(rate: 127, level: 63), segment2: HarmonicEnvelopeSegment(rate: 127, level: 63), segment3: HarmonicEnvelopeSegment(rate: 127, level: 63), loopType: .off))
+            envelopes.append(HarmonicEnvelope(segment0: HarmonicEnvelope.Segment(rate: 127, level: 63), segment1: HarmonicEnvelope.Segment(rate: 127, level: 63), segment2: HarmonicEnvelope.Segment(rate: 127, level: 63), segment3: HarmonicEnvelope.Segment(rate: 127, level: 63), loopType: .off))
         }
     }
     
@@ -35,14 +35,14 @@ public struct AdditiveKit: Codable {
         morf = MorfHarmonicSettings(data: d.slice(from: offset, length: MorfHarmonicSettings.dataLength))
         offset += MorfHarmonicSettings.dataLength
 
-        formantFilter = FormantFilterSettings(data: d.slice(from: offset, length: FormantFilterSettings.dataLength))
-        offset += FormantFilterSettings.dataLength
+        formantFilter = FormantFilter(data: d.slice(from: offset, length: FormantFilter.dataLength))
+        offset += FormantFilter.dataLength
         
         levels = HarmonicLevels(data: d.slice(from: offset, length: HarmonicLevels.dataLength))
         offset += HarmonicLevels.dataLength
         
-        bands = FormantFilterBands(data: d.slice(from: offset, length: FormantFilterBands.dataLength))
-        offset += FormantFilterBands.dataLength
+        bands = FormantFilter.Bands(data: d.slice(from: offset, length: FormantFilter.Bands.dataLength))
+        offset += FormantFilter.Bands.dataLength
         
         envelopes = [HarmonicEnvelope]()
         var envelopeBytes = ByteArray()

@@ -112,54 +112,54 @@ extension MacroController: CustomStringConvertible {
     }
 }
 
-public enum SwitchType: String, Codable, CaseIterable {
-    case off
-    case harmMax
-    case harmBright
-    case harmDark
-    case harmSaw
-    case selectLoud
-    case addLoud
-    case addFifth
-    case addOdd
-    case addEven
-    case he1
-    case he2
-    case harmonicEnvelopeLoop
-    case ffMax
-    case ffComb
-    case ffHiCut
-    case ffComb2
-    
-    public init?(index: Int) {
-        switch index {
-        case 0: self = .off
-        case 1: self = .harmMax
-        case 2: self = .harmBright
-        case 3: self = .harmDark
-        case 4: self = .harmSaw
-        case 5: self = .selectLoud
-        case 6: self = .addLoud
-        case 7: self = .addFifth
-        case 8: self = .addOdd
-        case 9: self = .addEven
-        case 10: self = .he1
-        case 11: self = .he2
-        case 12: self = .harmonicEnvelopeLoop
-        case 13: self = .ffMax
-        case 14: self = .ffComb
-        case 15: self = .ffHiCut
-        case 16: self = .ffComb2
-        default: return nil
+public struct SwitchControl: Codable {
+    public enum Kind: String, Codable, CaseIterable {
+        case off
+        case harmMax
+        case harmBright
+        case harmDark
+        case harmSaw
+        case selectLoud
+        case addLoud
+        case addFifth
+        case addOdd
+        case addEven
+        case he1
+        case he2
+        case harmonicEnvelopeLoop
+        case ffMax
+        case ffComb
+        case ffHiCut
+        case ffComb2
+        
+        public init?(index: Int) {
+            switch index {
+            case 0: self = .off
+            case 1: self = .harmMax
+            case 2: self = .harmBright
+            case 3: self = .harmDark
+            case 4: self = .harmSaw
+            case 5: self = .selectLoud
+            case 6: self = .addLoud
+            case 7: self = .addFifth
+            case 8: self = .addOdd
+            case 9: self = .addEven
+            case 10: self = .he1
+            case 11: self = .he2
+            case 12: self = .harmonicEnvelopeLoop
+            case 13: self = .ffMax
+            case 14: self = .ffComb
+            case 15: self = .ffHiCut
+            case 16: self = .ffComb2
+            default: return nil
+            }
         }
     }
-}
 
-public struct SwitchControl: Codable {
-    public var switch1: SwitchType
-    public var switch2: SwitchType
-    public var footSwitch1: SwitchType
-    public var footSwitch2: SwitchType
+    public var switch1: Kind
+    public var switch2: Kind
+    public var footSwitch1: Kind
+    public var footSwitch2: Kind
     
     public init() {
         switch1 = .off
@@ -168,7 +168,7 @@ public struct SwitchControl: Codable {
         footSwitch2 = .off
     }
     
-    public init(switch1: SwitchType, switch2: SwitchType, footSwitch1: SwitchType, footSwitch2: SwitchType) {
+    public init(switch1: Kind, switch2: Kind, footSwitch1: Kind, footSwitch2: Kind) {
         self.switch1 = switch1
         self.switch2 = switch2
         self.footSwitch1 = footSwitch1
@@ -372,120 +372,6 @@ extension AssignableController: CustomStringConvertible {
     public var description: String {
         var s = ""
         s += "source=\(source.rawValue), destination=\(destination.rawValue), depth=\(depth)"
-        return s
-    }
-}
-
-public struct ModulationSettings: Codable {
-    public var pressure: MacroController
-    public var wheel: MacroController
-    public var expression: MacroController
-    public var assignable1: AssignableController
-    public var assignable2: AssignableController
-    
-    static let dataLength = 18
-    
-    public init() {
-        pressure = MacroController()
-        wheel = MacroController()
-        expression = MacroController()
-        assignable1 = AssignableController()
-        assignable2 = AssignableController()
-    }
-    
-    public init(data d: ByteArray) {
-        var offset: Int = 0
-
-        pressure = MacroController(data: d.slice(from: offset, length: MacroController.dataLength))
-        offset += MacroController.dataLength
-
-        wheel = MacroController(data: d.slice(from: offset, length: MacroController.dataLength))
-        offset += MacroController.dataLength
-        
-        expression = MacroController(data: d.slice(from: offset, length: MacroController.dataLength))
-        offset += MacroController.dataLength
-    
-        assignable1 = AssignableController(data: d.slice(from: offset, length: AssignableController.dataLength))
-        offset += AssignableController.dataLength
-        
-        assignable2 = AssignableController(data: d.slice(from: offset, length: AssignableController.dataLength))
-        offset += AssignableController.dataLength
-    }
-    
-    public func asData() -> ByteArray {
-        var data = ByteArray()
-        
-        data.append(contentsOf: pressure.asData())
-        data.append(contentsOf: wheel.asData())
-        data.append(contentsOf: expression.asData())
-        data.append(contentsOf: assignable1.asData())
-        data.append(contentsOf: assignable2.asData())
-        
-        return data
-    }
-}
-
-extension ModulationSettings: CustomStringConvertible {
-    public var description: String {
-        var s = ""
-        s += "pressure: \(pressure), wheel: \(wheel), expression: \(expression), assignable1: \(assignable1), assignable2: \(assignable2)"
-        return s
-    }
-}
-
-public enum PanType: String, Codable, CaseIterable {
-    case normal
-    case random
-    case keyScale
-    case negativeKeyScale
-    
-    public init?(index: Int) {
-        switch index {
-        case 0: self = .normal
-        case 1: self = .random
-        case 2: self = .keyScale
-        case 3: self = .negativeKeyScale
-        default: return nil
-        }
-    }
-}
-
-public struct PanSettings: Codable {
-    public var panType: PanType
-    public var panValue: Int
-    
-    static let dataLength = 2
-    
-    public init(panType: PanType, panValue: Int) {
-        self.panType = panType
-        self.panValue = panValue        
-    }
-    
-    public init(data d: ByteArray) {
-        var offset: Int = 0
-        var b: Byte = 0
-        
-        b = d.next(&offset)
-        panType = PanType(index: Int(b))!
-        
-        b = d.next(&offset)
-        panValue = Int(b) - 64
-    }
-
-    public func asData() -> ByteArray {
-        var data = ByteArray()
-        
-        data.append(Byte(panType.index!))
-        data.append(Byte(panValue + 64))
-        
-        return data
-    }
-}
-
-extension PanSettings: CustomStringConvertible {
-    public var description: String {
-        var s = ""
-        s += "type=\(panType.rawValue), value=\(panValue)"
         return s
     }
 }
