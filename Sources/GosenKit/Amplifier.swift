@@ -1,7 +1,7 @@
 import Foundation
 
 public struct Amplifier: Codable {
-    public struct Envelope: Codable {
+    public struct Envelope: Codable, Equatable {
         // All values are 0...127
         public var attackTime: Int
         public var decay1Time: Int

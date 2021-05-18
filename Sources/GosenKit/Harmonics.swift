@@ -202,7 +202,7 @@ public struct HarmonicEnvelope: Codable {
         
         b = d.next(&offset)
         let segment2LevelBit6 = b.isBitSet(6)
-        print("segment2 rate = 0x\(String(segment2Rate, radix: 16)) level = 0x\(String(b, radix: 16)) = 0b\(String(b, radix: 2))")
+        //print("segment2 rate = 0x\(String(segment2Rate, radix: 16)) level = 0x\(String(b, radix: 16)) = 0b\(String(b, radix: 2))")
         //print("bit 6 of segment 1 level set? \(segment2LevelBit6 ? "YES" : "NO")")
         b.unsetBit(6)
         let segment2Level = Int(b)
@@ -226,7 +226,7 @@ public struct HarmonicEnvelope: Codable {
         case (true, true):
             loopType = .loop1
         case (true, false):
-            print("warning: impossible loop type value '0b10', setting loop type to OFF")
+            print("warning: impossible loop type value '0b10', setting loop type to OFF", to: &standardError)
             loopType = .off
         case (false, true):
             loopType = .loop2

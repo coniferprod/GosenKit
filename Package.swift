@@ -21,6 +21,9 @@ let package = Package(
             dependencies: []),
         .testTarget(
             name: "GosenKitTests",
-            dependencies: ["GosenKit"]),
+            dependencies: ["GosenKit"],
+            resources: [
+                .copy("Resources")
+            ]),
     ]
 )

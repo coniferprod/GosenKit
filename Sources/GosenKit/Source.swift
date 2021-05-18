@@ -257,23 +257,23 @@ public struct Source: Codable {
     public init(data d: ByteArray) {
         var offset: Int = 0
         
-        print("SOURCE: Start Control, offset = \(offset)")
+        //print("SOURCE: Start Control, offset = \(offset)")
         control = Control(data: d.slice(from: offset, length: Control.dataLength))
         offset += Control.dataLength
         
-        print("SOURCE: Start DCO, offset = \(offset)")
+        //print("SOURCE: Start DCO, offset = \(offset)")
         oscillator = Oscillator(data: d.slice(from: offset, length:Oscillator.dataLength))
         offset += Oscillator.dataLength
         
-        print("SOURCE: Start DCF, offset = \(offset)")
+        //print("SOURCE: Start DCF, offset = \(offset)")
         filter = Filter(data: d.slice(from: offset, length: Filter.dataLength))
         offset += Filter.dataLength
 
-        print("SOURCE: Start DCA, offset = \(offset)")
+        //print("SOURCE: Start DCA, offset = \(offset)")
         amplifier = Amplifier(data: d.slice(from: offset, length: Amplifier.dataLength))
         offset += Amplifier.dataLength
         
-        print("SOURCE: Start LFO, offset = \(offset)")
+        //print("SOURCE: Start LFO, offset = \(offset)")
         lfo = LFO(data: d.slice(from: offset, length: LFO.dataLength))
     }
 
@@ -349,4 +349,3 @@ extension Source.Control.Pan: CustomStringConvertible {
         return s
     }
 }
-

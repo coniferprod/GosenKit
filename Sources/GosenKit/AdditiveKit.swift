@@ -161,7 +161,7 @@ public struct AdditiveKit: Codable {
         //print("checksum: added 0xA5, total = \(byteCount)")
         
         let result = Byte(totalSum & 0x7F)
-        print("checksum: byteCount = \(byteCount), result = 0x\(String(result, radix: 16))")
+        print("debug: checksum: byteCount = \(byteCount), result = 0x\(String(result, radix: 16))", to: &standardError)
 
         return result
     }
