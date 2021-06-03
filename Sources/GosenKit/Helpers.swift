@@ -125,23 +125,31 @@ public func noteName(for key: Int) -> String {
 public func keyNumber(for name: String) -> Int {
     let names = ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"]
 
+    let notes = CharacterSet(charactersIn: "CDEFGAB")
+    
     var i = 0
     var notePart = ""
     var octavePart = ""
     while i < name.count {
         let c = name[i ..< i + 1]
-        if c == "C" || c == "D" || c == "E" || c == "F" || c == "G" || c == "A" || c == "B" {
+        
+        let isNote = c.unicodeScalars.allSatisfy { notes.contains($0) }
+        if isNote {
             notePart += c
         }
+ 
         if c == "#" {
             notePart += c
         }
         if c == "-" {
             octavePart += c
         }
-        if c == "0" || c == "1" || c == "2" || c == "3" || c == "4" || c == "5" || c == "6" || c == "7" || c == "8" || c == "9" {
+        
+        let isDigit = c.unicodeScalars.allSatisfy { CharacterSet.decimalDigits.contains($0) }
+        if isDigit {
             octavePart += c
         }
+
         i += 1
     }
 
@@ -150,4 +158,12 @@ public func keyNumber(for name: String) -> Int {
     }
 
     return 0
+}
+
+extension Array {
+    func chunked(into size: Int) -> [[Element]] {
+        return stride(from: 0, to: count, by: size).map {
+            Array(self[$0 ..< Swift.min($0 + size, count)])
+        }
+    }
 }
