@@ -15,4 +15,5 @@ struct GosenKit {
 
 public typealias Byte = UInt8
 public typealias ByteArray = [Byte]
+public typealias SByte = Int8
 

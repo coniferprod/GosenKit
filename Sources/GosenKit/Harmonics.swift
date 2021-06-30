@@ -297,7 +297,7 @@ public struct HarmonicLevels: Codable {
     public var loud: [Int]  // 65~128
     // all values are 0~127
     
-    static let harmonicCount = 64
+    public static let harmonicCount = 64
     
     static let dataLength = 128
     
