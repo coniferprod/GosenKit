@@ -1,5 +1,3 @@
-import Foundation
-
 public struct Amplifier: Codable {
     public struct Envelope: Codable, Equatable {
         // All values are 0...127
@@ -54,14 +52,6 @@ public struct Amplifier: Codable {
             b = d.next(&offset)
             releaseTime = Int(b)
         }
-        
-        public func asData() -> ByteArray {
-            var data = ByteArray()
-            [attackTime, decay1Time, decay1Level, decay2Time, decay2Level, releaseTime].forEach {
-                data.append(Byte($0))
-            }
-            return data
-        }
     }
 
     public struct Modulation: Codable {
@@ -105,14 +95,6 @@ public struct Amplifier: Codable {
                 
                 b = d.next(&offset)
                 release = Int(b) - 64
-            }
-            
-            public func asData() -> ByteArray {
-                var data = ByteArray()
-                [level, attackTime, decay1Time, release].forEach {
-                    data.append(Byte($0 + 64))
-                }
-                return data
             }
         }
 
@@ -158,14 +140,6 @@ public struct Amplifier: Codable {
                 b = d.next(&offset)
                 release = Int(b) - 64
             }
-            
-            public func asData() -> ByteArray {
-                var data = ByteArray()
-                [level, attackTime + 64, decay1Time + 64, release + 64].forEach {
-                    data.append(Byte($0))
-                }
-                return data
-            }
         }
 
         public var keyScalingToEnvelope: KeyScalingControl
@@ -188,17 +162,7 @@ public struct Amplifier: Codable {
             
             velocityToEnvelope = VelocityControl(data: d.slice(from: offset, length: VelocityControl.dataLength))
         }
-        
-        public func asData() -> ByteArray {
-            var data = ByteArray()
-            
-            data.append(contentsOf: keyScalingToEnvelope.asData())
-            data.append(contentsOf: velocityToEnvelope.asData())
-
-            return data
-        }
     }
-
 
     public var velocityCurve: Int  // store as 1~12
     public var envelope: Envelope
@@ -228,7 +192,21 @@ public struct Amplifier: Codable {
         //print("Start amplifier envelope modulation, offset = \(offset)")
         modulation = Modulation(data: d.slice(from: offset, length: Modulation.dataLength))
     }
+}
 
+// MARK: - SystemExclusiveData
+
+extension Amplifier.Envelope: SystemExclusiveData {
+    public func asData() -> ByteArray {
+        var data = ByteArray()
+        [attackTime, decay1Time, decay1Level, decay2Time, decay2Level, releaseTime].forEach {
+            data.append(Byte($0))
+        }
+        return data
+    }
+}
+
+extension Amplifier: SystemExclusiveData {
     public func asData() -> ByteArray {
         var data = ByteArray()
         
@@ -236,6 +214,37 @@ public struct Amplifier: Codable {
         data.append(contentsOf: envelope.asData())
         data.append(contentsOf: modulation.asData())
         
+        return data
+    }
+}
+
+extension Amplifier.Modulation: SystemExclusiveData {
+    public func asData() -> ByteArray {
+        var data = ByteArray()
+        
+        data.append(contentsOf: keyScalingToEnvelope.asData())
+        data.append(contentsOf: velocityToEnvelope.asData())
+
+        return data
+    }
+}
+
+extension Amplifier.Modulation.KeyScalingControl: SystemExclusiveData {
+    public func asData() -> ByteArray {
+        var data = ByteArray()
+        [level, attackTime, decay1Time, release].forEach {
+            data.append(Byte($0 + 64))
+        }
+        return data
+    }
+}
+
+extension Amplifier.Modulation.VelocityControl: SystemExclusiveData {
+    public func asData() -> ByteArray {
+        var data = ByteArray()
+        [level, attackTime + 64, decay1Time + 64, release + 64].forEach {
+            data.append(Byte($0))
+        }
         return data
     }
 }

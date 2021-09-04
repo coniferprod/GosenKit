@@ -2,12 +2,14 @@ import XCTest
 @testable import GosenKit
 
 final class GosenKitTests: XCTestCase {
-    func testNoteName() {
-        XCTAssertEqual(noteName(for: 60), "C4")
+    func testKeyName() {
+        let key = Key(note: 60)
+        XCTAssertEqual(key.name, "C4")
     }
 
     func testKeyNumber() {
-        XCTAssertEqual(keyNumber(for: "C4"), 60)
+        let key = Key(name: "C4")
+        XCTAssertEqual(key.note, 60)
     }
     
     func testNextByte() {
@@ -22,7 +24,7 @@ final class GosenKitTests: XCTestCase {
     }
 
     static var allTests = [
-        ("testNoteName", testNoteName),
+        ("testkeyName", testKeyName),
         ("testKeyNumber", testKeyNumber),
     ]
 }

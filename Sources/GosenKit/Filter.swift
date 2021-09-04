@@ -1,5 +1,3 @@
-import Foundation
-
 public struct Filter: Codable {
     public enum Mode: String, Codable, CaseIterable {
         case lowPass
@@ -80,17 +78,6 @@ public struct Filter: Codable {
             b = d.next(&offset)
             velocityToDecay1 = Int(b) - 64
         }
-        
-        public func asData() -> ByteArray {
-            var data = ByteArray()
-            
-            [attackTime, decay1Time, decay1Level + 64, decay2Time, decay2Level + 64, releaseTime,
-             keyScalingToAttack + 64, keyScalingToDecay1 + 64, velocityToEnvelope + 64, velocityToAttack + 64, velocityToDecay1 + 64].forEach {
-                data.append(Byte($0))
-            }
-
-            return data
-        }
     }
 
     public var isActive: Bool
@@ -152,7 +139,11 @@ public struct Filter: Codable {
         
         envelope = Envelope(data: d.slice(from: offset, length: Envelope.dataLength))
     }
-    
+}
+
+// MARK: - SystemExclusiveData
+
+extension Filter: SystemExclusiveData {
     public func asData() -> ByteArray {
         var data = ByteArray()
         
@@ -177,6 +168,8 @@ public struct Filter: Codable {
     }
 }
 
+// MARK: - CustomStringConvertible
+
 extension Filter: CustomStringConvertible {
     public var description: String {
         var s = ""
@@ -186,6 +179,19 @@ extension Filter: CustomStringConvertible {
         s += "Env.Depth=\(envelopeDepth)\n"
         s += "Filter Envelope:\n\(envelope)\n"
         return s
+    }
+}
+
+extension Filter.Envelope: SystemExclusiveData {
+    public func asData() -> ByteArray {
+        var data = ByteArray()
+        
+        [attackTime, decay1Time, decay1Level + 64, decay2Time, decay2Level + 64, releaseTime,
+         keyScalingToAttack + 64, keyScalingToDecay1 + 64, velocityToEnvelope + 64, velocityToAttack + 64, velocityToDecay1 + 64].forEach {
+            data.append(Byte($0))
+        }
+
+        return data
     }
 }
 

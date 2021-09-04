@@ -1,5 +1,3 @@
-import Foundation
-
 public struct Morf: Codable {
     public struct CopyParameters: Codable {
         public var patchNumber: Int  // 0~127
@@ -22,10 +20,6 @@ public struct Morf: Codable {
             b = d.next(&offset)
             sourceNumber = Int(b)
         }
-        
-        public func asData() -> ByteArray {
-            return ByteArray(arrayLiteral: Byte(patchNumber), Byte(sourceNumber))
-        }
     }
 
     public struct Envelope: Codable {
@@ -33,7 +27,7 @@ public struct Morf: Codable {
         public var time2: Int
         public var time3: Int
         public var time4: Int
-        public var loopType: EnvelopeLoopType
+        public var loopType: EnvelopeLoopKind
         
         static let dataLength = 5
         
@@ -62,18 +56,9 @@ public struct Morf: Codable {
             time4 = Int(b)
 
             b = d.next(&offset)
-            loopType = EnvelopeLoopType(index: Int(b))!
-        }
-        
-        public func asData() -> ByteArray {
-            var data = ByteArray()
-            [time1, time2, time3, time4, loopType.index!].forEach {
-                data.append(Byte($0))
-            }
-            return data
+            loopType = EnvelopeLoopKind(index: Int(b))!
         }
     }
-
 
     public var copy1: CopyParameters
     public var copy2: CopyParameters
@@ -110,7 +95,17 @@ public struct Morf: Codable {
         length = Envelope.dataLength
         envelope = Envelope(data: d.slice(from: offset, length: length))
     }
-    
+}
+
+// MARK: - SystemExclusiveData
+
+extension Morf.CopyParameters: SystemExclusiveData {
+    public func asData() -> ByteArray {
+        return ByteArray(arrayLiteral: Byte(patchNumber), Byte(sourceNumber))
+    }
+}
+
+extension Morf: SystemExclusiveData {
     public func asData() -> ByteArray {
         var data = ByteArray()
         
@@ -120,6 +115,16 @@ public struct Morf: Codable {
         data.append(contentsOf: copy4.asData())
         data.append(contentsOf: envelope.asData())
 
+        return data
+    }
+}
+
+extension Morf.Envelope: SystemExclusiveData {
+    public func asData() -> ByteArray {
+        var data = ByteArray()
+        [time1, time2, time3, time4, loopType.index!].forEach {
+            data.append(Byte($0))
+        }
         return data
     }
 }

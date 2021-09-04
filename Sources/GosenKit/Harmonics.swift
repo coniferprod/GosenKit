@@ -1,5 +1,3 @@
-import Foundation
-
 public struct HarmonicCommon: Codable {
     public enum Group: String, Codable, CaseIterable {
         case low
@@ -15,7 +13,10 @@ public struct HarmonicCommon: Codable {
     }
 
     public var isMorfEnabled: Bool
+    
+    //@Clamping<UInt8>(defaultValue: 1, range: 1...63)  // doesn't conform to Codable
     public var totalGain: Int // 1~63
+    
     public var group: Group
     public var keyScalingToGain: Int // -63(1)~+63(127)
     public var velocityCurve: Int  // 1~12 (stored in SysEx as 0~11)
@@ -54,60 +55,10 @@ public struct HarmonicCommon: Codable {
         b = d.next(&offset)
         velocityDepth = Int(b)
     }
-    
-    public func asData() -> ByteArray {
-        var data = ByteArray()
-        
-        [
-            isMorfEnabled ? 1 : 0,
-            totalGain,
-            group.index!,
-            keyScalingToGain + 64,
-            velocityCurve - 1,
-            velocityDepth
-        ]
-        .forEach {
-            data.append(Byte($0))
-        }
-        
-        return data
-    }
 }
 
-public struct EnvelopeSegment: Codable {
-    public var rate: Int  // 0~127
-    public var level: Int // -63(1)~+63(127)
-    
-    static let dataLength = 2
-    
-    public init(rate: Int, level: Int) {
-        self.rate = rate
-        self.level = level
-    }
-    
-    public init(data d: ByteArray) {
-        var offset: Int = 0
-        var b: Byte = 0
-        
-        b = d.next(&offset)
-        rate = Int(b)
-        
-        b = d.next(&offset)
-        level = Int(b) - 64
-    }
-        
-    public func asData() -> ByteArray {
-        return ByteArray(arrayLiteral: Byte(rate), Byte(level + 64))
-    }
-}
-
-extension EnvelopeSegment: CustomStringConvertible {
-    public var description: String {
-        return "L\(level) R\(rate)"
-    }
-}
-
-public enum EnvelopeLoopType: String, Codable, CaseIterable {
+/// The looping kind of the envelope. Used in formant filter, harmonic, and MORF envelopes.
+public enum EnvelopeLoopKind: String, Codable, CaseIterable {
     case off
     case loop1
     case loop2
@@ -144,34 +95,26 @@ public struct HarmonicEnvelope: Codable {
             b = d.next(&offset)
             level = Int(b)
         }
-            
-        func asData() -> ByteArray {
-            return ByteArray(arrayLiteral: Byte(rate), Byte(level))
-        }
     }
 
-    public var segment0: Segment
-    public var segment1: Segment
-    public var segment2: Segment
-    public var segment3: Segment
-    public var loopType: EnvelopeLoopType
+    public var segments: [Segment]
+    public var loop: EnvelopeLoopKind
     
     static let dataLength = 4 * Segment.dataLength
     
     public init() {
-        self.segment0 = Segment(rate: 127, level: 63)
-        self.segment1 = Segment(rate: 127, level: 63)
-        self.segment2 = Segment(rate: 127, level: 63)
-        self.segment3 = Segment(rate: 0, level: 0)
-        self.loopType = .off
+        self.segments = [Segment]()
+        self.segments.append(Segment(rate: 127, level: 63))
+        self.segments.append(Segment(rate: 127, level: 63))
+        self.segments.append(Segment(rate: 127, level: 63))
+        self.segments.append(Segment(rate: 0, level: 0))
+
+        self.loop = .off
     }
     
-    public init(segment0: Segment, segment1: Segment, segment2: Segment, segment3: Segment, loopType: EnvelopeLoopType) {
-        self.segment0 = segment0
-        self.segment1 = segment1
-        self.segment2 = segment2
-        self.segment3 = segment3
-        self.loopType = loopType
+    public init(segments: [Segment], loop: EnvelopeLoopKind) {
+        self.segments = segments
+        self.loop = loop
     }
     
     public init(data d: ByteArray) {
@@ -215,83 +158,29 @@ public struct HarmonicEnvelope: Codable {
         
         //print("segment3 rate = 0x\(String(segment3Rate, radix: 16)) level = 0x\(String(segment3Level, radix: 16))")
 
-        segment0 = Segment(rate: segment0Rate, level: segment0Level)
-        segment1 = Segment(rate: segment1Rate, level: segment1Level)
-        segment2 = Segment(rate: segment2Rate, level: segment2Level)
-        segment3 = Segment(rate: segment3Rate, level: segment3Level)
+        segments = [Segment]()
+        segments.append(Segment(rate: segment0Rate, level: segment0Level))
+        segments.append(Segment(rate: segment1Rate, level: segment1Level))
+        segments.append(Segment(rate: segment2Rate, level: segment2Level))
+        segments.append(Segment(rate: segment3Rate, level: segment3Level))
         
         // Need to post-process segments 1 and 2 to get the loop type
         
         switch (segment1LevelBit6, segment2LevelBit6) {
         case (true, true):
-            loopType = .loop1
+            loop = .loop1
         case (true, false):
             print("warning: impossible loop type value '0b10', setting loop type to OFF", to: &standardError)
-            loopType = .off
+            loop = .off
         case (false, true):
-            loopType = .loop2
+            loop = .loop2
         default:
-            loopType = .off
+            loop = .off
         }
-    }
-
-    public func asData() -> ByteArray {
-        var data = ByteArray()
-        
-        data.append(contentsOf: segment0.asData())
-        
-        // When emitting segment1 and segment2 data,
-        // we need to bake the loop type into the levels.
-        
-        var segment1Level = Byte(segment1.level)
-        var segment2Level = Byte(segment2.level)
-
-        if loopType == .loop2 {  // bit pattern from bits 6 of L1 and L2 = "01"
-            segment1Level.unsetBit(6)
-            segment2Level.setBit(6)
-        }
-        else if loopType == .loop1 {    // "11"
-            segment1Level.setBit(6)
-            segment2Level.setBit(6)
-        }
-        else if loopType == .off {  // "00"
-            segment1Level.unsetBit(6)
-            segment2Level.unsetBit(6)
-        }
-        
-        var segment1Data = segment1.asData()
-        //print("< HARM ENV seg1 level = 0x\(String(segment1Level, radix: 16))")
-        segment1Data[1] = segment1Level
-        data.append(contentsOf: segment1Data)
-
-        var segment2Data = segment2.asData()
-        //print("> HARM ENV seg2 level = 0x\(String(segment2Level, radix: 16))")
-        segment2Data[1] = segment2Level
-        data.append(contentsOf: segment2Data)
-
-        data.append(contentsOf: segment3.asData())
-
-        return data
     }
 }
 
-extension HarmonicEnvelope.Segment: CustomStringConvertible {
-    public var description: String {
-        return "L\(level) R\(rate)"
-    }
-}
-
-extension HarmonicEnvelope: CustomStringConvertible {
-    public var description: String {
-        var s = ""
-        s += "  Atk  DC1  DC2  RLS\n"
-        s += "    Lvl  \(segment0.level)   \(segment1.level)   \(segment2.level)   \(segment3.level)\n"
-        s += "   Rate  \(segment0.rate)   \(segment1.rate)   \(segment2.rate)   \(segment3.rate)\n"
-        s += "   Decay Loop: \(loopType)\n"
-        return s
-    }
-}
-
+// Harmonic levels.
 public struct HarmonicLevels: Codable {
     public var soft: [Int]  // 1~64
     public var loud: [Int]  // 65~128
@@ -315,6 +204,11 @@ public struct HarmonicLevels: Codable {
         }
     }
     
+    public init(soft: [Int], loud: [Int]) {
+        self.soft = soft
+        self.loud = loud
+    }
+    
     public init(data d: ByteArray) {
         var offset: Int = 0
         var b: Byte = 0
@@ -335,11 +229,108 @@ public struct HarmonicLevels: Codable {
             i += 1
         }
     }
-    
+}
+
+// MARK: - SystemExclusiveData
+
+extension HarmonicEnvelope: SystemExclusiveData {
+    public func asData() -> ByteArray {
+        var data = ByteArray()
+        
+        data.append(contentsOf: segments[0].asData())
+        
+        // When emitting segment1 and segment2 data,
+        // we need to bake the loop type into the levels.
+        
+        var segment1Level = Byte(segments[1].level)
+        var segment2Level = Byte(segments[2].level)
+
+        if loop == .loop2 {  // bit pattern from bits 6 of L1 and L2 = "01"
+            segment1Level.unsetBit(6)
+            segment2Level.setBit(6)
+        }
+        else if loop == .loop1 {    // "11"
+            segment1Level.setBit(6)
+            segment2Level.setBit(6)
+        }
+        else if loop == .off {  // "00"
+            segment1Level.unsetBit(6)
+            segment2Level.unsetBit(6)
+        }
+        
+        var segment1Data = segments[1].asData()
+        //print("< HARM ENV seg1 level = 0x\(String(segment1Level, radix: 16))")
+        segment1Data[1] = segment1Level
+        data.append(contentsOf: segment1Data)
+
+        var segment2Data = segments[2].asData()
+        //print("> HARM ENV seg2 level = 0x\(String(segment2Level, radix: 16))")
+        segment2Data[1] = segment2Level
+        data.append(contentsOf: segment2Data)
+
+        data.append(contentsOf: segments[3].asData())
+
+        return data
+    }
+}
+
+
+extension HarmonicLevels: SystemExclusiveData {
     public func asData() -> ByteArray {
         var data = ByteArray()
         soft.forEach { data.append(Byte($0)) }
         loud.forEach { data.append(Byte($0)) }
         return data
+    }
+}
+
+extension HarmonicCommon: SystemExclusiveData {
+    public func asData() -> ByteArray {
+        var data = ByteArray()
+        
+        data.append(isMorfEnabled ? 1 : 0)
+        data.append(Byte(totalGain))
+        data.append(Byte(group.index!))
+        data.append(Byte(keyScalingToGain + 64))
+        data.append(Byte(velocityCurve - 1))
+        data.append(Byte(velocityDepth))
+        
+        return data
+    }
+}
+
+extension HarmonicEnvelope.Segment: SystemExclusiveData {
+    public func asData() -> ByteArray {
+        return ByteArray(arrayLiteral: Byte(rate), Byte(level))
+    }
+}
+
+// MARK: - CustomStringConvertible
+
+extension HarmonicEnvelope.Segment: CustomStringConvertible {
+    public var description: String {
+        return "L\(level) R\(rate)"
+    }
+}
+
+extension HarmonicEnvelope: CustomStringConvertible {
+    public var description: String {
+        var s = "  Atk  DC1  DC2  RLS\n"
+        
+        s += "    Lvl  "
+        for seg in segments {
+            s += "\(seg.level)   "
+        }
+        s += "\n"
+
+        s += "   Rate  "
+        for seg in segments {
+            s += "\(seg.rate)   "
+        }
+        s += "\n"
+
+        s += "   Decay Loop: \(loop)\n"
+        
+        return s
     }
 }

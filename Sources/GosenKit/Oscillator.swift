@@ -1,5 +1,3 @@
-import Foundation
-
 public struct Oscillator: Codable {
     public enum WaveType: String, Codable, CaseIterable {
         case additive
@@ -46,17 +44,6 @@ public struct Oscillator: Codable {
             
             b = d.next(&offset)
             levelVelocitySensitivity = Int(b) - 64
-        }
-        
-        public func asData() -> ByteArray {
-            var data = ByteArray()
-            
-            [start + 64, attackTime, attackLevel + 64, decayTime,
-             timeVelocitySensitivity + 64, levelVelocitySensitivity + 64].forEach {
-                data.append(Byte($0))
-            }
-
-            return data
         }
     }
 
@@ -133,7 +120,53 @@ public struct Oscillator: Codable {
             waveType = .pcm
         }
     }
-    
+}
+
+// MARK: - CustomStringConvertible
+
+extension Oscillator: CustomStringConvertible {
+    public var description: String {
+        var s = ""
+        if waveType == .pcm {
+            s += "PCM"
+        }
+        else if waveType == .additive {
+            s += "ADD"
+        }
+        else {  // shouldn't happen since waveType is an enum
+            s += "???"
+        }
+        s += " Wave=\(waveNumber) Coarse=\(coarse) Fine=\(fine) KStoPitch=\(keyScalingToPitch.rawValue) FixedKey=\(fixedKey)\n"
+        s += "Pitch Envelope:\n\(pitchEnvelope)\n"
+        return s
+    }
+}
+
+extension Oscillator.PitchEnvelope: CustomStringConvertible {
+    public var description: String {
+        var s = ""
+        s += "start=\(start), attackTime=\(attackTime), attackLevel=\(attackLevel), decayTime=\(decayTime)\n"
+        s += "timeVelSens=\(timeVelocitySensitivity) levelVelSens=\(levelVelocitySensitivity)\n"
+        return s
+    }
+}
+
+// MARK: - SystemExclusiveData
+
+extension Oscillator.PitchEnvelope: SystemExclusiveData {
+    public func asData() -> ByteArray {
+        var data = ByteArray()
+        
+        [start + 64, attackTime, attackLevel + 64, decayTime,
+         timeVelocitySensitivity + 64, levelVelocitySensitivity + 64].forEach {
+            data.append(Byte($0))
+        }
+
+        return data
+    }
+}
+
+extension Oscillator: SystemExclusiveData {
     public func asData() -> ByteArray {
         var data = ByteArray()
         
@@ -160,32 +193,5 @@ public struct Oscillator: Codable {
         data.append(contentsOf: pitchEnvelope.asData())
         
         return data
-    }
-}
-
-extension Oscillator: CustomStringConvertible {
-    public var description: String {
-        var s = ""
-        if waveType == .pcm {
-            s += "PCM"
-        }
-        else if waveType == .additive {
-            s += "ADD"
-        }
-        else {  // shouldn't happen since waveType is an enum
-            s += "???"
-        }
-        s += " Wave=\(waveNumber) Coarse=\(coarse) Fine=\(fine) KStoPitch=\(keyScalingToPitch.rawValue) FixedKey=\(fixedKey)\n"
-        s += "Pitch Envelope:\n\(pitchEnvelope)\n"
-        return s
-    }
-}
-
-extension Oscillator.PitchEnvelope: CustomStringConvertible {
-    public var description: String {
-        var s = ""
-        s += "start=\(start), attackTime=\(attackTime), attackLevel=\(attackLevel), decayTime=\(decayTime)\n"
-        s += "timeVelSens=\(timeVelocitySensitivity) levelVelSens=\(levelVelocitySensitivity)\n"
-        return s
     }
 }

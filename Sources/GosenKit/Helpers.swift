@@ -167,3 +167,31 @@ extension Array {
         }
     }
 }
+
+// Property wrapper to clamp the value of a Comparable.
+// https://www.swiftbysundell.com/articles/property-wrappers-in-swift/
+// This reallyt seems to be more trouble than it's worth,
+// or I can't make this pattern fit my brain.
+@propertyWrapper
+public struct Clamping<Value: Comparable> {
+    public let range: ClosedRange<Value>
+    private let defaultValue: Value
+    private var value: Value
+    
+    public var wrappedValue: Value {
+        get {
+            self.value
+        }
+        
+        set {
+            self.value = min(max(range.lowerBound, newValue), range.upperBound)
+        }
+    }
+     
+    init(defaultValue: Value, range: ClosedRange<Value>) {
+        precondition(range.contains(defaultValue))
+        self.defaultValue = defaultValue
+        self.value = defaultValue
+        self.range = range
+    }
+}

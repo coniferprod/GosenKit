@@ -1,19 +1,20 @@
-import Foundation
-
 /// Represents the set of included patches in a bank.
-public class ToneMap: CustomStringConvertible {
+public class ToneMap {
     public static let size = 19  // bytes
+    
+    /// Number of patches in a tone map.
     public static let patchCount = 128
     
     private var include = [Bool]()
     
+    /// Initializes en empty tone map.
     public init() {
         self.include = [Bool](repeating: false, count: ToneMap.patchCount)
     }
     
     public init(data: ByteArray) {
         self.include = [Bool]()
-        for (index, item) in data.enumerated() {
+        for (_, item) in data.enumerated() {
             for j in 0..<7 {
                 self.include.append(item.isBitSet(j))
             }
@@ -24,10 +25,16 @@ public class ToneMap: CustomStringConvertible {
         return self.include[index]
     }
     
+    /// The number of patches included.
     public var includedCount: Int {
         return self.include.filter { $0 == true }.count
     }
-    
+}
+
+// MARK: - SystemExclusiveData
+
+extension ToneMap: SystemExclusiveData {
+    /// Byte array representation for SysEx.
     public func asData() -> ByteArray {
         var data = ByteArray()
      
@@ -56,7 +63,12 @@ public class ToneMap: CustomStringConvertible {
 
         return data
     }
-    
+}
+
+// MARK: - CustomStringConvertible
+
+extension ToneMap: CustomStringConvertible {
+    /// Printable description of this tone map.
     public var description: String {
         var s = ""
         for (index, item) in self.include.enumerated() {

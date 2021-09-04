@@ -1,5 +1,3 @@
-import Foundation
-
 /*
  From http://www.optimolch.de/jens.groh/K5000/
  

@@ -1,5 +1,3 @@
-import Foundation
-
 public struct EffectDefinition: Codable {
     public enum Kind: String, Codable, CaseIterable {
         case hall1

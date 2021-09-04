@@ -1,5 +1,3 @@
-import Foundation
-
 public enum ControlDestination: String, Codable, CaseIterable {
     case pitchOffset
     case cutoffOffset
@@ -93,7 +91,11 @@ public struct MacroController: Codable {
         depth2 = Int(b) - 64
         //print("depth2 byte = \(String(b, radix: 16))h, converted to \(depth2)")
     }
-    
+}
+
+// MARK: - SystemExclusiveData
+
+extension MacroController: SystemExclusiveData {
     public func asData() -> ByteArray {
         var data = ByteArray()
         [destination1.index!, depth1 + 64, destination2.index!, depth2 + 64].forEach {
@@ -102,6 +104,8 @@ public struct MacroController: Codable {
         return data
     }
 }
+
+// MARK: - CustomStringConvertible
 
 extension MacroController: CustomStringConvertible {
     public var description: String {
@@ -174,7 +178,9 @@ public struct SwitchControl: Codable {
         self.footSwitch1 = footSwitch1
         self.footSwitch2 = footSwitch2
     }
-    
+}
+
+extension SwitchControl: SystemExclusiveData {
     public func asData() -> ByteArray {
         var data = ByteArray()
         [switch1.index!, switch2.index!, footSwitch1.index!, footSwitch2.index!].forEach {
@@ -221,7 +227,7 @@ public enum ControlSource: String, Codable, CaseIterable {
     }
 }
 
-public enum EffectDestinationType: String, Codable, CaseIterable {
+public enum EffectDestination: String, Codable, CaseIterable {
     case effect1DryWet
     case effect1Parameter
     case effect2DryWet
@@ -250,70 +256,56 @@ public enum EffectDestinationType: String, Codable, CaseIterable {
     }
 }
 
-public struct EffectControlSource: Codable {
-    public var sourceType: ControlSource
-    public var destinationType: EffectDestinationType
-    public var depth: Int
-    
-    static let dataLength = 3
-    
-    public init() {
-        sourceType = .bender
-        destinationType = .reverbDryWet1
-        depth = 0
-    }
-    
-    public init(data d: ByteArray) {
-        var offset: Int = 0
-        var b: Byte = 0
-    
-        b = d.next(&offset)
-        sourceType = ControlSource(index: Int(b))!
-        
-        b = d.next(&offset)
-        destinationType = EffectDestinationType(index: Int(b))!
-        
-        b = d.next(&offset)
-        depth = Int(b) - 64
-    }
-    
-    public func asData() -> ByteArray {
-        var data = ByteArray()
-        [sourceType.index!, destinationType.index!, depth + 64].forEach {
-            data.append(Byte($0))
-        }
-        return data
-    }
-}
-
-extension EffectControlSource: CustomStringConvertible {
-    public var description: String {
-        var s = ""
-        s += "source=\(sourceType.rawValue), destination=\(destinationType.rawValue), depth=\(depth)"
-        return s
-    }
-}
-
 public struct EffectControl: Codable {
-    public var source1: EffectControlSource
-    public var source2: EffectControlSource
+    public struct Source: Codable {
+        public var source: ControlSource
+        public var destination: EffectDestination
+        public var depth: Int
+        
+        static let dataLength = 3
+        
+        public init() {
+            source = .bender
+            destination = .reverbDryWet1
+            depth = 0
+        }
+        
+        public init(data d: ByteArray) {
+            var offset: Int = 0
+            var b: Byte = 0
+        
+            b = d.next(&offset)
+            source = ControlSource(index: Int(b))!
+            
+            b = d.next(&offset)
+            destination = EffectDestination(index: Int(b))!
+            
+            b = d.next(&offset)
+            depth = Int(b) - 64
+        }
+    }
+
+    public var source1: Source
+    public var source2: Source
     
     static let dataLength = 6
     
     public init() {
-        source1 = EffectControlSource()
-        source2 = EffectControlSource()
+        source1 = Source()
+        source2 = Source()
     }
     
     public init(data d: ByteArray) {
         var offset: Int = 0
     
-        let length = EffectControlSource.dataLength
-        source1 = EffectControlSource(data: d.slice(from: offset, length: length))
+        let length = Source.dataLength
+        source1 = Source(data: d.slice(from: offset, length: length))
         offset += length
-        source2 = EffectControlSource(data: d.slice(from: offset, length: length))
+        source2 = Source(data: d.slice(from: offset, length: length))
     }
-    
+}
+
+extension EffectControl: SystemExclusiveData {
     public func asData() -> ByteArray {
         var data = ByteArray()
     
@@ -359,7 +351,9 @@ public struct AssignableController: Codable {
         b = d.next(&offset)
         depth = Int(b)
     }
-    
+}
+
+extension AssignableController: SystemExclusiveData {
     public func asData() -> ByteArray {
         var data = ByteArray()
         [source.index!, destination.index!, depth].forEach {
@@ -370,6 +364,24 @@ public struct AssignableController: Codable {
 }
 
 extension AssignableController: CustomStringConvertible {
+    public var description: String {
+        var s = ""
+        s += "source=\(source.rawValue), destination=\(destination.rawValue), depth=\(depth)"
+        return s
+    }
+}
+
+extension EffectControl.Source: SystemExclusiveData {
+    public func asData() -> ByteArray {
+        var data = ByteArray()
+        [source.index!, destination.index!, depth + 64].forEach {
+            data.append(Byte($0))
+        }
+        return data
+    }
+}
+
+extension EffectControl.Source: CustomStringConvertible {
     public var description: String {
         var s = ""
         s += "source=\(source.rawValue), destination=\(destination.rawValue), depth=\(depth)"

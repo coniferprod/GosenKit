@@ -1,4 +1,6 @@
-import Foundation
+public protocol SystemExclusiveData {
+    func asData() -> ByteArray
+}
 
 public struct SystemExclusiveHeader {
     public static let initiator: Byte = 0xf0
@@ -23,18 +25,22 @@ public struct SystemExclusiveHeader {
         self.substatus1 = substatus1
         self.substatus2 = substatus2
     }
-    
+}
+
+// MARK: - SystemExclusiveData
+
+extension SystemExclusiveHeader: SystemExclusiveData {
     public func asData() -> ByteArray {
-        var data = ByteArray()
-        data.append(SystemExclusiveHeader.initiator)
-        data.append(manufacturerIdentifier)
-        data.append(channel)
-        data.append(function)
-        data.append(group)
-        data.append(machineIdentifier)
-        data.append(substatus1)
-        data.append(substatus2)
-        return data
+        return [
+            SystemExclusiveHeader.initiator,
+            manufacturerIdentifier,
+            channel,
+            function,
+            group,
+            machineIdentifier,
+            substatus1,
+            substatus2,
+        ]
     }
 }
 

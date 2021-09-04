@@ -36,37 +36,41 @@ final class AdditiveKitTests: XCTestCase {
         )
         add1.bands = ff
         
-        var levels = HarmonicLevels()
-        levels.soft = [
-            127, 0, 0, 0, 120, 0, 0, 0,
-            105, 0, 0, 0, 102, 0, 0, 0,
-            97, 0, 0, 0, 89, 0, 0, 0,
-            0, 0, 0, 0, 78, 0, 0, 0,
-            64, 0, 0, 0, 0, 0, 0, 0,
-            0, 0, 0, 0, 0, 0, 0, 0,
-            0, 0, 0, 0, 0, 0, 0, 0,
-            0, 0, 0, 0, 0, 0, 0, 0,
-            0, 0, 0, 0, 0, 0, 0, 0,
-        ]
-        levels.loud = [
-            0, 0, 0, 0, 0, 0, 0, 0,
-            0, 0, 0, 0, 0, 0, 0, 0,
-            0, 0, 0, 0, 0, 0, 0, 0,
-            0, 0, 0, 0, 0, 0, 0, 0,
-            0, 0, 0, 0, 0, 0, 0, 0,
-            0, 0, 0, 0, 0, 0, 0, 0,
-            0, 0, 0, 0, 0, 0, 0, 0,
-            0, 0, 0, 0, 0, 0, 0, 0
-        ]
+        var levels = HarmonicLevels(
+            soft: [
+                127, 0, 0, 0, 120, 0, 0, 0,
+                105, 0, 0, 0, 102, 0, 0, 0,
+                97, 0, 0, 0, 89, 0, 0, 0,
+                0, 0, 0, 0, 78, 0, 0, 0,
+                64, 0, 0, 0, 0, 0, 0, 0,
+                0, 0, 0, 0, 0, 0, 0, 0,
+                0, 0, 0, 0, 0, 0, 0, 0,
+                0, 0, 0, 0, 0, 0, 0, 0,
+                0, 0, 0, 0, 0, 0, 0, 0,
+            ],
+            loud: [
+                0, 0, 0, 0, 0, 0, 0, 0,
+                0, 0, 0, 0, 0, 0, 0, 0,
+                0, 0, 0, 0, 0, 0, 0, 0,
+                0, 0, 0, 0, 0, 0, 0, 0,
+                0, 0, 0, 0, 0, 0, 0, 0,
+                0, 0, 0, 0, 0, 0, 0, 0,
+                0, 0, 0, 0, 0, 0, 0, 0,
+                0, 0, 0, 0, 0, 0, 0, 0
+            ]
+        )
         
         add1.levels = levels
         
-        var envelope = HarmonicEnvelope()
-        envelope.segment0 = HarmonicEnvelope.Segment(rate: 125, level: 63)
-        envelope.segment1 = HarmonicEnvelope.Segment(rate: 92, level: 63)
-        envelope.segment2 = HarmonicEnvelope.Segment(rate: 49, level: 63)
-        envelope.segment3 = HarmonicEnvelope.Segment(rate: 39, level: 49)
-        envelope.loopType = .off
+        let envelope = HarmonicEnvelope(
+            segments: [
+                HarmonicEnvelope.Segment(rate: 125, level: 63),
+                HarmonicEnvelope.Segment(rate: 92, level: 63),
+                HarmonicEnvelope.Segment(rate: 49, level: 63),
+                HarmonicEnvelope.Segment(rate: 39, level: 49)
+            ],
+            loop: .off
+        )
             
         for i in 0..<AdditiveKit.harmonicCount {
             add1.envelopes[i] = envelope
@@ -75,6 +79,5 @@ final class AdditiveKitTests: XCTestCase {
         print(singlePatch)
         
         XCTAssertEqual(add1.asData(), [])
-
     }
 }

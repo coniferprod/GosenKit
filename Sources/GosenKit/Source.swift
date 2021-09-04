@@ -1,5 +1,60 @@
 import Foundation
 
+/// Key with note number and name.
+public struct Key: Codable {
+    public var note: Int
+    
+    public var name: String {
+        let noteNames = ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"]
+        let octave = self.note / 12 - 1
+        let name = noteNames[self.note % 12]
+        return "\(name)\(octave)"
+    }
+    
+    public init(note: Int) {
+        self.note = note
+    }
+    
+    public init(name: String) {
+        let names = ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"]
+
+        let notes = CharacterSet(charactersIn: "CDEFGAB")
+        
+        var i = 0
+        var notePart = ""
+        var octavePart = ""
+        while i < name.count {
+            let c = name[i ..< i + 1]
+            
+            let isNote = c.unicodeScalars.allSatisfy { notes.contains($0) }
+            if isNote {
+                notePart += c
+            }
+     
+            if c == "#" {
+                notePart += c
+            }
+            if c == "-" {
+                octavePart += c
+            }
+            
+            let isDigit = c.unicodeScalars.allSatisfy { CharacterSet.decimalDigits.contains($0) }
+            if isDigit {
+                octavePart += c
+            }
+
+            i += 1
+        }
+
+        if let octave = Int(octavePart), let noteIndex = names.firstIndex(where: { $0 == notePart }) {
+            self.note = (octave + 1) * 12 + noteIndex
+        }
+        else {
+            self.note = 0
+        }
+    }
+}
+
 public struct Source: Codable {
     public struct Control: Codable {
         public struct Modulation: Codable {
@@ -36,18 +91,6 @@ public struct Source: Codable {
                 
                 assignable2 = AssignableController(data: d.slice(from: offset, length: AssignableController.dataLength))
                 offset += AssignableController.dataLength
-            }
-            
-            public func asData() -> ByteArray {
-                var data = ByteArray()
-                
-                data.append(contentsOf: pressure.asData())
-                data.append(contentsOf: wheel.asData())
-                data.append(contentsOf: expression.asData())
-                data.append(contentsOf: assignable1.asData())
-                data.append(contentsOf: assignable2.asData())
-                
-                return data
             }
         }
 
@@ -97,15 +140,6 @@ public struct Source: Codable {
                 let n = Int(b & 0b00011111)   // bits 0-4
                 threshold = VelocitySwitch.conversionTable[n]
             }
-            
-            public func asData() -> ByteArray {
-                var data = ByteArray()
-                let t = VelocitySwitch.conversionTable.firstIndex(of: threshold)!
-                let value = t | (self.kind.index! << 5)
-                //print("velocity switch = \(self.velocitySwitchType.rawValue), velocityThreshold = \(self.velocityThreshold) --> velo_sw = \(String(value, radix: 2))")
-                data.append(Byte(value))
-                return data
-            }
         }
 
         public struct Pan: Codable {
@@ -146,19 +180,15 @@ public struct Source: Codable {
                 b = d.next(&offset)
                 value = Int(b) - 64
             }
-
-            public func asData() -> ByteArray {
-                var data = ByteArray()
-                
-                data.append(Byte(kind.index!))
-                data.append(Byte(value + 64))
-                
-                return data
-            }
         }
 
-        public var zoneLow: Int
-        public var zoneHigh: Int   // TODO: make a MIDI note type
+        public struct Zone: Codable {
+            public var high: Key
+            public var low: Key
+        }
+        
+        public var zone: Zone
+        
         public var velocitySwitch: VelocitySwitch
         public var effectPath: Int
         public var volume: Int
@@ -171,8 +201,7 @@ public struct Source: Codable {
         static let dataLength = 28
         
         public init() {
-            zoneLow = 0
-            zoneHigh = 127
+            zone = Zone(high: Key(note: 127), low: Key(note: 0))
             velocitySwitch = VelocitySwitch(kind: .off, threshold: 4)
             effectPath = 0
             volume = 120
@@ -190,10 +219,10 @@ public struct Source: Codable {
             //print("Source SysEx data = \(d.hexDump)")
             
             b = d.next(&offset)
-            zoneLow = Int(b)
-            
+            let zoneLow = Key(note: Int(b))
             b = d.next(&offset)
-            zoneHigh = Int(b)
+            let zoneHigh = Key(note: Int(b))
+            zone = Zone(high: zoneHigh, low: zoneLow)
             
             b = d.next(&offset)
             velocitySwitch = VelocitySwitch(data: [b])
@@ -217,23 +246,6 @@ public struct Source: Codable {
             keyOnDelay = Int(b)
             
             pan = Pan(data: d.slice(from: offset, length: Pan.dataLength))
-        }
-        
-        public func asData() -> ByteArray {
-            var data = ByteArray()
-            
-            data.append(Byte(zoneLow))
-            data.append(Byte(zoneHigh))
-            data.append(contentsOf: velocitySwitch.asData())
-            data.append(Byte(effectPath))
-            data.append(Byte(volume))
-            data.append(Byte(benderPitch))
-            data.append(Byte(benderCutoff))
-            data.append(contentsOf: modulation.asData())
-            data.append(Byte(keyOnDelay))
-            data.append(contentsOf: pan.asData())
-
-            return data
         }
     }
 
@@ -276,7 +288,66 @@ public struct Source: Codable {
         //print("SOURCE: Start LFO, offset = \(offset)")
         lfo = LFO(data: d.slice(from: offset, length: LFO.dataLength))
     }
+}
 
+// MARK: - SystemExclusiveData
+
+extension Source.Control.Modulation: SystemExclusiveData {
+    public func asData() -> ByteArray {
+        var data = ByteArray()
+        
+        data.append(contentsOf: pressure.asData())
+        data.append(contentsOf: wheel.asData())
+        data.append(contentsOf: expression.asData())
+        data.append(contentsOf: assignable1.asData())
+        data.append(contentsOf: assignable2.asData())
+        
+        return data
+    }
+}
+
+extension Source.Control.VelocitySwitch: SystemExclusiveData {
+    public func asData() -> ByteArray {
+        var data = ByteArray()
+        let t = Source.Control.VelocitySwitch.conversionTable.firstIndex(of: threshold)!
+        let value = t | (self.kind.index! << 5)
+        //print("velocity switch = \(self.velocitySwitchType.rawValue), velocityThreshold = \(self.velocityThreshold) --> velo_sw = \(String(value, radix: 2))")
+        data.append(Byte(value))
+        return data
+    }
+}
+
+extension Source.Control.Pan: SystemExclusiveData {
+    public func asData() -> ByteArray {
+        var data = ByteArray()
+        
+        data.append(Byte(kind.index!))
+        data.append(Byte(value + 64))
+        
+        return data
+    }
+}
+
+extension Source.Control: SystemExclusiveData {
+    public func asData() -> ByteArray {
+        var data = ByteArray()
+        
+        data.append(Byte(zone.low.note))
+        data.append(Byte(zone.high.note))
+        data.append(contentsOf: velocitySwitch.asData())
+        data.append(Byte(effectPath))
+        data.append(Byte(volume))
+        data.append(Byte(benderPitch))
+        data.append(Byte(benderCutoff))
+        data.append(contentsOf: modulation.asData())
+        data.append(Byte(keyOnDelay))
+        data.append(contentsOf: pan.asData())
+
+        return data
+    }
+}
+
+extension Source: SystemExclusiveData {
     public func asData() -> ByteArray {
         var data = ByteArray()
         
@@ -289,6 +360,8 @@ public struct Source: Codable {
         return data
     }
 }
+
+// MARK: - CustomStringConvertible
 
 extension Source: CustomStringConvertible {
     public var description: String {
@@ -314,7 +387,7 @@ extension Source: CustomStringConvertible {
 extension Source.Control: CustomStringConvertible {
     public var description: String {
         var s = ""
-        s += "ZoneLow=\(zoneLow) ZoneHigh=\(zoneHigh)\n"
+        s += "Zone = \(zone.low.name) ... \(zone.high.name)\n"
         s += "Velocity Switch: \(velocitySwitch)\n"
         s += "Effect Path = \(effectPath)\n"
         s += "Volume = \(volume)\n"

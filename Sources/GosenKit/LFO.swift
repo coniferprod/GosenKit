@@ -1,5 +1,3 @@
-import Foundation
-
 public struct LFO: Codable {
     public enum Waveform: String, Codable, CaseIterable {
         case triangle
@@ -32,10 +30,6 @@ public struct LFO: Codable {
         public init(depth: Int, keyScaling: Int) {
             self.depth = depth
             self.keyScaling = keyScaling
-        }
-        
-        public func asData() -> ByteArray {
-            return ByteArray(arrayLiteral: Byte(depth), Byte(keyScaling + 64))
         }
     }
 
@@ -108,7 +102,11 @@ public struct LFO: Codable {
         
         tremolo = Control(depth: tremoloDepth, keyScaling: tremoloKeyScaling)
     }
-        
+}
+
+// MARK: - SystemExclusiveData
+
+extension LFO: SystemExclusiveData {
     public func asData() -> ByteArray {
         var data = ByteArray()
         
@@ -121,5 +119,11 @@ public struct LFO: Codable {
         data.append(contentsOf: tremolo.asData())
 
         return data
+    }
+}
+
+extension LFO.Control: SystemExclusiveData {
+    public func asData() -> ByteArray {
+        return ByteArray(arrayLiteral: Byte(depth), Byte(keyScaling + 64))
     }
 }

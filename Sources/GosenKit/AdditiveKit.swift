@@ -1,7 +1,8 @@
-import Foundation
-
+/// Additive kit.
 public struct AdditiveKit: Codable {
+    /// The number of harmonics in the additive kit.
     public static let harmonicCount = 64
+    
     public static let dataLength = 806
     
     public var common: HarmonicCommon
@@ -19,7 +20,17 @@ public struct AdditiveKit: Codable {
         bands = FormantFilter.Bands()
         envelopes = [HarmonicEnvelope]()
         for _ in 0..<AdditiveKit.harmonicCount {
-            envelopes.append(HarmonicEnvelope(segment0: HarmonicEnvelope.Segment(rate: 127, level: 63), segment1: HarmonicEnvelope.Segment(rate: 127, level: 63), segment2: HarmonicEnvelope.Segment(rate: 127, level: 63), segment3: HarmonicEnvelope.Segment(rate: 127, level: 63), loopType: .off))
+            envelopes.append(
+                HarmonicEnvelope(
+                    segments: [
+                        HarmonicEnvelope.Segment(rate: 127, level: 63),
+                        HarmonicEnvelope.Segment(rate: 127, level: 63),
+                        HarmonicEnvelope.Segment(rate: 127, level: 63),
+                        HarmonicEnvelope.Segment(rate: 127, level: 63),
+                    ],
+                    loop: .off
+                )
+            )
         }
     }
     
@@ -56,35 +67,7 @@ public struct AdditiveKit: Codable {
             envelopes.append(envelope)
         }
     }
-    
-    public func asData() -> ByteArray {
-        var data = ByteArray()
-        
-        data.append(checksum)
-        
-        data.append(contentsOf: common.asData())
-        data.append(contentsOf: morf.asData())
-        data.append(contentsOf: formantFilter.asData())
-        data.append(contentsOf: levels.asData())
-        data.append(contentsOf: bands.asData())
-        
-        var envelopeBytes = ByteArray()
-        for env in envelopes {
-            let ed = env.asData()
-            for e in ed {
-                data.append(Byte(e))
-                envelopeBytes.append(e)
-            }
-        }
-        
-        //print("< HARM ENV = \(Data(envelopeBytes).hexDump)")
-        
-        data.append(0)  // "loud sens" select WTF?
 
-        //print("harmonics.asData is \(data.count) bytes, should be 806 bytes")
-        return data
-    }
-    
     // Additive kit checksum:
     // {(HCKIT sum) + (HCcode1 sum) + (HCcode2 sum) + (FF sum) + (HCenv sum) + (loud sense select) + 0xA5} & 0x7F
     public var checksum: Byte {
@@ -166,6 +149,40 @@ public struct AdditiveKit: Codable {
         return result
     }
 }
+
+// MARK: - SystemExclusiveData
+
+extension AdditiveKit: SystemExclusiveData {
+    public func asData() -> ByteArray {
+        var data = ByteArray()
+        
+        data.append(checksum)
+        
+        data.append(contentsOf: common.asData())
+        data.append(contentsOf: morf.asData())
+        data.append(contentsOf: formantFilter.asData())
+        data.append(contentsOf: levels.asData())
+        data.append(contentsOf: bands.asData())
+        
+        var envelopeBytes = ByteArray()
+        for env in envelopes {
+            let ed = env.asData()
+            for e in ed {
+                data.append(Byte(e))
+                envelopeBytes.append(e)
+            }
+        }
+        
+        //print("< HARM ENV = \(Data(envelopeBytes).hexDump)")
+        
+        data.append(0)  // "loud sens" select WTF?
+
+        //print("harmonics.asData is \(data.count) bytes, should be 806 bytes")
+        return data
+    }
+}
+
+// MARK: - CustomStringComvertible
 
 extension AdditiveKit: CustomStringConvertible {
     public var description: String {
