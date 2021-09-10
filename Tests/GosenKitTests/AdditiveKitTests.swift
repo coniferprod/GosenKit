@@ -8,8 +8,7 @@ final class AdditiveKitTests: XCTestCase {
         singlePatch.common.volume = 115
         
         var source1 = singlePatch.sources[0]
-        source1.oscillator.waveType = .additive
-        source1.oscillator.waveNumber = 512
+        source1.oscillator.wave = Wave.additive
         
         var add1 = AdditiveKit()  // use default settings
         
@@ -36,7 +35,7 @@ final class AdditiveKitTests: XCTestCase {
         )
         add1.bands = ff
         
-        var levels = HarmonicLevels(
+        let levels = HarmonicLevels(
             soft: [
                 127, 0, 0, 0, 120, 0, 0, 0,
                 105, 0, 0, 0, 102, 0, 0, 0,

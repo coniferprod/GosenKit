@@ -93,7 +93,7 @@ final class SystemExclusiveTests: XCTestCase {
     func testSinglePatch_1PCM_1ADD() {
         var single = SinglePatch()
         var addSource = Source()
-        addSource.oscillator.waveType = .additive
+        addSource.oscillator.wave = Wave.additive
         single.additiveKits["s2"] = AdditiveKit()
         single.sources[1] = addSource
         let data = single.asData()
@@ -104,7 +104,7 @@ final class SystemExclusiveTests: XCTestCase {
         var single = SinglePatch()
         single.common.sourceCount = 3
         var addSource = Source()
-        addSource.oscillator.waveType = .additive
+        addSource.oscillator.wave = Wave.additive
         single.additiveKits["s3"] = AdditiveKit()
         single.sources.append(addSource)
         let data = single.asData()
@@ -116,32 +116,32 @@ final class SystemExclusiveTests: XCTestCase {
         single.common.sourceCount = 6
         
         var source1 = Source()
-        source1.oscillator.waveType = .additive
+        source1.oscillator.wave = Wave.additive
         single.additiveKits["s1"] = AdditiveKit()
         single.sources[0] = source1
         
         var source2 = Source()
-        source2.oscillator.waveType = .additive
+        source2.oscillator.wave = Wave.additive
         single.additiveKits["s2"] = AdditiveKit()
         single.sources[1] = source2
         
         var source3 = Source()
-        source3.oscillator.waveType = .additive
+        source3.oscillator.wave = Wave.additive
         single.additiveKits["s3"] = AdditiveKit()
         single.sources.append(source3)
         
         var source4 = Source()
-        source4.oscillator.waveType = .additive
+        source4.oscillator.wave = Wave.additive
         single.additiveKits["s4"] = AdditiveKit()
         single.sources.append(source4)
         
         var source5 = Source()
-        source5.oscillator.waveType = .additive
+        source5.oscillator.wave = Wave.additive
         single.additiveKits["s5"] = AdditiveKit()
         single.sources.append(source5)
         
         var source6 = Source()
-        source6.oscillator.waveType = .additive
+        source6.oscillator.wave = Wave.additive
         single.additiveKits["s6"] = AdditiveKit()
         single.sources.append(source6)
         

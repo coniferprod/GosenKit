@@ -235,7 +235,7 @@ public struct SinglePatch: Codable {
         additiveKits = AdditiveKitDictionary()
         
         // How many additive kits should we expect then?
-        let additiveKitCount = sources.filter{ $0.oscillator.waveType == .additive }.count
+        let additiveKitCount = sources.filter{ $0.oscillator.wave.isAdditive() }.count
         var kitIndex = 0
         while kitIndex < additiveKitCount {
             let kit = AdditiveKit(data: d.slice(from: offset, length: AdditiveKit.dataLength))
@@ -473,6 +473,8 @@ extension SinglePatch.Common: CustomStringConvertible {
         return s
     }
 }
+
+// MARK: - Codable
 
 // Enums with associated values do not automatically conform to Codable
 // (apparently this is coming in Swift 5.5).

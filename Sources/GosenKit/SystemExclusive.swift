@@ -69,4 +69,38 @@ public enum SystemExclusiveFunction: Byte {
     case writeErrorByProtect = 0x42
     case writeErrorByMemoryFull = 0x44
     case writeErrorByNoExpandMemory = 0x45
+    case identityRequest = 0x60
+    case identityAcknowledge = 0x61
+    case unknown = 0x99
+    
+    public static func identify(data: ByteArray) -> SystemExclusiveFunction {
+        if data[3] == 0x20 && data[4] == 0x00 && data[5] == 0x0A && data[6] == 0x00 {
+            return .oneBlockDump
+        }
+        
+        if data[3] == SystemExclusiveFunction.identityRequest.rawValue && data[4] == 0x00 && data[5] == 0x0A {
+            return .identityRequest
+        }
+
+        if data[3] == SystemExclusiveFunction.writeComplete.rawValue && data[4] == 0x00 && data[5] == 0x0A {
+            return .writeComplete
+        }
+        
+        if data[3] == SystemExclusiveFunction.writeError.rawValue && data[4] == 0x00 && data[5] == 0x0A {
+            return .writeError
+        }
+        
+        return .unknown
+    }
+    
+    public var headerLength: Int {
+        var result = 0
+        switch self {
+        case .oneBlockDump:
+            result = 9
+        default:
+            result = 0
+        }
+        return result
+    }
 }

@@ -16,8 +16,7 @@ final class SinglePatchTests: XCTestCase {
         var single = SinglePatch()
         
         var source1 = single.sources[0]
-        source1.oscillator.waveType = .additive
-        source1.oscillator.waveNumber = 512
+        source1.oscillator.wave = Wave.additive
         
         var add1 = AdditiveKit()
         let ff = FormantFilter.Bands(
@@ -43,7 +42,7 @@ final class SinglePatchTests: XCTestCase {
         )
         add1.bands = ff
 
-        var levels = HarmonicLevels(
+        let levels = HarmonicLevels(
             soft: [
                 127, 124, 121, 118, 115, 112, 109, 106,
                 103, 100, 97, 94, 91, 88, 85, 82,

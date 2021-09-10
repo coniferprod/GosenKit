@@ -1,9 +1,4 @@
 public struct Oscillator: Codable {
-    public enum WaveType: String, Codable, CaseIterable {
-        case additive
-        case pcm
-    }
-
     public struct PitchEnvelope: Codable {
         public var start: Int
         public var attackTime: Int
@@ -64,8 +59,7 @@ public struct Oscillator: Codable {
         }
     }
 
-    public var waveType: WaveType  // TODO: is this necessary? Maybe just use the wave number?
-    public var waveNumber: Int
+    public var wave: Wave
     public var coarse: Int
     public var fine: Int
     public var keyScalingToPitch: KeyScaling
@@ -75,8 +69,7 @@ public struct Oscillator: Codable {
     static let dataLength = 12
     
     public init() {
-        waveType = .pcm
-        waveNumber = 412
+        wave = Wave(number: 411)
         coarse = 0
         fine = 0
         keyScalingToPitch = .zeroCent
@@ -92,13 +85,8 @@ public struct Oscillator: Codable {
         let waveMSB = b
         b = d.next(&offset)
         let waveLSB = b
-
-        let waveMSBString = String(waveMSB, radix: 2).pad(with: "0", toLength: 3)
-        let waveLSBString = String(waveLSB, radix: 2).pad(with: "0", toLength: 7)
-        let waveString = waveMSBString + waveLSBString
-        // now we should have a 10-bit binary string, convert it to a decimal number
-        waveNumber = Int(waveString, radix: 2) ?? 412
-
+        wave = Wave(msb: waveMSB, lsb: waveLSB)
+        
         b = d.next(&offset)
         coarse = Int(b) - 24
 
@@ -112,13 +100,6 @@ public struct Oscillator: Codable {
         keyScalingToPitch = KeyScaling(index: Int(b))!
 
         pitchEnvelope = PitchEnvelope(data: d.slice(from: offset, length: PitchEnvelope.dataLength))
-        
-        if waveNumber == 512 {
-            waveType = .additive
-        }
-        else {
-            waveType = .pcm
-        }
     }
 }
 
@@ -126,17 +107,8 @@ public struct Oscillator: Codable {
 
 extension Oscillator: CustomStringConvertible {
     public var description: String {
-        var s = ""
-        if waveType == .pcm {
-            s += "PCM"
-        }
-        else if waveType == .additive {
-            s += "ADD"
-        }
-        else {  // shouldn't happen since waveType is an enum
-            s += "???"
-        }
-        s += " Wave=\(waveNumber) Coarse=\(coarse) Fine=\(fine) KStoPitch=\(keyScalingToPitch.rawValue) FixedKey=\(fixedKey)\n"
+        var s = "Wave: \(wave) "
+        s += "Coarse=\(coarse) Fine=\(fine) KStoPitch=\(keyScalingToPitch.rawValue) FixedKey=\(fixedKey)\n"
         s += "Pitch Envelope:\n\(pitchEnvelope)\n"
         return s
     }
@@ -170,22 +142,8 @@ extension Oscillator: SystemExclusiveData {
     public func asData() -> ByteArray {
         var data = ByteArray()
         
-        // NOTE: Wave type is not emitted in System Exclusive
+        data.append(contentsOf: wave.asData())
         
-        // Convert wave kit number to binary string with 10 digits
-        // using a String extension (see Helpers.swift).
-        let waveBitString = String(waveNumber, radix: 2).pad(with: "0", toLength: 10)
-        
-        // Take the first three bits and convert them to a number
-        let msbBitString = waveBitString.prefix(3)
-        let msb = Byte(msbBitString, radix: 2)
-        data.append(msb!)
-        
-        // Take the last seven bits and convert them to a number
-        let lsbBitString = waveBitString.suffix(7)
-        let lsb = Byte(lsbBitString, radix: 2)
-        data.append(lsb!)
-
         [coarse + 24, fine + 64, fixedKey, keyScalingToPitch.index!].forEach {
             data.append(Byte($0))
         }
