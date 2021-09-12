@@ -1,3 +1,116 @@
+import Foundation
+
+/// Key with note number and name.
+public struct Key: Codable {
+    public var note: Int
+    
+    public var name: String {
+        let noteNames = ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"]
+        let octave = self.note / 12 - 1
+        let name = noteNames[self.note % 12]
+        return "\(name)\(octave)"
+    }
+    
+    public init(note: Int) {
+        self.note = note
+    }
+    
+    public init(name: String) {
+        let names = ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"]
+
+        let notes = CharacterSet(charactersIn: "CDEFGAB")
+        
+        var i = 0
+        var notePart = ""
+        var octavePart = ""
+        while i < name.count {
+            let c = name[i ..< i + 1]
+            
+            let isNote = c.unicodeScalars.allSatisfy { notes.contains($0) }
+            if isNote {
+                notePart += c
+            }
+     
+            if c == "#" {
+                notePart += c
+            }
+            if c == "-" {
+                octavePart += c
+            }
+            
+            let isDigit = c.unicodeScalars.allSatisfy { CharacterSet.decimalDigits.contains($0) }
+            if isDigit {
+                octavePart += c
+            }
+
+            i += 1
+        }
+
+        if let octave = Int(octavePart), let noteIndex = names.firstIndex(where: { $0 == notePart }) {
+            self.note = (octave + 1) * 12 + noteIndex
+        }
+        else {
+            self.note = 0
+        }
+    }
+}
+
+/// Keyboard zone with low and high keys.
+public struct Zone: Codable {
+    public var high: Key
+    public var low: Key
+}
+
+/// Velocity switch settings.
+public struct VelocitySwitch: Codable {
+    // On the synth, the threshold value goes from 4 to 127 in steps of four! (last step is from 124 to 127)
+    // So as the SysEx spec says, the value of 0 means 4, 1 means 8, and so on... and 31 means 127.
+    // I guess that 30 must mean 124 then. So the actual value in the SysEx should be 0...31, but it should be
+    // translated on input from 0...31 to 4...127, and on output from 4...127 to 0...31 again.
+
+    public enum Kind: String, Codable, CaseIterable {
+        case off
+        case loud
+        case soft
+        
+        public init?(index: Int) {
+            switch index {
+            case 0: self = .off
+            case 1: self = .loud
+            case 2: self = .soft
+            default: return nil
+            }
+        }
+    }
+
+    public var kind: Kind
+    public var threshold: Int  // store as a value in the conversion table
+    
+    static let dataLength = 1
+    
+    // Get the value on input as table[n] (where n = bottom 5 bits of value),
+    // and on output as indexOf(velocityThreshold).
+    private static let conversionTable = [
+        4, 8, 12, 16, 20, 24, 28, 32,
+        36, 40, 44, 48, 52, 56, 60, 64,
+        68, 72, 76, 80, 84, 88, 92, 96,
+        100, 104, 108, 112, 116, 120, 124, 127
+    ]
+    
+    public init(kind: Kind, threshold: Int) {
+        self.kind = kind
+        self.threshold = VelocitySwitch.conversionTable[threshold]
+    }
+    
+    public init(data d: ByteArray) {
+        let b = d[0]
+        let vs = Int(b >> 5)   // bits 5-6
+        kind = Kind(index: vs)!
+        let n = Int(b & 0b00011111)   // bits 0-4
+        threshold = VelocitySwitch.conversionTable[n]
+    }
+}
+
 public enum ControlDestination: String, Codable, CaseIterable {
     case pitchOffset
     case cutoffOffset
@@ -93,29 +206,6 @@ public struct MacroController: Codable {
     }
 }
 
-// MARK: - SystemExclusiveData
-
-extension MacroController: SystemExclusiveData {
-    public func asData() -> ByteArray {
-        var data = ByteArray()
-        [destination1.index!, depth1 + 64, destination2.index!, depth2 + 64].forEach {
-            data.append(Byte($0))
-        }
-        return data
-    }
-}
-
-// MARK: - CustomStringConvertible
-
-extension MacroController: CustomStringConvertible {
-    public var description: String {
-        var s = ""
-        s += "destination1=\(destination1.rawValue), depth1=\(depth1)\n"
-        s += "destination2=\(destination2.rawValue), depth1=\(depth2)\n"
-        return s
-    }
-}
-
 public struct SwitchControl: Codable {
     public enum Kind: String, Codable, CaseIterable {
         case off
@@ -177,16 +267,6 @@ public struct SwitchControl: Codable {
         self.switch2 = switch2
         self.footSwitch1 = footSwitch1
         self.footSwitch2 = footSwitch2
-    }
-}
-
-extension SwitchControl: SystemExclusiveData {
-    public func asData() -> ByteArray {
-        var data = ByteArray()
-        [switch1.index!, switch2.index!, footSwitch1.index!, footSwitch2.index!].forEach {
-            data.append(Byte($0))
-        }
-        return data
     }
 }
 
@@ -305,26 +385,6 @@ public struct EffectControl: Codable {
     }
 }
 
-extension EffectControl: SystemExclusiveData {
-    public func asData() -> ByteArray {
-        var data = ByteArray()
-    
-        data.append(contentsOf: source1.asData())
-        data.append(contentsOf: source2.asData())
-    
-        return data
-    }
-}
-
-extension EffectControl: CustomStringConvertible {
-    public var description: String {
-        var s = "Effect Control:\n"
-        s += "    Source1: \(source1)\n"
-        s += "    Source2: \(source2)\n"
-        return s
-    }
-}
-
 public struct AssignableController: Codable {
     public var source: ControlSource
     public var destination: ControlDestination
@@ -353,21 +413,26 @@ public struct AssignableController: Codable {
     }
 }
 
-extension AssignableController: SystemExclusiveData {
+// MARK: - SystemExclusiveData
+
+extension MacroController: SystemExclusiveData {
     public func asData() -> ByteArray {
         var data = ByteArray()
-        [source.index!, destination.index!, depth].forEach {
+        [destination1.index!, depth1 + 64, destination2.index!, depth2 + 64].forEach {
             data.append(Byte($0))
         }
         return data
     }
 }
 
-extension AssignableController: CustomStringConvertible {
-    public var description: String {
-        var s = ""
-        s += "source=\(source.rawValue), destination=\(destination.rawValue), depth=\(depth)"
-        return s
+extension VelocitySwitch: SystemExclusiveData {
+    public func asData() -> ByteArray {
+        var data = ByteArray()
+        let t = VelocitySwitch.conversionTable.firstIndex(of: threshold)!
+        let value = t | (self.kind.index! << 5)
+        //print("velocity switch = \(self.velocitySwitchType.rawValue), velocityThreshold = \(self.velocityThreshold) --> velo_sw = \(String(value, radix: 2))")
+        data.append(Byte(value))
+        return data
     }
 }
 
@@ -381,10 +446,77 @@ extension EffectControl.Source: SystemExclusiveData {
     }
 }
 
+extension AssignableController: SystemExclusiveData {
+    public func asData() -> ByteArray {
+        var data = ByteArray()
+        [source.index!, destination.index!, depth].forEach {
+            data.append(Byte($0))
+        }
+        return data
+    }
+}
+
+extension EffectControl: SystemExclusiveData {
+    public func asData() -> ByteArray {
+        var data = ByteArray()
+    
+        data.append(contentsOf: source1.asData())
+        data.append(contentsOf: source2.asData())
+    
+        return data
+    }
+}
+
+extension SwitchControl: SystemExclusiveData {
+    public func asData() -> ByteArray {
+        var data = ByteArray()
+        [switch1.index!, switch2.index!, footSwitch1.index!, footSwitch2.index!].forEach {
+            data.append(Byte($0))
+        }
+        return data
+    }
+}
+
+// MARK: - CustomStringConvertible
+
+extension AssignableController: CustomStringConvertible {
+    public var description: String {
+        var s = ""
+        s += "source=\(source.rawValue), destination=\(destination.rawValue), depth=\(depth)"
+        return s
+    }
+}
+
 extension EffectControl.Source: CustomStringConvertible {
     public var description: String {
         var s = ""
         s += "source=\(source.rawValue), destination=\(destination.rawValue), depth=\(depth)"
+        return s
+    }
+}
+
+extension EffectControl: CustomStringConvertible {
+    public var description: String {
+        var s = "Effect Control:\n"
+        s += "    Source1: \(source1)\n"
+        s += "    Source2: \(source2)\n"
+        return s
+    }
+}
+
+extension MacroController: CustomStringConvertible {
+    public var description: String {
+        var s = ""
+        s += "destination1=\(destination1.rawValue), depth1=\(depth1)\n"
+        s += "destination2=\(destination2.rawValue), depth1=\(depth2)\n"
+        return s
+    }
+}
+
+extension VelocitySwitch: CustomStringConvertible {
+    public var description: String {
+        var s = ""
+        s += "\(kind.rawValue), threshold=\(threshold)"
         return s
     }
 }
