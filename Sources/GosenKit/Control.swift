@@ -59,6 +59,11 @@ public struct Key: Codable {
 public struct Zone: Codable {
     public var high: Key
     public var low: Key
+    
+    public init(high: Key, low: Key) {
+        self.high = high
+        self.low = low
+    }
 }
 
 /// Velocity switch settings.

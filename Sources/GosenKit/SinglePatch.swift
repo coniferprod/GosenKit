@@ -138,7 +138,7 @@ public struct SinglePatch: Codable {
             //print("Start source mutes, offset = \(offset)")
 
             b = d.next(&offset)
-            // Unpack the source mutes into a Bool array. Spec says "0:mute".
+            // Unpack the source mutes into a Bool array. Spec says "0:mute, bit 0~5 = source 1~6".
             sourceMutes = [Bool]()
             sourceMutes.append(b.isBitSet(0) ? false : true)
             sourceMutes.append(b.isBitSet(1) ? false : true)
