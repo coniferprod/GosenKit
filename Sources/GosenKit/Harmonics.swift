@@ -22,7 +22,7 @@ public struct HarmonicCommon: Codable {
     public var velocityCurve: Int  // 1~12 (stored in SysEx as 0~11)
     public var velocityDepth: Int  // 0~127
     
-    static let dataLength = 6
+    public static let dataLength = 6
     
     public init() {
         isMorfEnabled = false
@@ -100,7 +100,7 @@ public struct HarmonicEnvelope: Codable {
     public var segments: [Segment]
     public var loop: EnvelopeLoopKind
     
-    static let dataLength = 4 * Segment.dataLength
+    public static let dataLength = 4 * Segment.dataLength
     
     public init() {
         self.segments = [Segment]()
@@ -188,7 +188,7 @@ public struct HarmonicLevels: Codable {
     
     public static let harmonicCount = 64
     
-    static let dataLength = 128
+    public static let dataLength = 128
     
     public init() {
         soft = [Int]()

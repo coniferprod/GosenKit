@@ -8,7 +8,7 @@ public struct Amplifier: Codable {
         public var decay2Level: Int
         public var releaseTime: Int
         
-        static let dataLength = 6
+        public static let dataLength = 6
         
         public init() {
             attackTime = 0
@@ -62,7 +62,7 @@ public struct Amplifier: Codable {
             public var decay1Time: Int
             public var release: Int
             
-            static let dataLength = 4
+            public static let dataLength = 4
 
             public init() {
                 level = 0
@@ -106,7 +106,7 @@ public struct Amplifier: Codable {
             public var decay1Time: Int
             public var release: Int
             
-            static let dataLength = 4
+            public static let dataLength = 4
             
             public init() {
                 level = 0
@@ -168,7 +168,7 @@ public struct Amplifier: Codable {
     public var envelope: Envelope
     public var modulation: Modulation
     
-    static let dataLength = 15
+    public static let dataLength = 15
     
     public init() {
         velocityCurve = 1

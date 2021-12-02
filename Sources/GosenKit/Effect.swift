@@ -160,7 +160,7 @@ public struct EffectDefinition: Codable {
         /* 47 */ Name(name: "Distortion & Delay", parameterNames: ["EQ Low", "EQ High", "Delay Time", "Drive"]),
     ])
 
-    static let dataLength = 6
+    public static let dataLength = 6
     
     public var kind: Kind  // reverb = 0...10, other effects = 11...47
     public var depth: Int  // 0~100  // reverb dry/wet1 = depth
@@ -224,7 +224,7 @@ public struct EffectSettings: Codable {
     public var effect3: EffectDefinition
     public var effect4: EffectDefinition
     
-    static let dataLength = 31
+    public static let dataLength = 31
     
     public init() {
         algorithm = 1

@@ -25,7 +25,7 @@ public struct Filter: Codable {
         public var velocityToAttack: Int
         public var velocityToDecay1: Int
         
-        static let dataLength = 11
+        public static let dataLength = 11
         
         public init() {
             attackTime = 0
@@ -91,7 +91,7 @@ public struct Filter: Codable {
     public var envelopeDepth: Int
     public var envelope: Envelope
     
-    static let dataLength = 20
+    public static let dataLength = 20
     
     public init() {
         isActive = false

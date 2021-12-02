@@ -71,7 +71,7 @@ public struct SinglePatch: Codable {
         static let nameLength = 8
         static let macroCount = 4
         
-        public static let dataLength = 82
+        public static let dataLength = 81
         
         /// Initializes the common part with default values.
         public init() {
@@ -99,10 +99,6 @@ public struct SinglePatch: Codable {
         public init(data d: ByteArray) {
             var offset: Int = 0
             var b: Byte = 0
-            
-            let checksum = d.next(&offset)
-            
-            //print("Original checksum = \(String(checksum, radix: 16))")
             
             effects = EffectSettings(data: d.slice(from: offset, length: EffectSettings.dataLength))
             offset += EffectSettings.dataLength
@@ -204,7 +200,7 @@ public struct SinglePatch: Codable {
     public var sources: [Source]
     public var additiveKits: AdditiveKitDictionary
     
-    static let maxSourceCount = 6
+    public static let maxSourceCount = 6
 
     /// Initializes a single patch.
     public init() {
@@ -221,8 +217,11 @@ public struct SinglePatch: Codable {
     /// - Parameter d: A byte array with the System Exclusive data.
     public init(data d: ByteArray) {
         var offset: Int = 0
-        
-        common = Common(data: d)
+        var b: Byte = 0
+
+        b = d.next(&offset)  // checksum is the first byte
+
+        common = Common(data: d.slice(from: offset, length: Common.dataLength))
         offset += Common.dataLength
         
         sources = [Source]()

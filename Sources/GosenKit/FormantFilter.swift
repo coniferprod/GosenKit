@@ -4,7 +4,7 @@ public struct FormantFilter: Codable {
             public var rate: Int  // 0~127
             public var level: Int // -63(1)~+63(127)
             
-            static let dataLength = 2
+            public static let dataLength = 2
             
             public init(rate: Int, level: Int) {
                 self.rate = rate
@@ -31,7 +31,7 @@ public struct FormantFilter: Codable {
         public var velocityDepth: Int // -63(1)~+63(127)
         public var keyScalingDepth: Int // -63(1)~+63(127)
         
-        static let dataLength = 11
+        public static let dataLength = 11
         
         public init() {
             attack = Segment(rate: 127, level: 63)
@@ -91,7 +91,7 @@ public struct FormantFilter: Codable {
         public var shape: Shape
         public var depth: Int  // 0~63
         
-        static let dataLength = 3
+        public static let dataLength = 3
         
         public init() {
             shape = .triangle
@@ -155,7 +155,7 @@ public struct FormantFilter: Codable {
     public var envelope: Envelope
     public var lfo: LFO
     
-    static let dataLength = 17  // does not include the bands!
+    public static let dataLength = 17  // does not include the bands!
     
     public init() {
         bias = -10

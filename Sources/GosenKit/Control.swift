@@ -91,7 +91,7 @@ public struct VelocitySwitch: Codable {
     public var kind: Kind
     public var threshold: Int  // store as a value in the conversion table
     
-    static let dataLength = 1
+    public static let dataLength = 1
     
     // Get the value on input as table[n] (where n = bottom 5 bits of value),
     // and on output as indexOf(velocityThreshold).
@@ -171,7 +171,7 @@ public struct MacroController: Codable {
     public var destination2: ControlDestination
     public var depth2: Int // -31~+31
     
-    static let dataLength = 4
+    public static let dataLength = 4
     
     public init() {
         destination1 = .cutoffOffset
@@ -347,7 +347,7 @@ public struct EffectControl: Codable {
         public var destination: EffectDestination
         public var depth: Int
         
-        static let dataLength = 3
+        public static let dataLength = 3
         
         public init() {
             source = .bender
@@ -373,7 +373,7 @@ public struct EffectControl: Codable {
     public var source1: Source
     public var source2: Source
     
-    static let dataLength = 6
+    public static let dataLength = 6
     
     public init() {
         source1 = Source()
@@ -395,7 +395,7 @@ public struct AssignableController: Codable {
     public var destination: ControlDestination
     public var depth: Int
     
-    static let dataLength = 3
+    public static let dataLength = 3
     
     public init() {
         source = .bender

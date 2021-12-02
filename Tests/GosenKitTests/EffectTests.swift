@@ -39,5 +39,46 @@ final class EffectTests: XCTestCase {
 
     }
     
+    func testEffectSettings_ABankINT_001() {
+        let data: ByteArray = [
+            0x00,
+            0x08, 0x14, 0x10, 0x14, 0x0e, 0x0e,
+            0x11, 0x3c, 0x21, 0x21, 0x08, 0x00,
+            0x24, 0x00, 0x05, 0x2b, 0x0d, 0x24,
+            0x1a, 0x17, 0x23, 0x28, 0x0e, 0x21,
+            0x0b, 0x00, 0x00, 0x00, 0x00, 0x00,
+        ]
+        let effectSettings = EffectSettings(data: data)
+        XCTAssertEqual(effectSettings.algorithm, 1)  // original byte is 0x00, algorithm values are 1~4
+        XCTAssertEqual(effectSettings.reverb.kind, .plate3)
+        print(effectSettings)
+    }
+    
+    func testEffectSettings_ABankINT_017() {
+        let data: ByteArray = [
+            0x00, // Algorithm
+            0x00, 0x00, 0x1C, 0x1A, 0x10, 0x3C, // Reverb
+            0x2A, 0x3C, 0x0C, 0x0C, 0x27, 0x01, // Effect1
+            0x11, 0x02, 0x69, 0x17, 0x00, 0x00, // Effect2
+            0x23, 0x00, 0x06, 0x4B, 0x00, 0x00, // Effect3
+            0x2A, 0x00, 0x0C, 0x0C, 0x00, 0x00, // Effect4
+            // 41 41 40 40 3E 40 41 = GEQ
+            // 00 = drum_mark
+            //"50 79 70 65 72 20 20 20" = "Pyper   "
+        ]
+        let effectSettings = EffectSettings(data: data)
+        XCTAssertEqual(effectSettings.algorithm, 1)  // original byte is 0x00, algorithm values are 1~4
+        print(effectSettings)
+    }
+    
+    func testReverb() {
+        let data: ByteArray = [
+            0x00, 0x00, 0x1C, 0x1A, 0x10, 0x3C, // Reverb
+        ]
+        let reverb = EffectDefinition(data: data)
+        XCTAssertEqual(reverb.kind, EffectDefinition.Kind.hall1)
+        
+    }
+    
 }
 

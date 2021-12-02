@@ -9,7 +9,7 @@ public struct Source: Codable {
             public var assignable1: AssignableController
             public var assignable2: AssignableController
             
-            static let dataLength = 18
+            public static let dataLength = 18
             
             public init() {
                 pressure = MacroController()
@@ -60,7 +60,7 @@ public struct Source: Codable {
             public var kind: Kind
             public var value: Int
             
-            static let dataLength = 2
+            public static let dataLength = 2
             
             public init(kind: Kind, value: Int) {
                 self.kind = kind
@@ -90,7 +90,7 @@ public struct Source: Codable {
         public var keyOnDelay: Int
         public var pan: Pan
         
-        static let dataLength = 28
+        public static let dataLength = 28
         
         public init() {
             zone = Zone(high: Key(note: 127), low: Key(note: 0))

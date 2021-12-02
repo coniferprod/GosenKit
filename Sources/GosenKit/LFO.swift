@@ -43,7 +43,7 @@ public struct LFO: Codable {
     public var growl: Control
     public var tremolo: Control
     
-    static let dataLength = 11
+    public static let dataLength = 11
     
     public init() {
         waveform = .square

@@ -3,7 +3,7 @@ public struct Morf: Codable {
         public var patchNumber: Int  // 0~127
         public var sourceNumber: Int  // 0~11 (0~5:soft, 6~11:loud)
         
-        static let dataLength = 2
+        public static let dataLength = 2
         
         public init() {
             patchNumber = 0
@@ -29,7 +29,7 @@ public struct Morf: Codable {
         public var time4: Int
         public var loopType: EnvelopeLoopKind
         
-        static let dataLength = 5
+        public static let dataLength = 5
         
         public init() {
             time1 = 0
@@ -66,7 +66,7 @@ public struct Morf: Codable {
     public var copy4: CopyParameters
     public var envelope: Envelope
     
-    static let dataLength = 13
+    public static let dataLength = 13
     
     public init() {
         copy1 = CopyParameters()

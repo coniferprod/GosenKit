@@ -7,7 +7,7 @@ public struct Oscillator: Codable {
         public var timeVelocitySensitivity: Int
         public var levelVelocitySensitivity: Int
         
-        static let dataLength = 6
+        public static let dataLength = 6
         
         public init() {
             start = 0
@@ -66,7 +66,7 @@ public struct Oscillator: Codable {
     public var fixedKey: Int  // TODO: OFF / MIDI note
     public var pitchEnvelope: PitchEnvelope
     
-    static let dataLength = 12
+    public static let dataLength = 12
     
     public init() {
         wave = Wave(number: 411)
