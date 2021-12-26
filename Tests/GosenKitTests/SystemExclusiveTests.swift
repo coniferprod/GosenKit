@@ -33,17 +33,23 @@ import XCTest
 @testable import GosenKit
 
 final class SystemExclusiveTests: XCTestCase {
-    func testSystemExclusiveHeader() {
-        let header = SystemExclusiveHeader(manufacturerIdentifier: 0x40, channel: 0, function: SystemExclusiveFunction.oneBlockDump.rawValue, group: 0x00, machineIdentifier: 0x0a, substatus1: 0x00, substatus2: 0x00)
+    func testSystemExclusive_header() {
+        let header = SystemExclusive.Header(
+            channel: 0,
+            function: SystemExclusive.Function.oneBlockDump,
+            group: 0x00,
+            machineIdentifier: 0x0a,
+            substatus1: 0x00,
+            substatus2: BankIdentifier.a.rawValue)
     
-        XCTAssertEqual(header.asData(), [0xf0, 0x40, 0x00, 0x20, 0x00, 0x0a, 0x00, 0x00])
+        XCTAssertEqual(header.asData(), [0x00, 0x20, 0x00, 0x0a, 0x00, 0x00])
     }
     
     func testSinglePatch_asSystemExclusiveMessage() {
         let single = SinglePatch()
-        let data = single.asSystemExclusiveMessage(channel: 0, bank: "a")
+        let data = single.asSystemExclusiveMessage(channel: 0, bank: .a)
         
-        XCTAssertEqual(data.count, 254 + 8 + 1)
+        XCTAssertEqual(data.count, 254 + 6)
     }
     
     func testSinglePatch_2PCM() {

@@ -167,11 +167,28 @@ public struct MultiPatch: Codable {
         totalSum += sectionSum
         
         totalSum += 0xA5
+
+        return Byte(totalSum & 0x7F)
+    }
+    
+    /// Generates a MIDI System Exclusive message from this patch.
+    /// - Parameter channel: the MIDI channel to use
+    /// - Parameter instrument: 00...3F
+    public func asSystemExclusiveMessage(channel: Byte, instrument: Byte) -> ByteArray {
+        var data = ByteArray()
         
-        let result = Byte(totalSum & 0x7F)
+        let header = SystemExclusive.Header(
+            channel: channel,
+            function: .oneBlockDump,
+            group: 0x00,
+            machineIdentifier: 0x0a,
+            substatus1: 0x20,
+            substatus2: instrument)
 
-        return result
-
+        data.append(contentsOf: header.asData())
+        data.append(contentsOf: self.asData())
+        
+        return data
     }
 }
 

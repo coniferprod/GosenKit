@@ -249,34 +249,20 @@ public struct SinglePatch: Codable {
     
     /// Generates a MIDI System Exclusive message from this patch.
     /// - Parameter channel: the MIDI channel to use
-    /// - Parameter bank: the K5000 bank ("a", "d", "e", "f")
-    public func asSystemExclusiveMessage(channel: Byte, bank: String) -> ByteArray {
+    /// - Parameter bank: the K5000 bank identifier
+    public func asSystemExclusiveMessage(channel: Byte, bank: BankIdentifier) -> ByteArray {
         var data = ByteArray()
         
-        var header = SystemExclusiveHeader(
-            manufacturerIdentifier: 0x40,
+        let header = SystemExclusive.Header(
             channel: channel,
-            function: SystemExclusiveFunction.oneBlockDump.rawValue,
+            function: .oneBlockDump,
             group: 0x00,
             machineIdentifier: 0x0a,
-            substatus1: 0x00, substatus2: 0x00)
-
-        switch bank {
-        case "a":
-            header.substatus2 = 0x00
-        case "d":
-            header.substatus2 = 0x02
-        case "e":
-            header.substatus2 = 0x03
-        case "f":
-            header.substatus2 = 0x04
-        default:
-            header.substatus2 = 0x00
-        }
+            substatus1: 0x00,
+            substatus2: bank.rawValue)
 
         data.append(contentsOf: header.asData())
         data.append(contentsOf: self.asData())
-        data.append(SystemExclusiveHeader.terminator)
         
         return data
     }
