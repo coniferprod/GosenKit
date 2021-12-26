@@ -41,23 +41,6 @@ extension ByteArray {
     }
 }
 
-extension Data {
-    public var bytes: ByteArray {
-        var byteArray = ByteArray(repeating: 0, count: self.count)
-        self.copyBytes(to: &byteArray, count: self.count)
-        return byteArray
-    }
-    
-    public var hexDump: String {
-        var s = ""
-        for d in self {
-            s += d.toHex(digits: 2)
-            s += " "
-        }
-        return s
-    }
-}
-
 extension Double {
     /// Rounds the double to decimal places value
     func rounded(toPlaces places:Int) -> Double {
