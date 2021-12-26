@@ -14,7 +14,6 @@ public struct HarmonicCommon: Codable {
 
     public var isMorfEnabled: Bool
     
-    //@Clamping<UInt8>(defaultValue: 1, range: 1...63)  // doesn't conform to Codable
     public var totalGain: Int // 1~63
     
     public var group: Group

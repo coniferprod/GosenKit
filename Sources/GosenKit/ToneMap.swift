@@ -1,3 +1,5 @@
+import SyxPack
+
 /// Represents the set of included patches in a bank.
 public class ToneMap {
     public static let size = 19  // bytes

@@ -2,6 +2,7 @@ import XCTest
 @testable import GosenKit
 
 final class AdditiveKitTests: XCTestCase {
+    /*
     func testAsData() {
         var singlePatch = SinglePatch()
         singlePatch.common.name = "FooBar"
@@ -79,4 +80,5 @@ final class AdditiveKitTests: XCTestCase {
         
         XCTAssertEqual(add1.asData(), [])
     }
+     */
 }

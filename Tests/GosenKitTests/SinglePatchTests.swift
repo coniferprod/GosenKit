@@ -12,6 +12,7 @@ final class SinglePatchTests: XCTestCase {
         XCTAssertEqual(single.common.sourceCount, single.sources.count)
     }
     
+    /*
     func testSinglePatch_asData() {
         var single = SinglePatch()
         
@@ -86,6 +87,7 @@ final class SinglePatchTests: XCTestCase {
         print(single)
         XCTAssertEqual(single.asData(), [])
     }
+    */
     
     // This test depends on a System Exclusive file found in the Resources directory of the test module.
     func testSinglePatch_fromData() {

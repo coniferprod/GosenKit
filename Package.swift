@@ -14,14 +14,15 @@ let package = Package(
             targets: ["GosenKit"]),
     ],
     dependencies: [
+        .package(url: "https://github.com/coniferprod/SyxPack", from: "0.4.0"),
     ],
     targets: [
         .target(
             name: "GosenKit",
-            dependencies: []),
+            dependencies: ["SyxPack"]),
         .testTarget(
             name: "GosenKitTests",
-            dependencies: ["GosenKit"],
+            dependencies: ["GosenKit", "SyxPack"],
             resources: [
                 .copy("Resources")
             ]),

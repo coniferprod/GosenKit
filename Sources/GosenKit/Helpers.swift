@@ -18,20 +18,6 @@ extension String {
 }
 
 extension Byte {
-    public mutating func setBit(_ position: Int) {
-        self |= 1 << position;
-    }
-    
-    public mutating func unsetBit(_ position: Int) {
-        self &= ~(1 << position);
-    }
-    
-    public func isBitSet(_ position: Int) -> Bool {
-        return (self & (1 << position)) != 0
-    }
-}
-
-extension Byte {
     public func toBinary() -> String {
         return String(self, radix: 2)
     }
@@ -42,15 +28,6 @@ extension Byte {
 }
 
 extension ByteArray {
-    public var hexDump: String {
-        var s = ""
-        for d in self {
-            s += d.toHex(digits: 2)
-            s += " "
-        }
-        return s
-    }
-    
     /// Returns the byte at the given offset, then increases the offset by one.
     public func next(_ offset: inout Int) -> Byte {
         let b = self[offset]
@@ -158,40 +135,4 @@ public func keyNumber(for name: String) -> Int {
     }
 
     return 0
-}
-
-extension Array {
-    func chunked(into size: Int) -> [[Element]] {
-        return stride(from: 0, to: count, by: size).map {
-            Array(self[$0 ..< Swift.min($0 + size, count)])
-        }
-    }
-}
-
-// Property wrapper to clamp the value of a Comparable.
-// https://www.swiftbysundell.com/articles/property-wrappers-in-swift/
-// This reallyt seems to be more trouble than it's worth,
-// or I can't make this pattern fit my brain.
-@propertyWrapper
-public struct Clamping<Value: Comparable> {
-    public let range: ClosedRange<Value>
-    private let defaultValue: Value
-    private var value: Value
-    
-    public var wrappedValue: Value {
-        get {
-            self.value
-        }
-        
-        set {
-            self.value = min(max(range.lowerBound, newValue), range.upperBound)
-        }
-    }
-     
-    init(defaultValue: Value, range: ClosedRange<Value>) {
-        precondition(range.contains(defaultValue))
-        self.defaultValue = defaultValue
-        self.value = defaultValue
-        self.range = range
-    }
 }
