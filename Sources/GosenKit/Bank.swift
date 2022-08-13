@@ -1,10 +1,10 @@
 import Foundation
 
-public struct Bank {
-    public var singles: [SinglePatch]
-    public var multis: [MultiPatch]
-    
-    
+// Kawai K5000 banks contain either single patches (up to 128 of them)
+// or exactly 64 multi patches (called combi on K5000W).
+
+public struct SingleBank {
+    public var patches: [SinglePatch]
 }
 
 public enum BankIdentifier: Byte, CustomStringConvertible {
@@ -31,4 +31,9 @@ public enum BankIdentifier: Byte, CustomStringConvertible {
             return "N/A"
         }
     }
+}
+
+
+public struct MultiBank {
+    public var patches: [MultiPatch]
 }
