@@ -136,7 +136,7 @@ public struct HarmonicEnvelope: Codable {
         //print("segment1 rate = 0x\(String(segment1Rate, radix: 16)) level = 0x\(String(b, radix: 16)) = 0b\(String(b, radix: 2))")
         //print("bit 6 of segment 1 level set? \(segment1LevelBit6 ? "YES" : "NO")")
         
-        b.unsetBit(6)
+        b.clearBit(6)
         let segment1Level = Int(b)
 
         b = d.next(&offset)
@@ -146,7 +146,7 @@ public struct HarmonicEnvelope: Codable {
         let segment2LevelBit6 = b.isBitSet(6)
         //print("segment2 rate = 0x\(String(segment2Rate, radix: 16)) level = 0x\(String(b, radix: 16)) = 0b\(String(b, radix: 2))")
         //print("bit 6 of segment 1 level set? \(segment2LevelBit6 ? "YES" : "NO")")
-        b.unsetBit(6)
+        b.clearBit(6)
         let segment2Level = Int(b)
         
         b = d.next(&offset)
@@ -245,7 +245,7 @@ extension HarmonicEnvelope: SystemExclusiveData {
         var segment2Level = Byte(segments[2].level)
 
         if loop == .loop2 {  // bit pattern from bits 6 of L1 and L2 = "01"
-            segment1Level.unsetBit(6)
+            segment1Level.clearBit(6)
             segment2Level.setBit(6)
         }
         else if loop == .loop1 {    // "11"
@@ -253,8 +253,8 @@ extension HarmonicEnvelope: SystemExclusiveData {
             segment2Level.setBit(6)
         }
         else if loop == .off {  // "00"
-            segment1Level.unsetBit(6)
-            segment2Level.unsetBit(6)
+            segment1Level.clearBit(6)
+            segment2Level.clearBit(6)
         }
         
         var segment1Data = segments[1].asData()
