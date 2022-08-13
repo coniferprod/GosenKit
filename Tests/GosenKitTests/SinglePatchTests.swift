@@ -98,4 +98,15 @@ final class SinglePatchTests: XCTestCase {
             }
         }
     }
+    
+    func testPatchName_truncate() {
+        @PatchName var longName = "MoreThan8Chars"
+        XCTAssert(longName.count == PatchName.length)
+    }
+    
+    func testPatchName_pad() {
+        @PatchName var shortName = "Name"
+        XCTAssert(shortName.count == PatchName.length)
+        XCTAssert(shortName.last! == " ")
+    }
 }

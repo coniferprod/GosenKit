@@ -6,14 +6,24 @@ extension CaseIterable where Self: Equatable {
     }
 }
 
+public enum PadFrom {
+    case left
+    case right
+}
+
 extension String {
-    public func pad(with character: String, toLength length: Int) -> String {
+    public func pad(with character: String, toLength length: Int, from: PadFrom = .right) -> String {
         let padCount = length - self.count
         guard padCount > 0 else {
             return self
         }
 
-        return String(repeating: character, count: padCount) + self
+        if from == .left {
+            return String(repeating: character, count: padCount) + self
+        }
+        else {
+            return self + String(repeating: character, count: padCount)
+        }
     }
 }
 

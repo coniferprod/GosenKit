@@ -1,5 +1,33 @@
 import Foundation
 
+extension String {
+    public func adjusted(length: Int, pad: String = " ") -> String {
+        // If longer, truncate to `length`.
+        // If shorter, pad from right with `pad` to the length `length`.
+        if self.count > length {
+            return String(self.prefix(length))
+        }
+        else {
+            return self.pad(with: " ", toLength: length, from: .right)
+            //return self.padding(toLength: length, withPad: " ", startingAt: self.count - 1)
+        }
+    }
+}
+
+@propertyWrapper public struct PatchName: Codable {
+    public static let length = 8
+    
+    public var wrappedValue: String {
+        didSet {
+            wrappedValue = wrappedValue.adjusted(length: PatchName.length)
+        }
+    }
+    
+    public init(wrappedValue: String) {
+        self.wrappedValue = wrappedValue.adjusted(length: PatchName.length)
+    }
+}
+
 /// Additive kits keyed by source ("s1": ... etc.)
 public typealias AdditiveKitDictionary = [String: AdditiveKit]
 
@@ -52,7 +80,7 @@ public struct SinglePatch: Codable {
     
     /// Single patch common settings.
     public struct Common: Codable {
-        public var name: String
+        @PatchName public var name: String
         public var volume: Int
         public var polyphony: Polyphony
         public var sourceCount: Int
@@ -68,7 +96,6 @@ public struct SinglePatch: Codable {
         
         static let sourceCountOffset = 50
         static let geqBandCount = 7
-        static let nameLength = 8
         static let macroCount = 4
         
         public static let dataLength = 81
@@ -116,8 +143,8 @@ public struct SinglePatch: Codable {
             
             //print("Start name, offset = \(offset)")
 
-            name = String(data: Data(d.slice(from: offset, length: Common.nameLength)), encoding: .ascii) ?? "--------"
-            offset += Common.nameLength
+            name = String(data: Data(d.slice(from: offset, length: PatchName.length)), encoding: .ascii) ?? "--------"
+            offset += PatchName.length
             
             b = d.next(&offset)
             volume = Int(b)
