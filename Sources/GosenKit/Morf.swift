@@ -1,9 +1,10 @@
+import SyxPack
+
+
 public struct Morf: Codable {
     public struct CopyParameters: Codable {
         public var patchNumber: Int  // 0~127
         public var sourceNumber: Int  // 0~11 (0~5:soft, 6~11:loud)
-        
-        public static let dataLength = 2
         
         public init() {
             patchNumber = 0
@@ -27,16 +28,14 @@ public struct Morf: Codable {
         public var time2: Int
         public var time3: Int
         public var time4: Int
-        public var loopType: EnvelopeLoopKind
-        
-        public static let dataLength = 5
+        public var loopKind: HarmonicEnvelope.LoopKind
         
         public init() {
             time1 = 0
             time2 = 0
             time3 = 0
             time4 = 0
-            loopType = .off
+            loopKind = .off
         }
         
         public init(data d: ByteArray) {
@@ -56,7 +55,7 @@ public struct Morf: Codable {
             time4 = Int(b)
 
             b = d.next(&offset)
-            loopType = EnvelopeLoopKind(index: Int(b))!
+            loopKind = HarmonicEnvelope.LoopKind(index: Int(b))!
         }
     }
 
@@ -65,8 +64,6 @@ public struct Morf: Codable {
     public var copy3: CopyParameters
     public var copy4: CopyParameters
     public var envelope: Envelope
-    
-    public static let dataLength = 13
     
     public init() {
         copy1 = CopyParameters()
@@ -103,6 +100,8 @@ extension Morf.CopyParameters: SystemExclusiveData {
     public func asData() -> ByteArray {
         return ByteArray(arrayLiteral: Byte(patchNumber), Byte(sourceNumber))
     }
+    
+    public static var dataLength = 2
 }
 
 extension Morf: SystemExclusiveData {
@@ -117,14 +116,18 @@ extension Morf: SystemExclusiveData {
 
         return data
     }
+    
+    public static var dataLength = 13
 }
 
 extension Morf.Envelope: SystemExclusiveData {
     public func asData() -> ByteArray {
         var data = ByteArray()
-        [time1, time2, time3, time4, loopType.index!].forEach {
+        [time1, time2, time3, time4, loopKind.index!].forEach {
             data.append(Byte($0))
         }
         return data
     }
+    
+    public static var dataLength = 5
 }

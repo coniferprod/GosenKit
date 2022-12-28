@@ -1,3 +1,6 @@
+import SyxPack
+
+
 public struct EffectDefinition: Codable {
     public enum Kind: String, Codable, CaseIterable {
         case hall1
@@ -160,8 +163,6 @@ public struct EffectDefinition: Codable {
         /* 47 */ Name(name: "Distortion & Delay", parameterNames: ["EQ Low", "EQ High", "Delay Time", "Drive"]),
     ])
 
-    public static let dataLength = 6
-    
     public var kind: Kind  // reverb = 0...10, other effects = 11...47
     public var depth: Int  // 0~100  // reverb dry/wet1 = depth
     public var parameter1: Int  // all parameters are 0~127, except reverb param1 = 0~100
@@ -200,20 +201,6 @@ public struct EffectDefinition: Codable {
         b = d.next(&offset)
         parameter4 = Int(b)
     }
-    
-    public func asData() -> ByteArray {
-        var data = ByteArray()
-        
-        [
-            kind.index!, depth,
-            parameter1, parameter2, parameter3, parameter4
-        ]
-        .forEach {
-            data.append(Byte($0))
-        }
-
-        return data
-    }
 }
 
 public struct EffectSettings: Codable {
@@ -223,8 +210,6 @@ public struct EffectSettings: Codable {
     public var effect2: EffectDefinition
     public var effect3: EffectDefinition
     public var effect4: EffectDefinition
-    
-    public static let dataLength = 31
     
     public init() {
         algorithm = 1
@@ -256,7 +241,29 @@ public struct EffectSettings: Codable {
         
         effect4 = EffectDefinition(data: d.slice(from: offset, length: EffectDefinition.dataLength))
     }
+}
+
+// MARK: - SystemExclusiveData
+
+extension EffectDefinition: SystemExclusiveData {
+    public func asData() -> ByteArray {
+        var data = ByteArray()
         
+        [
+            kind.index!, depth,
+            parameter1, parameter2, parameter3, parameter4
+        ]
+        .forEach {
+            data.append(Byte($0))
+        }
+
+        return data
+    }
+    
+    public static var dataLength = 6
+}
+
+extension EffectSettings: SystemExclusiveData {
     public func asData() -> ByteArray {
         var data = ByteArray()
         
@@ -269,7 +276,11 @@ public struct EffectSettings: Codable {
         
         return data
     }
+
+    public static var dataLength = 31
 }
+
+// MARK: - CustomStringConvertible
 
 extension EffectSettings: CustomStringConvertible {
     public var description: String {

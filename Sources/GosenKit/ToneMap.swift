@@ -2,8 +2,6 @@ import SyxPack
 
 /// Represents the set of included patches in a bank.
 public class ToneMap {
-    public static let size = 19  // bytes
-    
     /// Number of patches in a tone map.
     public static let patchCount = 128
     
@@ -65,6 +63,8 @@ extension ToneMap: SystemExclusiveData {
 
         return data
     }
+    
+    public static var dataLength = 19
 }
 
 // MARK: - CustomStringConvertible

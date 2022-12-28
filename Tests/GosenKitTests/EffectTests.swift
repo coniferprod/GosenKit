@@ -1,6 +1,9 @@
 import XCTest
 @testable import GosenKit
 
+import SyxPack
+
+
 final class EffectTests: XCTestCase {
     func testEffectSettings_fromData() {
         /*

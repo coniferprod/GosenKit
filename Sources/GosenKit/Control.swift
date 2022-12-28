@@ -1,70 +1,7 @@
 import Foundation
 
-/// Key with note number and name.
-public struct Key: Codable {
-    public var note: Int
-    
-    public var name: String {
-        let noteNames = ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"]
-        let octave = self.note / 12 - 1
-        let name = noteNames[self.note % 12]
-        return "\(name)\(octave)"
-    }
-    
-    public init(note: Int) {
-        self.note = note
-    }
-    
-    public init(name: String) {
-        let names = ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"]
+import SyxPack
 
-        let notes = CharacterSet(charactersIn: "CDEFGAB")
-        
-        var i = 0
-        var notePart = ""
-        var octavePart = ""
-        while i < name.count {
-            let c = name[i ..< i + 1]
-            
-            let isNote = c.unicodeScalars.allSatisfy { notes.contains($0) }
-            if isNote {
-                notePart += c
-            }
-     
-            if c == "#" {
-                notePart += c
-            }
-            if c == "-" {
-                octavePart += c
-            }
-            
-            let isDigit = c.unicodeScalars.allSatisfy { CharacterSet.decimalDigits.contains($0) }
-            if isDigit {
-                octavePart += c
-            }
-
-            i += 1
-        }
-
-        if let octave = Int(octavePart), let noteIndex = names.firstIndex(where: { $0 == notePart }) {
-            self.note = (octave + 1) * 12 + noteIndex
-        }
-        else {
-            self.note = 0
-        }
-    }
-}
-
-/// Keyboard zone with low and high keys.
-public struct Zone: Codable {
-    public var high: Key
-    public var low: Key
-    
-    public init(high: Key, low: Key) {
-        self.high = high
-        self.low = low
-    }
-}
 
 /// Velocity switch settings.
 public struct VelocitySwitch: Codable {
@@ -90,8 +27,6 @@ public struct VelocitySwitch: Codable {
 
     public var kind: Kind
     public var threshold: Int  // store as a value in the conversion table
-    
-    public static let dataLength = 1
     
     // Get the value on input as table[n] (where n = bottom 5 bits of value),
     // and on output as indexOf(velocityThreshold).
@@ -170,8 +105,6 @@ public struct MacroController: Codable {
     public var depth1: Int  // -31~+31
     public var destination2: ControlDestination
     public var depth2: Int // -31~+31
-    
-    public static let dataLength = 4
     
     public init() {
         destination1 = .cutoffOffset
@@ -347,8 +280,6 @@ public struct EffectControl: Codable {
         public var destination: EffectDestination
         public var depth: Int
         
-        public static let dataLength = 3
-        
         public init() {
             source = .bender
             destination = .reverbDryWet1
@@ -373,8 +304,6 @@ public struct EffectControl: Codable {
     public var source1: Source
     public var source2: Source
     
-    public static let dataLength = 6
-    
     public init() {
         source1 = Source()
         source2 = Source()
@@ -394,8 +323,6 @@ public struct AssignableController: Codable {
     public var source: ControlSource
     public var destination: ControlDestination
     public var depth: Int
-    
-    public static let dataLength = 3
     
     public init() {
         source = .bender
@@ -428,6 +355,8 @@ extension MacroController: SystemExclusiveData {
         }
         return data
     }
+    
+    public static var dataLength = 4
 }
 
 extension VelocitySwitch: SystemExclusiveData {
@@ -439,6 +368,8 @@ extension VelocitySwitch: SystemExclusiveData {
         data.append(Byte(value))
         return data
     }
+    
+    public static var dataLength = 1
 }
 
 extension EffectControl.Source: SystemExclusiveData {
@@ -449,6 +380,8 @@ extension EffectControl.Source: SystemExclusiveData {
         }
         return data
     }
+    
+    public static var dataLength = 3
 }
 
 extension AssignableController: SystemExclusiveData {
@@ -459,6 +392,8 @@ extension AssignableController: SystemExclusiveData {
         }
         return data
     }
+    
+    public static var dataLength = 3
 }
 
 extension EffectControl: SystemExclusiveData {
@@ -470,6 +405,8 @@ extension EffectControl: SystemExclusiveData {
     
         return data
     }
+    
+    public static var dataLength = 6
 }
 
 extension SwitchControl: SystemExclusiveData {
@@ -480,6 +417,8 @@ extension SwitchControl: SystemExclusiveData {
         }
         return data
     }
+    
+    public static var dataLength = 4
 }
 
 // MARK: - CustomStringConvertible

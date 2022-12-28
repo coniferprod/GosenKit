@@ -1,18 +1,7 @@
 import Foundation
 
-extension String {
-    public func adjusted(length: Int, pad: String = " ") -> String {
-        // If longer, truncate to `length`.
-        // If shorter, pad from right with `pad` to the length `length`.
-        if self.count > length {
-            return String(self.prefix(length))
-        }
-        else {
-            return self.pad(with: " ", toLength: length, from: .right)
-            //return self.padding(toLength: length, withPad: " ", startingAt: self.count - 1)
-        }
-    }
-}
+import SyxPack
+
 
 @propertyWrapper public struct PatchName: Codable {
     public static let length = 8
@@ -97,8 +86,6 @@ public struct SinglePatch: Codable {
         static let sourceCountOffset = 50
         static let geqBandCount = 7
         static let macroCount = 4
-        
-        public static let dataLength = 81
         
         /// Initializes the common part with default values.
         public init() {
@@ -363,6 +350,12 @@ extension SinglePatch: SystemExclusiveData {
         
         return data
     }
+
+    /// The length of single patch System Exclusive data.
+    /// NOTE: This result does not reflect the actual data length, because the number of additive kits is dynamic.
+    public static var dataLength: Int {
+        return 1 + Common.dataLength + 6 * Source.dataLength
+    }
 }
 
 extension SinglePatch.Common: SystemExclusiveData {
@@ -425,6 +418,8 @@ extension SinglePatch.Common: SystemExclusiveData {
         
         return data
     }
+        
+    public static var dataLength = 81
 }
 
 // MARK: - CustomStringConvertible

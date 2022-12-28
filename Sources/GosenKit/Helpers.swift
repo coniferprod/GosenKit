@@ -1,5 +1,8 @@
 import Foundation
 
+import SyxPack
+
+
 extension CaseIterable where Self: Equatable {
     public var index: Self.AllCases.Index? {
         return Self.allCases.firstIndex { self == $0 }
@@ -23,6 +26,18 @@ extension String {
         }
         else {
             return self + String(repeating: character, count: padCount)
+        }
+    }
+    
+    public func adjusted(length: Int, pad: String = " ") -> String {
+        // If longer, truncate to `length`.
+        // If shorter, pad from right with `pad` to the length `length`.
+        if self.count > length {
+            return String(self.prefix(length))
+        }
+        else {
+            return self.pad(with: " ", toLength: length, from: .right)
+            //return self.padding(toLength: length, withPad: " ", startingAt: self.count - 1)
         }
     }
 }
@@ -85,47 +100,67 @@ extension String {
     }
 }
 
-public func noteName(for key: Int) -> String {
-    let noteNames = ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"]
-    let octave = key / 12 - 1
-    let name = noteNames[key % 12];
-    return "\(name)\(octave)"
+/// Key with note number and name.
+public struct Key: Codable {
+    private var noteNames = ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"]
+    
+    public var note: Int
+    
+    public var name: String {
+        let octave = self.note / 12 - 1
+        let name = self.noteNames[self.note % 12]
+        return "\(name)\(octave)"
+    }
+    
+    public init(note: Int) {
+        self.note = note
+    }
+    
+    public init(name: String) {
+        let notes = CharacterSet(charactersIn: "CDEFGAB")
+        
+        var i = 0
+        var notePart = ""
+        var octavePart = ""
+        while i < name.count {
+            let c = name[i ..< i + 1]
+            
+            let isNote = c.unicodeScalars.allSatisfy { notes.contains($0) }
+            if isNote {
+                notePart += c
+            }
+     
+            if c == "#" {
+                notePart += c
+            }
+            if c == "-" {
+                octavePart += c
+            }
+            
+            let isDigit = c.unicodeScalars.allSatisfy { CharacterSet.decimalDigits.contains($0) }
+            if isDigit {
+                octavePart += c
+            }
+
+            i += 1
+        }
+
+        if let octave = Int(octavePart), let noteIndex = self.noteNames.firstIndex(where: { $0 == notePart }) {
+            self.note = (octave + 1) * 12 + noteIndex
+        }
+        else {
+            self.note = 0
+        }
+    }
 }
 
-public func keyNumber(for name: String) -> Int {
-    let names = ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"]
-
-    let notes = CharacterSet(charactersIn: "CDEFGAB")
+/// Keyboard zone with low and high keys.
+public struct Zone: Codable {
+    public var high: Key
+    public var low: Key
     
-    var i = 0
-    var notePart = ""
-    var octavePart = ""
-    while i < name.count {
-        let c = name[i ..< i + 1]
-        
-        let isNote = c.unicodeScalars.allSatisfy { notes.contains($0) }
-        if isNote {
-            notePart += c
-        }
- 
-        if c == "#" {
-            notePart += c
-        }
-        if c == "-" {
-            octavePart += c
-        }
-        
-        let isDigit = c.unicodeScalars.allSatisfy { CharacterSet.decimalDigits.contains($0) }
-        if isDigit {
-            octavePart += c
-        }
-
-        i += 1
+    public init(high: Key, low: Key) {
+        self.high = high
+        self.low = low
     }
-
-    if let octave = Int(octavePart), let noteIndex = names.firstIndex(where: { $0 == notePart }) {
-        return (octave + 1) * 12 + noteIndex
-    }
-
-    return 0
 }

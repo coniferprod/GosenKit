@@ -1,3 +1,6 @@
+import SyxPack
+
+/// Common settings for harmonics.
 public struct HarmonicCommon: Codable {
     public enum Group: String, Codable, CaseIterable {
         case low
@@ -20,8 +23,6 @@ public struct HarmonicCommon: Codable {
     public var keyScalingToGain: Int // -63(1)~+63(127)
     public var velocityCurve: Int  // 1~12 (stored in SysEx as 0~11)
     public var velocityDepth: Int  // 0~127
-    
-    public static let dataLength = 6
     
     public init() {
         isMorfEnabled = false
@@ -56,28 +57,12 @@ public struct HarmonicCommon: Codable {
     }
 }
 
-/// The looping kind of the envelope. Used in formant filter, harmonic, and MORF envelopes.
-public enum EnvelopeLoopKind: String, Codable, CaseIterable {
-    case off
-    case loop1
-    case loop2
-    
-    public init?(index: Int) {
-        switch index {
-        case 0: self = .off
-        case 1: self = .loop1
-        case 2: self = .loop2
-        default: return nil
-        }
-    }
-}
-
+/// Harmonic envelope.
 public struct HarmonicEnvelope: Codable {
+    /// One segment of harmonic envelope.
     public struct Segment: Codable {
         public var rate: Int  // 0~127
         public var level: Int // 0~63
-        
-        static let dataLength = 2
         
         public init(rate: Int, level: Int) {
             self.rate = rate
@@ -97,9 +82,24 @@ public struct HarmonicEnvelope: Codable {
     }
 
     public var segments: [Segment]
-    public var loop: EnvelopeLoopKind
     
-    public static let dataLength = 4 * Segment.dataLength
+    /// The loop kind of the harmonic envelope. Used in formant filter, harmonic, and MORF envelopes.
+    public enum LoopKind: String, Codable, CaseIterable {
+        case off
+        case loop1
+        case loop2
+        
+        public init?(index: Int) {
+            switch index {
+            case 0: self = .off
+            case 1: self = .loop1
+            case 2: self = .loop2
+            default: return nil
+            }
+        }
+    }
+
+    public var loopKind: LoopKind
     
     public init() {
         self.segments = [Segment]()
@@ -108,12 +108,12 @@ public struct HarmonicEnvelope: Codable {
         self.segments.append(Segment(rate: 127, level: 63))
         self.segments.append(Segment(rate: 0, level: 0))
 
-        self.loop = .off
+        self.loopKind = .off
     }
     
-    public init(segments: [Segment], loop: EnvelopeLoopKind) {
+    public init(segments: [Segment], loopKind: LoopKind) {
         self.segments = segments
-        self.loop = loop
+        self.loopKind = loopKind
     }
     
     public init(data d: ByteArray) {
@@ -167,14 +167,14 @@ public struct HarmonicEnvelope: Codable {
         
         switch (segment1LevelBit6, segment2LevelBit6) {
         case (true, true):
-            loop = .loop1
+            loopKind = .loop1
         case (true, false):
-            print("warning: impossible loop type value '0b10', setting loop type to OFF", to: &standardError)
-            loop = .off
+            //sprint("warning: impossible loop type value '0b10', setting loop type to OFF", to: &standardError)
+            loopKind = .off
         case (false, true):
-            loop = .loop2
+            loopKind = .loop2
         default:
-            loop = .off
+            loopKind = .off
         }
     }
 }
@@ -186,8 +186,6 @@ public struct HarmonicLevels: Codable {
     // all values are 0~127
     
     public static let harmonicCount = 64
-    
-    public static let dataLength = 128
     
     public init() {
         soft = [Int]()
@@ -244,15 +242,15 @@ extension HarmonicEnvelope: SystemExclusiveData {
         var segment1Level = Byte(segments[1].level)
         var segment2Level = Byte(segments[2].level)
 
-        if loop == .loop2 {  // bit pattern from bits 6 of L1 and L2 = "01"
+        if loopKind == .loop2 {  // bit pattern from bits 6 of L1 and L2 = "01"
             segment1Level.clearBit(6)
             segment2Level.setBit(6)
         }
-        else if loop == .loop1 {    // "11"
+        else if loopKind == .loop1 {    // "11"
             segment1Level.setBit(6)
             segment2Level.setBit(6)
         }
-        else if loop == .off {  // "00"
+        else if loopKind == .off {  // "00"
             segment1Level.clearBit(6)
             segment2Level.clearBit(6)
         }
@@ -271,6 +269,10 @@ extension HarmonicEnvelope: SystemExclusiveData {
 
         return data
     }
+    
+    public static var dataLength: Int {
+        return 4 * 2  // four segments with two bytes each
+    }
 }
 
 
@@ -280,6 +282,11 @@ extension HarmonicLevels: SystemExclusiveData {
         soft.forEach { data.append(Byte($0)) }
         loud.forEach { data.append(Byte($0)) }
         return data
+    }
+    
+    
+    public static var dataLength: Int {
+        return 128
     }
 }
 
@@ -296,12 +303,18 @@ extension HarmonicCommon: SystemExclusiveData {
         
         return data
     }
+    
+    public static var dataLength: Int {
+        return 6
+    }
 }
 
 extension HarmonicEnvelope.Segment: SystemExclusiveData {
     public func asData() -> ByteArray {
         return ByteArray(arrayLiteral: Byte(rate), Byte(level))
     }
+    
+    public static var dataLength: Int { return 2 }
 }
 
 // MARK: - CustomStringConvertible
@@ -328,7 +341,7 @@ extension HarmonicEnvelope: CustomStringConvertible {
         }
         s += "\n"
 
-        s += "   Decay Loop: \(loop)\n"
+        s += "   Decay Loop: \(loopKind)\n"
         
         return s
     }

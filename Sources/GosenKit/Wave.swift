@@ -1,3 +1,6 @@
+import SyxPack
+
+
 /// Wave for PCM sources, with special case for additive.
 public class Wave: Codable {
     public var number: Int
@@ -549,6 +552,8 @@ extension Wave: SystemExclusiveData {
         
         return data
     }
+    
+    public static var dataLength = 2
 }
 
 // MARK: - CustomStringConvertible

@@ -1,3 +1,5 @@
+import SyxPack
+
 public struct Amplifier: Codable {
     public struct Envelope: Codable, Equatable {
         // All values are 0...127
@@ -7,8 +9,6 @@ public struct Amplifier: Codable {
         public var decay2Time: Int
         public var decay2Level: Int
         public var releaseTime: Int
-        
-        public static let dataLength = 6
         
         public init() {
             attackTime = 0
@@ -62,8 +62,6 @@ public struct Amplifier: Codable {
             public var decay1Time: Int
             public var release: Int
             
-            public static let dataLength = 4
-
             public init() {
                 level = 0
                 attackTime = 0
@@ -106,8 +104,6 @@ public struct Amplifier: Codable {
             public var decay1Time: Int
             public var release: Int
             
-            public static let dataLength = 4
-            
             public init() {
                 level = 0
                 attackTime = 0
@@ -145,8 +141,6 @@ public struct Amplifier: Codable {
         public var keyScalingToEnvelope: KeyScalingControl
         public var velocityToEnvelope: VelocityControl
 
-        static let dataLength = KeyScalingControl.dataLength + VelocityControl.dataLength
-        
         public init() {
             keyScalingToEnvelope = KeyScalingControl()
             velocityToEnvelope = VelocityControl()
@@ -167,8 +161,6 @@ public struct Amplifier: Codable {
     public var velocityCurve: Int  // store as 1~12
     public var envelope: Envelope
     public var modulation: Modulation
-    
-    public static let dataLength = 15
     
     public init() {
         velocityCurve = 1
@@ -204,6 +196,8 @@ extension Amplifier.Envelope: SystemExclusiveData {
         }
         return data
     }
+    
+    public static var dataLength = 6
 }
 
 extension Amplifier: SystemExclusiveData {
@@ -216,6 +210,8 @@ extension Amplifier: SystemExclusiveData {
         
         return data
     }
+    
+    public static var dataLength = 15
 }
 
 extension Amplifier.Modulation: SystemExclusiveData {
@@ -227,6 +223,8 @@ extension Amplifier.Modulation: SystemExclusiveData {
 
         return data
     }
+    
+    public static var dataLength = KeyScalingControl.dataLength + VelocityControl.dataLength
 }
 
 extension Amplifier.Modulation.KeyScalingControl: SystemExclusiveData {
@@ -237,6 +235,8 @@ extension Amplifier.Modulation.KeyScalingControl: SystemExclusiveData {
         }
         return data
     }
+    
+    public static var dataLength = 4
 }
 
 extension Amplifier.Modulation.VelocityControl: SystemExclusiveData {
@@ -247,4 +247,6 @@ extension Amplifier.Modulation.VelocityControl: SystemExclusiveData {
         }
         return data
     }
+    
+    public static var dataLength = 4
 }

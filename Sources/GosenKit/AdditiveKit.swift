@@ -1,9 +1,9 @@
+import SyxPack
+
 /// Additive kit.
 public struct AdditiveKit: Codable {
     /// The number of harmonics in the additive kit.
     public static let harmonicCount = 64
-    
-    public static let dataLength = 806
     
     public var common: HarmonicCommon
     public var morf: Morf
@@ -28,7 +28,7 @@ public struct AdditiveKit: Codable {
                         HarmonicEnvelope.Segment(rate: 127, level: 63),
                         HarmonicEnvelope.Segment(rate: 127, level: 63),
                     ],
-                    loop: .off
+                    loopKind: .off
                 )
             )
         }
@@ -144,7 +144,7 @@ public struct AdditiveKit: Codable {
         //print("checksum: added 0xA5, total = \(byteCount)")
         
         let result = Byte(totalSum & 0x7F)
-        print("debug: checksum: byteCount = \(byteCount), result = 0x\(String(result, radix: 16))", to: &standardError)
+        //print("debug: checksum: byteCount = \(byteCount), result = 0x\(String(result, radix: 16))", to: &standardError)
 
         return result
     }
@@ -177,9 +177,10 @@ extension AdditiveKit: SystemExclusiveData {
         
         data.append(0)  // "loud sens" select WTF?
 
-        //print("harmonics.asData is \(data.count) bytes, should be 806 bytes")
         return data
     }
+    
+    public static var dataLength = 806
 }
 
 // MARK: - CustomStringComvertible

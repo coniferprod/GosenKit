@@ -1,3 +1,5 @@
+import SyxPack
+
 public enum SystemExclusive {
     public struct Header {
         public var channel: Byte
@@ -64,21 +66,12 @@ public enum SystemExclusive {
     }
 }
 
-// MARK: - CustomStringConvertible
-
-extension SystemExclusive.Header: CustomStringConvertible {
-    /// Provides a printable description for this header.
-    public var description: String {
-        var s = ""
-        s += "Channel = \(self.channel + 1), function = \(self.function) etc."
-        return s
-    }
-}
-
 // MARK: - SystemExclusiveData
 
 public protocol SystemExclusiveData {
     func asData() -> ByteArray
+    
+    static var dataLength: Int { get }
 }
 
 extension SystemExclusive.Header: SystemExclusiveData {
@@ -91,5 +84,20 @@ extension SystemExclusive.Header: SystemExclusiveData {
             substatus1,
             substatus2,
         ]
+    }
+    
+    public static var dataLength: Int {
+        return 6
+    }
+}
+
+// MARK: - CustomStringConvertible
+
+extension SystemExclusive.Header: CustomStringConvertible {
+    /// Provides a printable description for this header.
+    public var description: String {
+        var s = ""
+        s += "Channel = \(self.channel + 1), function = \(self.function) etc."
+        return s
     }
 }

@@ -1,10 +1,10 @@
+import SyxPack
+
 public struct FormantFilter: Codable {
     public struct Envelope: Codable {
         public struct Segment: Codable {
             public var rate: Int  // 0~127
             public var level: Int // -63(1)~+63(127)
-            
-            public static let dataLength = 2
             
             public init(rate: Int, level: Int) {
                 self.rate = rate
@@ -27,11 +27,9 @@ public struct FormantFilter: Codable {
         public var decay1: Segment
         public var decay2: Segment
         public var release: Segment
-        public var decayLoop: EnvelopeLoopKind
+        public var decayLoop: HarmonicEnvelope.LoopKind
         public var velocityDepth: Int // -63(1)~+63(127)
         public var keyScalingDepth: Int // -63(1)~+63(127)
-        
-        public static let dataLength = 11
         
         public init() {
             attack = Segment(rate: 127, level: 63)
@@ -61,7 +59,7 @@ public struct FormantFilter: Codable {
             offset += length
 
             b = d.next(&offset)
-            decayLoop = EnvelopeLoopKind(index: Int(b))!
+            decayLoop = HarmonicEnvelope.LoopKind(index: Int(b))!
             
             b = d.next(&offset)
             velocityDepth = Int(b) - 64
@@ -90,8 +88,6 @@ public struct FormantFilter: Codable {
         public var speed: Int  // 0~127
         public var shape: Shape
         public var depth: Int  // 0~63
-        
-        public static let dataLength = 3
         
         public init() {
             shape = .triangle
@@ -131,7 +127,6 @@ public struct FormantFilter: Codable {
         public var levels: [Int]  // all 0~127
 
         public static let bandCount = 128
-        public static let dataLength = 128
 
         public init() {
             levels = Array(repeating: 127, count: Bands.bandCount)
@@ -154,8 +149,6 @@ public struct FormantFilter: Codable {
     public var envelopeDepth: Int // -63(1)~+63(127)
     public var envelope: Envelope
     public var lfo: LFO
-    
-    public static let dataLength = 17  // does not include the bands!
     
     public init() {
         bias = -10
@@ -203,12 +196,16 @@ extension FormantFilter.Envelope: SystemExclusiveData {
         
         return data
     }
+    
+    public static var dataLength = 11
 }
 
 extension FormantFilter.Envelope.Segment: SystemExclusiveData {
     public func asData() -> ByteArray {
         return ByteArray(arrayLiteral: Byte(rate), Byte(level + 64))
     }
+    
+    public static var dataLength = 2
 }
 
 extension FormantFilter: SystemExclusiveData {
@@ -224,12 +221,16 @@ extension FormantFilter: SystemExclusiveData {
         
         return data
     }
+    
+    public static var dataLength = 17  // does not include the bands!
 }
 
 extension FormantFilter.Bands: SystemExclusiveData {
     public func asData() -> ByteArray {
         return levels.map { Byte($0) }
     }
+    
+    public static var dataLength = 128
 }
 
 extension FormantFilter.LFO: SystemExclusiveData {
@@ -240,6 +241,8 @@ extension FormantFilter.LFO: SystemExclusiveData {
         }
         return data
     }
+    
+    public static var dataLength = 3
 }
 
 // MARK: - CustomStringConvertible

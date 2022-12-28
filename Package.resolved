@@ -1,0 +1,16 @@
+{
+  "object": {
+    "pins": [
+      {
+        "package": "SyxPack",
+        "repositoryURL": "https://github.com/coniferprod/SyxPack",
+        "state": {
+          "branch": null,
+          "revision": "b1d3b03eb6433db90c0c9345076cfe7a749fc01e",
+          "version": "0.7.1"
+        }
+      }
+    ]
+  },
+  "version": 1
+}

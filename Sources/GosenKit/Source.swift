@@ -1,5 +1,8 @@
 import Foundation
 
+import SyxPack
+
+
 public struct Source: Codable {
     public struct Control: Codable {
         public struct Modulation: Codable {
@@ -8,8 +11,6 @@ public struct Source: Codable {
             public var expression: MacroController
             public var assignable1: AssignableController
             public var assignable2: AssignableController
-            
-            public static let dataLength = 18
             
             public init() {
                 pressure = MacroController()
@@ -60,8 +61,6 @@ public struct Source: Codable {
             public var kind: Kind
             public var value: Int
             
-            public static let dataLength = 2
-            
             public init(kind: Kind, value: Int) {
                 self.kind = kind
                 self.value = value
@@ -89,8 +88,6 @@ public struct Source: Codable {
         public var modulation: Modulation
         public var keyOnDelay: Int
         public var pan: Pan
-        
-        public static let dataLength = 28
         
         public init() {
             zone = Zone(high: Key(note: 127), low: Key(note: 0))
@@ -147,8 +144,6 @@ public struct Source: Codable {
     public var lfo: LFO
     public var control: Control
 
-    public static let dataLength = 86
-    
     public init() {
         oscillator = Oscillator()
         filter = Filter()
@@ -196,6 +191,8 @@ extension Source.Control.Modulation: SystemExclusiveData {
         
         return data
     }
+    
+    public static var dataLength = 18
 }
 
 extension Source.Control.Pan: SystemExclusiveData {
@@ -207,6 +204,8 @@ extension Source.Control.Pan: SystemExclusiveData {
         
         return data
     }
+    
+    public static var dataLength = 2
 }
 
 extension Source.Control: SystemExclusiveData {
@@ -226,6 +225,8 @@ extension Source.Control: SystemExclusiveData {
 
         return data
     }
+    
+    public static var dataLength = 28
 }
 
 extension Source: SystemExclusiveData {
@@ -240,6 +241,8 @@ extension Source: SystemExclusiveData {
 
         return data
     }
+    
+    public static var dataLength = 86
 }
 
 // MARK: - CustomStringConvertible

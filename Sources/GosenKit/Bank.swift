@@ -1,5 +1,8 @@
 import Foundation
 
+import SyxPack
+
+
 // Kawai K5000 banks contain either single patches (up to 128 of them)
 // or exactly 64 multi patches (called combi on K5000W).
 

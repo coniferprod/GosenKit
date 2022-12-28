@@ -5,7 +5,7 @@ import PackageDescription
 let package = Package(
     name: "GosenKit",
     platforms: [
-        .macOS(.v10_10),
+        .macOS(.v11),
         .iOS(.v13),
     ],
     products: [
@@ -14,7 +14,7 @@ let package = Package(
             targets: ["GosenKit"]),
     ],
     dependencies: [
-        .package(url: "https://github.com/coniferprod/SyxPack", from: "0.6.0"),
+        .package(url: "https://github.com/coniferprod/SyxPack", from: "0.7.0"),
     ],
     targets: [
         .target(

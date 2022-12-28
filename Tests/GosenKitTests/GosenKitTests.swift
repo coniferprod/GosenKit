@@ -1,6 +1,9 @@
 import XCTest
 @testable import GosenKit
 
+import SyxPack
+
+
 final class GosenKitTests: XCTestCase {
     func testKeyName() {
         let key = Key(note: 60)

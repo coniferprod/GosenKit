@@ -1,3 +1,5 @@
+import SyxPack
+
 public struct LFO: Codable {
     public enum Waveform: String, Codable, CaseIterable {
         case triangle
@@ -42,8 +44,6 @@ public struct LFO: Codable {
     public var vibrato: Control
     public var growl: Control
     public var tremolo: Control
-    
-    public static let dataLength = 11
     
     public init() {
         waveform = .square
@@ -120,10 +120,14 @@ extension LFO: SystemExclusiveData {
 
         return data
     }
+    
+    public static var dataLength = 11
 }
 
 extension LFO.Control: SystemExclusiveData {
     public func asData() -> ByteArray {
         return ByteArray(arrayLiteral: Byte(depth), Byte(keyScaling + 64))
     }
+    
+    public static var dataLength = 2
 }

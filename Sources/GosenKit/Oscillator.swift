@@ -1,3 +1,6 @@
+import SyxPack
+
+
 public struct Oscillator: Codable {
     public struct PitchEnvelope: Codable {
         public var start: Int
@@ -6,8 +9,6 @@ public struct Oscillator: Codable {
         public var decayTime: Int
         public var timeVelocitySensitivity: Int
         public var levelVelocitySensitivity: Int
-        
-        public static let dataLength = 6
         
         public init() {
             start = 0
@@ -66,8 +67,6 @@ public struct Oscillator: Codable {
     public var fixedKey: Int  // TODO: OFF / MIDI note
     public var pitchEnvelope: PitchEnvelope
     
-    public static let dataLength = 12
-    
     public init() {
         wave = Wave(number: 411)
         coarse = 0
@@ -103,6 +102,41 @@ public struct Oscillator: Codable {
     }
 }
 
+// MARK: - SystemExclusiveData
+
+extension Oscillator.PitchEnvelope: SystemExclusiveData {
+    public func asData() -> ByteArray {
+        var data = ByteArray()
+        
+        [start + 64, attackTime, attackLevel + 64, decayTime,
+         timeVelocitySensitivity + 64, levelVelocitySensitivity + 64].forEach {
+            data.append(Byte($0))
+        }
+
+        return data
+    }
+    
+    public static var dataLength = 6
+}
+
+extension Oscillator: SystemExclusiveData {
+    public func asData() -> ByteArray {
+        var data = ByteArray()
+        
+        data.append(contentsOf: wave.asData())
+        
+        [coarse + 24, fine + 64, fixedKey, keyScalingToPitch.index!].forEach {
+            data.append(Byte($0))
+        }
+        
+        data.append(contentsOf: pitchEnvelope.asData())
+        
+        return data
+    }
+    
+    public static var dataLength = 12
+}
+
 // MARK: - CustomStringConvertible
 
 extension Oscillator: CustomStringConvertible {
@@ -120,36 +154,5 @@ extension Oscillator.PitchEnvelope: CustomStringConvertible {
         s += "start=\(start), attackTime=\(attackTime), attackLevel=\(attackLevel), decayTime=\(decayTime)\n"
         s += "timeVelSens=\(timeVelocitySensitivity) levelVelSens=\(levelVelocitySensitivity)\n"
         return s
-    }
-}
-
-// MARK: - SystemExclusiveData
-
-extension Oscillator.PitchEnvelope: SystemExclusiveData {
-    public func asData() -> ByteArray {
-        var data = ByteArray()
-        
-        [start + 64, attackTime, attackLevel + 64, decayTime,
-         timeVelocitySensitivity + 64, levelVelocitySensitivity + 64].forEach {
-            data.append(Byte($0))
-        }
-
-        return data
-    }
-}
-
-extension Oscillator: SystemExclusiveData {
-    public func asData() -> ByteArray {
-        var data = ByteArray()
-        
-        data.append(contentsOf: wave.asData())
-        
-        [coarse + 24, fine + 64, fixedKey, keyScalingToPitch.index!].forEach {
-            data.append(Byte($0))
-        }
-        
-        data.append(contentsOf: pitchEnvelope.asData())
-        
-        return data
     }
 }

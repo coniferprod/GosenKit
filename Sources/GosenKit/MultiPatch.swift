@@ -1,12 +1,14 @@
 import Foundation
 
+import SyxPack
+
+
 /// A Kawai K5000 multi patch (combi on the K5000W).
 public struct MultiPatch: Codable {
     public static let sectionCount = 4
     
     /// Common settings for multi patch.
     public struct Common: Codable {
-        public static let dataLength = 54
         static let geqBandCount = 7
 
         public var effects: EffectSettings
@@ -61,8 +63,6 @@ public struct MultiPatch: Codable {
     
     /// One section of a multi patch.
     public struct Section: Codable {
-        public static let dataLength = 12
-
         public var singlePatchNumber: UInt
         public var volume: UInt
         public var pan: Int
@@ -121,6 +121,22 @@ public struct MultiPatch: Codable {
             
             b = d.next(&offset)
             receiveChannel = b
+        }
+        
+        public func asBytes() -> (msb: Byte, lsb: Byte) {
+            // Convert wave kit number to binary string with 10 digits
+            // using a String extension (see Helpers.swift).
+            let waveBitString = String(self.singlePatchNumber, radix: 2).pad(with: "0", toLength: 9)
+            
+            // Take the first two bits and convert them to a number
+            let msbBitString = waveBitString.prefix(2)
+            let msb = Byte(msbBitString, radix: 2)!
+            
+            // Take the last seven bits and convert them to a number
+            let lsbBitString = waveBitString.suffix(7)
+            let lsb = Byte(lsbBitString, radix: 2)!
+
+            return (msb, lsb)
         }
     }
     
@@ -210,6 +226,10 @@ extension MultiPatch: SystemExclusiveData {
         
         return data
     }
+    
+    public static var dataLength: Int {
+        return 1 + Common.dataLength + 4 * Section.dataLength
+    }
 }
 
 extension MultiPatch.Common: SystemExclusiveData {
@@ -229,25 +249,11 @@ extension MultiPatch.Common: SystemExclusiveData {
                 
         return data
     }
+    
+    public static var dataLength = 54
 }
 
 extension MultiPatch.Section: SystemExclusiveData {
-    private func asBytes() -> (msb: Byte, lsb: Byte) {
-        // Convert wave kit number to binary string with 10 digits
-        // using a String extension (see Helpers.swift).
-        let waveBitString = String(self.singlePatchNumber, radix: 2).pad(with: "0", toLength: 9)
-        
-        // Take the first two bits and convert them to a number
-        let msbBitString = waveBitString.prefix(2)
-        let msb = Byte(msbBitString, radix: 2)!
-        
-        // Take the last seven bits and convert them to a number
-        let lsbBitString = waveBitString.suffix(7)
-        let lsb = Byte(lsbBitString, radix: 2)!
-
-        return (msb, lsb)
-    }
-    
     /// Gets a multi section as MIDI System Exclusive data.
     /// - Returns: A byte array with the section SysEx data.
     public func asData() -> ByteArray {
@@ -268,4 +274,6 @@ extension MultiPatch.Section: SystemExclusiveData {
         
         return data
     }
+    
+    public static var dataLength = 12
 }
