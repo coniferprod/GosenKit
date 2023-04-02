@@ -124,7 +124,7 @@ public struct DumpCommand {
     
     /// Initialize a dump command with all values. The sub-bytes array can be, and defaults to, empty.
     public init(channel: Byte, cardinality: Cardinality, bank: BankIdentifier, kind: PatchKind, subBytes: ByteArray = []) {
-        self.channel = 0
+        self.channel = channel
         self.cardinality = cardinality
         self.bank = bank
         self.kind = kind
@@ -138,7 +138,7 @@ public struct DumpCommand {
         var maybeBank: BankIdentifier = .none
         var maybeKind: PatchKind = .single
         
-        print("\(#file):\(#line) data.count = \(data.count)")
+        //print("\(#file):\(#line) data.count = \(data.count)")
         
         // Iterate through all the bytes and pick up information
         for (index, b) in data.enumerated() {
@@ -202,8 +202,10 @@ public struct DumpCommand {
 extension DumpCommand: CustomStringConvertible {
     /// Returns a string representation of the dump command.
     public var description: String {
-        var s = "Channel: \(self.channel)  \(self.cardinality)  \(self.kind)  Bank \(self.bank) "
-        s += "Sub-bytes: \(self.subBytes.hexDump(config: .plainConfig))"
+        var s = "Channel: \(self.channel + 1)  \(self.cardinality)  \(self.kind)  Bank: \(self.bank)"
+        if self.subBytes.count != 0 {
+            s += " Sub-bytes: \(self.subBytes.hexDump(config: .plainConfig))"
+        }
         return s
     }
 }

@@ -161,7 +161,7 @@ final class SystemExclusiveTests: XCTestCase {
     
     // K5000W
     // One
-    let oneADDBankA: ByteArray = [ 0x00, 0x20, 0x00, 0x0A, 0x00, 0x00, 0x00, 0x00 ] // One ADD Bank A (see 3.1.1b)
+    let oneADDBankA: ByteArray = [ 0x00, 0x20, 0x00, 0x0A, 0x00, 0x00, 0x00 ] // One ADD Bank A (see 3.1.1b)
     let onePCMBankB: ByteArray = [ 0x00, 0x20, 0x00, 0x0A, 0x00, 0x01, 0x00 ] // One PCM Bank B (see 3.1.1d)
     let oneExpBankE: ByteArray = [ 0x00, 0x20, 0x00, 0x0A, 0x00, 0x03, 0x00 ] // One Exp Bank E ((see 3.1.1m)
     let oneExpBankF: ByteArray = [ 0x00, 0x20, 0x00, 0x0A, 0x00, 0x04, 0x00 ] // One Exp Bank F (see 3.1.1o)
@@ -305,5 +305,12 @@ final class SystemExclusiveTests: XCTestCase {
         XCTAssertTrue(actual != nil)
         let expected = DumpCommand(channel: 1, cardinality: .block, bank: .d, kind: .single, subBytes: [0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00])
         XCTAssertEqual(actual, expected)
+    }
+    
+    func testDumpCommand_asData() {
+        let dump = DumpCommand(data: oneADDBankA)
+        XCTAssertTrue(dump != nil)
+        let dumpData = dump?.asData()
+        XCTAssertEqual(dumpData, ByteArray([0x00, 0x20, 0x00, 0x0A, 0x00, 0x00, 0x00]))
     }
 }
