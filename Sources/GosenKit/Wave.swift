@@ -3,7 +3,7 @@ import SyxPack
 
 /// Wave for PCM sources, with special case for additive.
 public class Wave: Codable {
-    public var number: Int
+    public var number: Int  // wave number 1~464 or 512
     
     public static let additive = Wave(number: 512)
     
@@ -28,17 +28,23 @@ public class Wave: Codable {
     }
     
     public static func numberFromBytes(_ msb: Byte, _ lsb: Byte) -> Int? {
-        let waveMSBString = String(msb, radix: 2).pad(with: "0", toLength: 3)
-        let waveLSBString = String(lsb, radix: 2).pad(with: "0", toLength: 7)
+        let waveMSBString = String(msb, radix: 2).pad(with: "0", toLength: 3, from: .left)
+        let waveLSBString = String(lsb, radix: 2).pad(with: "0", toLength: 7, from: .left)
         let waveString = waveMSBString + waveLSBString
-        // now we should have a 10-bit binary string, convert it to a decimal number
-        return Int(waveString, radix: 2)
+        // Now we should have a 10-bit binary string, convert it to a decimal number.
+        // The wave number is zero-based in the SysEx file, but treated as one-based.
+        if let number = Int(waveString, radix: 2) {
+            return number + 1
+        }
+        return nil
     }
     
     private func asBytes() -> (msb: Byte, lsb: Byte) {
+        let num = self.isAdditive() ? self.number : self.number - 1  // adjust wave number to 0~463 (but don't adjust ADD wave 512)
+        
         // Convert wave kit number to binary string with 10 digits
         // using a String extension (see Helpers.swift).
-        let waveBitString = String(self.number, radix: 2).pad(with: "0", toLength: 10)
+        let waveBitString = String(num, radix: 2).pad(with: "0", toLength: 10, from: .left)
         
         // Take the first three bits and convert them to a number
         let msbBitString = waveBitString.prefix(3)
