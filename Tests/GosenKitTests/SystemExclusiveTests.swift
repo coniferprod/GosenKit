@@ -31,6 +31,7 @@
 
 import XCTest
 @testable import GosenKit
+import SyxPack
 
 final class SystemExclusiveTests: XCTestCase {
     func testSystemExclusive_header() {
@@ -41,7 +42,7 @@ final class SystemExclusiveTests: XCTestCase {
             machineIdentifier: 0x0a,
             substatus1: 0x00,
             substatus2: BankIdentifier.a.rawValue)
-    
+        
         XCTAssertEqual(header.asData(), [0x00, 0x20, 0x00, 0x0a, 0x00, 0x00])
     }
     
@@ -53,7 +54,7 @@ final class SystemExclusiveTests: XCTestCase {
     }
     
     func testSinglePatch_2PCM() {
-        let single = SinglePatch()        
+        let single = SinglePatch()
         let data = single.asData()
         XCTAssertEqual(data.count, 254)
     }
@@ -74,7 +75,7 @@ final class SystemExclusiveTests: XCTestCase {
         let data = single.asData()
         XCTAssertEqual(data.count, 426)
     }
-
+    
     func testSinglePatch_5PCM() {
         var single = SinglePatch()
         single.common.sourceCount = 5
@@ -84,7 +85,7 @@ final class SystemExclusiveTests: XCTestCase {
         let data = single.asData()
         XCTAssertEqual(data.count, 512)
     }
-
+    
     func testSinglePatch_6PCM() {
         var single = SinglePatch()
         single.common.sourceCount = 6
@@ -154,5 +155,137 @@ final class SystemExclusiveTests: XCTestCase {
         let data = single.asData()
         XCTAssertEqual(data.count, 5434)
     }
-
+    
+    let oneADDBankA: ByteArray = [ 0x00, 0x20, 0x00, 0x0A, 0x00, 0x00, 0x00, 0x00 ] // One ADD Bank A (see 3.1.1b)
+    let oneADDBankD: ByteArray = [ 0x00, 0x20, 0x00, 0x0A, 0x00, 0x02, 0x00 ] // One ADD Bank D (see 3.1.1k)
+    let oneExpBankE: ByteArray = [ 0x00, 0x20, 0x00, 0x0A, 0x00, 0x03, 0x00 ] // One Exp Bank E ((see 3.1.1m)
+    let oneExpBankF: ByteArray = [ 0x00, 0x20, 0x00, 0x0A, 0x00, 0x04, 0x00 ] // One Exp Bank F (see 3.1.1o)
+    let oneMulti: ByteArray = [ 0x00, 0x20, 0x00, 0x0A, 0x20, 0x00 ] // One Multi/Combi (see 3.1.1i)
+    let blockADDBankA: ByteArray = [ 0x00, 0x21, 0x00, 0x0A, 0x00, 0x00,
+                                     /* tone map of 19 bytes follows */
+                                     0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+                                     0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 ]
+    let blockADDBankD: ByteArray = [ 0x00, 0x21, 0x00, 0x0A, 0x00, 0x02,
+                                     /* tone map of 19 bytes follows */
+                                     0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+                                     0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00]
+    let blockExpBankE: ByteArray = [ 0x00, 0x21, 0x00, 0x0A, 0x00, 0x03,
+                                     /* tone map of 19 bytes follows */
+                                     0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+                                     0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 ]
+    let blockExpBankF: ByteArray = [ 0x00, 0x21, 0x00, 0x0A, 0x00, 0x04,
+                                     /* tone map of 19 bytes follows */
+                                     0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+                                     0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 ]
+    let blockMulti: ByteArray = [ 0x00, 0x21, 0x00, 0x0A, 0x20 ]
+    let onePCMBankB: ByteArray = [ 0x00, 0x20, 0x00, 0x0A, 0x00, 0x01, 0x00 ] // One PCM Bank B (see 3.1.1d)
+    let blockPCMBankB: ByteArray = [ 0x00, 0x21, 0x00, 0x0A, 0x00, 0x01 ]
+    let oneDrumKit: ByteArray = [ 0x00, 0x20, 0x00, 0x0A, 0x10 ]
+    let oneDrumInstrument: ByteArray = [ 0x00, 0x20, 0x00, 0x0A, 0x11, 0x00 ]
+    let blockDrumInstrument: ByteArray = [ 0x00, 0x21, 0x00, 0x0A, 0x11 ]
+    
+    func testDumpCommand_oneADDBankA() {
+        let actual = DumpCommand(data: oneADDBankA)
+        XCTAssertTrue(actual != nil)
+        let expected = DumpCommand(channel: 1, cardinality: .one, bank: .a, kind: .single, subBytes: [0x00])
+        XCTAssertEqual(actual, expected)
+    }
+    
+    func testDumpCommand_oneADDBankD() {
+        let actual = DumpCommand(data: oneADDBankD)
+        XCTAssertTrue(actual != nil)
+        let expected = DumpCommand(channel: 1, cardinality: .one, bank: .d, kind: .single, subBytes: [0x00])
+        XCTAssertEqual(actual, expected)
+    }
+    
+    func testDumpCommand_oneExpBankE() {
+        let actual = DumpCommand(data: oneExpBankE)
+        XCTAssertTrue(actual != nil)
+        let expected = DumpCommand(channel: 1, cardinality: .one, bank: .e, kind: .single, subBytes: [0x00])
+        XCTAssertEqual(actual, expected)
+    }
+    
+    func testDumpCommand_oneExpBankF() {
+        let actual = DumpCommand(data: oneExpBankF)
+        XCTAssertTrue(actual != nil)
+        let expected = DumpCommand(channel: 1, cardinality: .one, bank: .f, kind: .single, subBytes: [0x00])
+        XCTAssertEqual(actual, expected)
+    }
+    
+    func testDumpCommand_oneMulti() {
+        let actual = DumpCommand(data: oneMulti)
+        XCTAssertTrue(actual != nil)
+        let expected = DumpCommand(channel: 1, cardinality: .one, bank: .none, kind: .multi, subBytes: [0x00])
+        XCTAssertEqual(actual, expected)
+    }
+    
+    func testDumpCommand_blockADDBankA() {
+        let actual = DumpCommand(data: blockADDBankA)
+        XCTAssertTrue(actual != nil)
+        let expected = DumpCommand(channel: 1, cardinality: .block, bank: .a, kind: .single, subBytes: [0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00])
+        XCTAssertEqual(actual, expected)
+    }
+    
+    func testDumpCommand_blockADDBankD() {
+        let actual = DumpCommand(data: blockADDBankD)
+        XCTAssertTrue(actual != nil)
+        let expected = DumpCommand(channel: 1, cardinality: .block, bank: .d, kind: .single, subBytes: [0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00])
+        XCTAssertEqual(actual, expected)
+    }
+    
+    func testDumpCommand_blockExpBankE() {
+        let actual = DumpCommand(data: blockExpBankE)
+        XCTAssertTrue(actual != nil)
+        let expected = DumpCommand(channel: 1, cardinality: .block, bank: .e, kind: .single, subBytes: [0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00])
+        XCTAssertEqual(actual, expected)
+    }
+    
+    func testDumpCommand_blockExpBankF() {
+        let actual = DumpCommand(data: blockExpBankF)
+        XCTAssertTrue(actual != nil)
+        let expected = DumpCommand(channel: 1, cardinality: .block, bank: .f, kind: .single, subBytes: [0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00])
+        XCTAssertEqual(actual, expected)
+    }
+    
+    func testDumpCommand_blockMulti() {
+        let actual = DumpCommand(data: blockMulti)
+        XCTAssertTrue(actual != nil)
+        let expected = DumpCommand(channel: 1, cardinality: .block, bank: .none, kind: .multi, subBytes: [])
+        XCTAssertEqual(actual, expected)
+    }
+    
+    func testDumpCommand_onePCMBankB() {
+        let actual = DumpCommand(data: onePCMBankB)
+        XCTAssertTrue(actual != nil)
+        let expected = DumpCommand(channel: 1, cardinality: .one, bank: .b, kind: .single, subBytes: [0x00])
+        XCTAssertEqual(actual, expected)
+    }
+    
+    func testDumpCommand_blockPCMBankB() {
+        let actual = DumpCommand(data: blockPCMBankB)
+        XCTAssertTrue(actual != nil)
+        let expected = DumpCommand(channel: 1, cardinality: .block, bank: .b, kind: .single, subBytes: [])
+        XCTAssertEqual(actual, expected)
+    }
+    
+    func testDumpCommand_oneDrumKit() {
+        let actual = DumpCommand(data: oneDrumKit)
+        XCTAssertTrue(actual != nil)
+        let expected = DumpCommand(channel: 1, cardinality: .one, bank: .none, kind: .drumKit, subBytes: [])
+        XCTAssertEqual(actual, expected)
+    }
+    
+    func testDumpCommand_oneDrumInstrument() {
+        let actual = DumpCommand(data: oneDrumInstrument)
+        XCTAssertTrue(actual != nil)
+        let expected = DumpCommand(channel: 1, cardinality: .one, bank: .none, kind: .drumInstrument, subBytes: [0x00])
+        XCTAssertEqual(actual, expected)
+    }
+    
+    func testDumpCommand_blockDrumInstrument() {
+        let actual = DumpCommand(data: blockDrumInstrument)
+        XCTAssertTrue(actual != nil)
+        let expected = DumpCommand(channel: 1, cardinality: .block, bank: .none, kind: .drumInstrument, subBytes: [])
+        XCTAssertEqual(actual, expected)
+    }
 }

@@ -151,10 +151,10 @@ public struct Amplifier: Codable {
             
             var offset: Int = 0
             
-            keyScalingToEnvelope = KeyScalingControl(data: d.slice(from: offset, length: KeyScalingControl.dataLength))
-            offset += KeyScalingControl.dataLength
+            keyScalingToEnvelope = KeyScalingControl(data: d.slice(from: offset, length: KeyScalingControl.dataSize))
+            offset += KeyScalingControl.dataSize
             
-            velocityToEnvelope = VelocityControl(data: d.slice(from: offset, length: VelocityControl.dataLength))
+            velocityToEnvelope = VelocityControl(data: d.slice(from: offset, length: VelocityControl.dataSize))
         }
     }
 
@@ -178,11 +178,11 @@ public struct Amplifier: Codable {
         velocityCurve = Int(b) + 1  // 0~11 to 1~12
         
         //print("Start amplifier envelope, offset = \(offset)")
-        envelope = Envelope(data: d.slice(from: offset, length: Envelope.dataLength))
-        offset += Envelope.dataLength
+        envelope = Envelope(data: d.slice(from: offset, length: Envelope.dataSize))
+        offset += Envelope.dataSize
         
         //print("Start amplifier envelope modulation, offset = \(offset)")
-        modulation = Modulation(data: d.slice(from: offset, length: Modulation.dataLength))
+        modulation = Modulation(data: d.slice(from: offset, length: Modulation.dataSize))
     }
 }
 
@@ -197,7 +197,9 @@ extension Amplifier.Envelope: SystemExclusiveData {
         return data
     }
     
-    public static var dataLength = 6
+    public var dataLength: Int { return Amplifier.Envelope.dataSize }
+    
+    public static let dataSize = 6
 }
 
 extension Amplifier: SystemExclusiveData {
@@ -211,7 +213,9 @@ extension Amplifier: SystemExclusiveData {
         return data
     }
     
-    public static var dataLength = 15
+    public var dataLength: Int { return Amplifier.dataSize }
+    
+    public static let dataSize = 15
 }
 
 extension Amplifier.Modulation: SystemExclusiveData {
@@ -224,7 +228,11 @@ extension Amplifier.Modulation: SystemExclusiveData {
         return data
     }
     
-    public static var dataLength = KeyScalingControl.dataLength + VelocityControl.dataLength
+    public var dataLength: Int {
+        return Amplifier.Modulation.dataSize
+    }
+    
+    public static let dataSize = KeyScalingControl.dataSize + VelocityControl.dataSize
 }
 
 extension Amplifier.Modulation.KeyScalingControl: SystemExclusiveData {
@@ -236,7 +244,9 @@ extension Amplifier.Modulation.KeyScalingControl: SystemExclusiveData {
         return data
     }
     
-    public static var dataLength = 4
+    public var dataLength: Int { 4 }
+    
+    public static let dataSize = 4
 }
 
 extension Amplifier.Modulation.VelocityControl: SystemExclusiveData {
@@ -248,5 +258,7 @@ extension Amplifier.Modulation.VelocityControl: SystemExclusiveData {
         return data
     }
     
-    public static var dataLength = 4
+    public var dataLength: Int { 4 }
+
+    public static let dataSize = 4
 }

@@ -23,20 +23,20 @@ public struct Source: Codable {
             public init(data d: ByteArray) {
                 var offset: Int = 0
 
-                pressure = MacroController(data: d.slice(from: offset, length: MacroController.dataLength))
-                offset += MacroController.dataLength
+                pressure = MacroController(data: d.slice(from: offset, length: MacroController.dataSize))
+                offset += MacroController.dataSize
 
-                wheel = MacroController(data: d.slice(from: offset, length: MacroController.dataLength))
-                offset += MacroController.dataLength
+                wheel = MacroController(data: d.slice(from: offset, length: MacroController.dataSize))
+                offset += MacroController.dataSize
                 
-                expression = MacroController(data: d.slice(from: offset, length: MacroController.dataLength))
-                offset += MacroController.dataLength
+                expression = MacroController(data: d.slice(from: offset, length: MacroController.dataSize))
+                offset += MacroController.dataSize
             
-                assignable1 = AssignableController(data: d.slice(from: offset, length: AssignableController.dataLength))
-                offset += AssignableController.dataLength
+                assignable1 = AssignableController(data: d.slice(from: offset, length: AssignableController.dataSize))
+                offset += AssignableController.dataSize
                 
-                assignable2 = AssignableController(data: d.slice(from: offset, length: AssignableController.dataLength))
-                offset += AssignableController.dataLength
+                assignable2 = AssignableController(data: d.slice(from: offset, length: AssignableController.dataSize))
+                offset += AssignableController.dataSize
             }
         }
 
@@ -128,13 +128,13 @@ public struct Source: Codable {
             b = d.next(&offset)
             benderCutoff = Int(b)
             
-            modulation = Modulation(data: d.slice(from: offset, length: Modulation.dataLength))
-            offset += Modulation.dataLength
+            modulation = Modulation(data: d.slice(from: offset, length: Modulation.dataSize))
+            offset += Modulation.dataSize
             
             b = d.next(&offset)
             keyOnDelay = Int(b)
             
-            pan = Pan(data: d.slice(from: offset, length: Pan.dataLength))
+            pan = Pan(data: d.slice(from: offset, length: Pan.dataSize))
         }
     }
 
@@ -157,23 +157,23 @@ public struct Source: Codable {
         var offset: Int = 0
         
         //print("SOURCE: Start Control, offset = \(offset)")
-        control = Control(data: d.slice(from: offset, length: Control.dataLength))
-        offset += Control.dataLength
+        control = Control(data: d.slice(from: offset, length: Control.dataSize))
+        offset += Control.dataSize
         
         //print("SOURCE: Start DCO, offset = \(offset)")
-        oscillator = Oscillator(data: d.slice(from: offset, length:Oscillator.dataLength))
-        offset += Oscillator.dataLength
+        oscillator = Oscillator(data: d.slice(from: offset, length: Oscillator.dataSize))
+        offset += Oscillator.dataSize
         
         //print("SOURCE: Start DCF, offset = \(offset)")
-        filter = Filter(data: d.slice(from: offset, length: Filter.dataLength))
-        offset += Filter.dataLength
+        filter = Filter(data: d.slice(from: offset, length: Filter.dataSize))
+        offset += Filter.dataSize
 
         //print("SOURCE: Start DCA, offset = \(offset)")
-        amplifier = Amplifier(data: d.slice(from: offset, length: Amplifier.dataLength))
-        offset += Amplifier.dataLength
+        amplifier = Amplifier(data: d.slice(from: offset, length: Amplifier.dataSize))
+        offset += Amplifier.dataSize
         
         //print("SOURCE: Start LFO, offset = \(offset)")
-        lfo = LFO(data: d.slice(from: offset, length: LFO.dataLength))
+        lfo = LFO(data: d.slice(from: offset, length: LFO.dataSize))
     }
 }
 
@@ -192,7 +192,9 @@ extension Source.Control.Modulation: SystemExclusiveData {
         return data
     }
     
-    public static var dataLength = 18
+    public var dataLength: Int { return Source.Control.Modulation.dataSize }
+    
+    public static let dataSize = 18
 }
 
 extension Source.Control.Pan: SystemExclusiveData {
@@ -204,8 +206,10 @@ extension Source.Control.Pan: SystemExclusiveData {
         
         return data
     }
-    
-    public static var dataLength = 2
+
+    public var dataLength: Int { return Source.Control.Pan.dataSize }
+
+    public static let dataSize = 2
 }
 
 extension Source.Control: SystemExclusiveData {
@@ -225,8 +229,10 @@ extension Source.Control: SystemExclusiveData {
 
         return data
     }
-    
-    public static var dataLength = 28
+
+    public var dataLength: Int { return Source.Control.dataSize }
+
+    public static let dataSize = 28
 }
 
 extension Source: SystemExclusiveData {
@@ -242,7 +248,9 @@ extension Source: SystemExclusiveData {
         return data
     }
     
-    public static var dataLength = 86
+    public var dataLength: Int { return Source.dataSize }
+    
+    public static let dataSize = 86
 }
 
 // MARK: - CustomStringConvertible

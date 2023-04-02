@@ -64,7 +64,11 @@ extension ToneMap: SystemExclusiveData {
         return data
     }
     
-    public static var dataLength = 19
+    public var dataLength: Int {
+        return ToneMap.dataSize
+    }
+    
+    public static let dataSize = 19
 }
 
 // MARK: - CustomStringConvertible

@@ -121,13 +121,17 @@ extension LFO: SystemExclusiveData {
         return data
     }
     
-    public static var dataLength = 11
+    public var dataLength: Int { return LFO.dataSize }
+    
+    public static let dataSize = 11
 }
 
 extension LFO.Control: SystemExclusiveData {
     public func asData() -> ByteArray {
         return ByteArray(arrayLiteral: Byte(depth), Byte(keyScaling + 64))
     }
-    
-    public static var dataLength = 2
+
+    public var dataLength: Int { return LFO.Control.dataSize }
+
+    public static let dataSize = 2
 }

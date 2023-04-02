@@ -13,10 +13,11 @@ public struct SingleBank {
 public enum BankIdentifier: Byte, CustomStringConvertible {
     case a = 0x00
     case b = 0x01
-    case d = 0x02
+    // there is no bank C, kind of
+    case d = 0x02  // this only on K5000S/R
     case e = 0x03
     case f = 0x04
-    case none = 0xff
+    case none = 0x99
 
     public var description: String {
         switch self {

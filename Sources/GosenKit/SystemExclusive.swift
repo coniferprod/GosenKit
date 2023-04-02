@@ -66,13 +66,145 @@ public enum SystemExclusive {
     }
 }
 
-// MARK: - SystemExclusiveData
-
-public protocol SystemExclusiveData {
-    func asData() -> ByteArray
+public enum Cardinality: Byte, CustomStringConvertible {
+    case one = 0x20
+    case block = 0x21
     
-    static var dataLength: Int { get }
+    public var description: String {
+        switch self {
+        case .one:
+            return "One"
+        case .block:
+            return "Block"
+        }
+    }
 }
+
+public enum PatchKind: Byte, CaseIterable, CustomStringConvertible {
+    case single = 0x00
+    case multi = 0x20
+    case drumKit = 0x10
+    case drumInstrument = 0x11
+
+    public var description: String {
+        switch self {
+        case .single:
+            return "Single"
+        case .multi:
+            return "Multi"
+        case .drumKit:
+            return "Drum Kit"
+        case .drumInstrument:
+            return "Drum Instrument"
+        }
+    }
+}
+
+/// Dump command header for various patch types.
+public struct DumpCommand {
+    /// MIDI channel (1...16)
+    public var channel: Byte
+    
+    /// Cardinality of the patch
+    public var cardinality: Cardinality
+    
+    /// Bank identifier for the patch, if applicable
+    public var bank: BankIdentifier
+    
+    /// Patch kind
+    public var kind: PatchKind
+    
+    /// Sub-bytes, like instrument number or tone map
+    public var subBytes: ByteArray
+    
+    /// Initialze a default dump command
+    public init() {
+        self.init(channel: 1, cardinality: .one, bank: .a, kind: .single)
+    }
+    
+    /// Initialize a dump command with all values. The sub-bytes array can be, and defaults to, empty.
+    public init(channel: Byte, cardinality: Cardinality, bank: BankIdentifier, kind: PatchKind, subBytes: ByteArray = []) {
+        self.channel = 0
+        self.cardinality = cardinality
+        self.bank = bank
+        self.kind = kind
+        self.subBytes = subBytes
+    }
+    
+    /// Initializes a dump command from MIDI System Exclusive data. Returns `nil` if the data is invalid.
+    public init?(data: ByteArray) {
+        var maybeChannel: Byte = 1
+        var maybeCardinality: Cardinality = .one
+        var maybeBank: BankIdentifier = .none
+        var maybeKind: PatchKind = .single
+        
+        for (index, b) in data.enumerated() {
+            switch index {
+            case 0: // channel byte
+                maybeChannel = b + 1  // adjust channel from 0~15 to 1~16
+            case 1:
+                maybeCardinality = Cardinality(rawValue: b)!
+            case 2:  // // "5th" in spec, always 0x00
+                if b != 0x00 {
+                    return nil
+                }
+            case 3: // "6th" in spec, always 0x0A
+                if b != 0x0A {
+                    return nil
+                }
+            case 4: // patch kind ("7th" in spec)
+                maybeKind = PatchKind(rawValue: b)!
+            case 5:  // bank ID ("8th" in spec)
+                maybeBank = BankIdentifier(rawValue: b)!
+            default:
+                break
+            }
+        }
+
+        var sub = ByteArray()
+        
+        if maybeCardinality == .one {
+            if maybeKind == .single {
+                sub.append(data[6])  // sub1 of single for all banks
+            }
+            else if maybeKind == .multi {
+                maybeBank = .none
+                sub.append(data[5])  // sub1 of combi/multi
+            }
+            else if maybeKind == .drumInstrument {
+                maybeBank = .none
+                sub.append(data[5])
+            }
+            // No sub-bytes for drum kit
+        }
+        else if maybeCardinality == .block {
+            if maybeKind == .single {
+                if maybeBank != .b {  // not for PCM bank
+                    // Get the tone map
+                    sub.append(contentsOf: ByteArray(data[6 ..< (6 + ToneMap.dataSize)]))
+                }
+            }
+            // No sub-bytes for block combi/multi or drum instrument
+            else {
+                maybeBank = .none
+            }
+        }
+        
+        self.init(channel: maybeChannel, cardinality: maybeCardinality, bank: maybeBank, kind: maybeKind, subBytes: sub)
+    }
+}
+
+extension DumpCommand: CustomStringConvertible {
+    /// Returns a string representation of the dump command.
+    public var description: String {
+        var s = "Channel: \(self.channel)  \(self.cardinality)  \(self.kind)  Bank \(self.bank) "
+        s += "Sub-bytes: \(self.subBytes.hexDump(config: .plainConfig))"
+        return s
+    }
+}
+
+extension DumpCommand: Equatable { }
+
 
 extension SystemExclusive.Header: SystemExclusiveData {
     public func asData() -> ByteArray {
@@ -86,8 +218,41 @@ extension SystemExclusive.Header: SystemExclusiveData {
         ]
     }
     
-    public static var dataLength: Int {
+    public var dataLength: Int {
         return 6
+    }
+}
+
+extension DumpCommand: SystemExclusiveData {
+    private func collectData() -> ByteArray {
+        var result: ByteArray = [
+            self.channel - 1,   // adjust 1~16 to 0~15
+            self.cardinality.rawValue,  // either 0x20 or 0x21
+            0x00,  // always
+            0x0A,  // always
+            self.kind.rawValue,  // single, multi, drum kit, drum instrument
+        ]
+        
+        // Only single patches need a bank
+        if self.kind == .single {
+            result.append(self.bank.rawValue)
+        }
+        
+        // Add any sub-bytes (one or more).
+        // For drum kit and drum instrument, and "Block PCM Bank B",
+        // sub-bytes will be empty, so this append is a no-op for them.
+        result.append(contentsOf: self.subBytes)
+
+        return result
+    }
+
+    public func asData() -> ByteArray {
+        return self.collectData()
+    }
+
+    public var dataLength: Int {
+        let data = self.collectData()
+        return data.count
     }
 }
 

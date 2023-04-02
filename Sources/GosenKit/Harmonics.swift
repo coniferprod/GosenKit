@@ -270,9 +270,9 @@ extension HarmonicEnvelope: SystemExclusiveData {
         return data
     }
     
-    public static var dataLength: Int {
-        return 4 * 2  // four segments with two bytes each
-    }
+    public var dataLength: Int { return HarmonicEnvelope.dataSize }
+    
+    public static let dataSize = 4 * 2 // four segments with two bytes each
 }
 
 
@@ -284,10 +284,9 @@ extension HarmonicLevels: SystemExclusiveData {
         return data
     }
     
-    
-    public static var dataLength: Int {
-        return 128
-    }
+    public var dataLength: Int { return HarmonicLevels.dataSize }
+
+    public static let dataSize: Int = 128
 }
 
 extension HarmonicCommon: SystemExclusiveData {
@@ -304,9 +303,9 @@ extension HarmonicCommon: SystemExclusiveData {
         return data
     }
     
-    public static var dataLength: Int {
-        return 6
-    }
+    public var dataLength: Int { return HarmonicCommon.dataSize }
+
+    public static let dataSize = 6
 }
 
 extension HarmonicEnvelope.Segment: SystemExclusiveData {
@@ -314,7 +313,9 @@ extension HarmonicEnvelope.Segment: SystemExclusiveData {
         return ByteArray(arrayLiteral: Byte(rate), Byte(level))
     }
     
-    public static var dataLength: Int { return 2 }
+    public var dataLength: Int { return HarmonicEnvelope.Segment.dataSize }
+
+    public static let dataSize = 2
 }
 
 // MARK: - CustomStringConvertible

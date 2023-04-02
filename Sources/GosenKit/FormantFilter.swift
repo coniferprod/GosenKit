@@ -45,7 +45,7 @@ public struct FormantFilter: Codable {
             var offset: Int = 0
             var b: Byte = 0
 
-            let length = Segment.dataLength
+            let length = Segment.dataSize
             attack = Segment(data: d.slice(from: offset, length: length))
             offset += length
 
@@ -171,11 +171,11 @@ public struct FormantFilter: Codable {
         b = d.next(&offset)
         envelopeDepth = Int(b) - 64
         
-        envelope = Envelope(data: d.slice(from: offset, length: Envelope.dataLength))
-        offset += Envelope.dataLength
+        envelope = Envelope(data: d.slice(from: offset, length: Envelope.dataSize))
+        offset += Envelope.dataSize
         
-        lfo = LFO(data: d.slice(from: offset, length: LFO.dataLength))
-        offset += LFO.dataLength
+        lfo = LFO(data: d.slice(from: offset, length: LFO.dataSize))
+        offset += LFO.dataSize
     }
 }
 
@@ -197,7 +197,9 @@ extension FormantFilter.Envelope: SystemExclusiveData {
         return data
     }
     
-    public static var dataLength = 11
+    public var dataLength: Int { return FormantFilter.Envelope.dataSize }
+    
+    public static let dataSize = 11
 }
 
 extension FormantFilter.Envelope.Segment: SystemExclusiveData {
@@ -205,7 +207,9 @@ extension FormantFilter.Envelope.Segment: SystemExclusiveData {
         return ByteArray(arrayLiteral: Byte(rate), Byte(level + 64))
     }
     
-    public static var dataLength = 2
+    public var dataLength: Int { return FormantFilter.Envelope.Segment.dataSize }
+    
+    public static let dataSize = 2
 }
 
 extension FormantFilter: SystemExclusiveData {
@@ -222,15 +226,19 @@ extension FormantFilter: SystemExclusiveData {
         return data
     }
     
-    public static var dataLength = 17  // does not include the bands!
+    public var dataLength: Int { return FormantFilter.dataSize }
+    
+    public static let dataSize = 17  // does not include the bands!
 }
 
 extension FormantFilter.Bands: SystemExclusiveData {
     public func asData() -> ByteArray {
         return levels.map { Byte($0) }
     }
-    
-    public static var dataLength = 128
+
+    public var dataLength: Int { return FormantFilter.Bands.dataSize }
+
+    public static let dataSize = 128
 }
 
 extension FormantFilter.LFO: SystemExclusiveData {
@@ -242,7 +250,9 @@ extension FormantFilter.LFO: SystemExclusiveData {
         return data
     }
     
-    public static var dataLength = 3
+    public var dataLength: Int { return FormantFilter.LFO.dataSize }
+
+    public static let dataSize = 3
 }
 
 // MARK: - CustomStringConvertible

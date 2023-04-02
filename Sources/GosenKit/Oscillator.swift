@@ -98,7 +98,7 @@ public struct Oscillator: Codable {
         b = d.next(&offset)
         keyScalingToPitch = KeyScaling(index: Int(b))!
 
-        pitchEnvelope = PitchEnvelope(data: d.slice(from: offset, length: PitchEnvelope.dataLength))
+        pitchEnvelope = PitchEnvelope(data: d.slice(from: offset, length: PitchEnvelope.dataSize))
     }
 }
 
@@ -116,7 +116,9 @@ extension Oscillator.PitchEnvelope: SystemExclusiveData {
         return data
     }
     
-    public static var dataLength = 6
+    public var dataLength: Int { return Oscillator.PitchEnvelope.dataSize }
+    
+    public static let dataSize = 6
 }
 
 extension Oscillator: SystemExclusiveData {
@@ -134,7 +136,9 @@ extension Oscillator: SystemExclusiveData {
         return data
     }
     
-    public static var dataLength = 12
+    public var dataLength: Int { return Oscillator.dataSize }
+    
+    public static let dataSize = 12
 }
 
 // MARK: - CustomStringConvertible

@@ -553,7 +553,7 @@ extension Wave: SystemExclusiveData {
         return data
     }
     
-    public static var dataLength = 2
+    public var dataLength: Int { 2 }
 }
 
 // MARK: - CustomStringConvertible

@@ -227,19 +227,19 @@ public struct EffectSettings: Codable {
         b = d.next(&offset)
         algorithm = Int(b + 1)  // adjust 0~3 to 1~4
         
-        reverb = EffectDefinition(data: d.slice(from: offset, length: EffectDefinition.dataLength))
-        offset += EffectDefinition.dataLength
+        reverb = EffectDefinition(data: d.slice(from: offset, length: EffectDefinition.dataSize))
+        offset += EffectDefinition.dataSize
         
-        effect1 = EffectDefinition(data: d.slice(from: offset, length: EffectDefinition.dataLength))
-        offset += EffectDefinition.dataLength
+        effect1 = EffectDefinition(data: d.slice(from: offset, length: EffectDefinition.dataSize))
+        offset += EffectDefinition.dataSize
         
-        effect2 = EffectDefinition(data: d.slice(from: offset, length: EffectDefinition.dataLength))
-        offset += EffectDefinition.dataLength
+        effect2 = EffectDefinition(data: d.slice(from: offset, length: EffectDefinition.dataSize))
+        offset += EffectDefinition.dataSize
         
-        effect3 = EffectDefinition(data: d.slice(from: offset, length: EffectDefinition.dataLength))
-        offset += EffectDefinition.dataLength
+        effect3 = EffectDefinition(data: d.slice(from: offset, length: EffectDefinition.dataSize))
+        offset += EffectDefinition.dataSize
         
-        effect4 = EffectDefinition(data: d.slice(from: offset, length: EffectDefinition.dataLength))
+        effect4 = EffectDefinition(data: d.slice(from: offset, length: EffectDefinition.dataSize))
     }
 }
 
@@ -260,7 +260,8 @@ extension EffectDefinition: SystemExclusiveData {
         return data
     }
     
-    public static var dataLength = 6
+    public var dataLength: Int { return EffectDefinition.dataSize }
+    public static let dataSize = 6
 }
 
 extension EffectSettings: SystemExclusiveData {
@@ -277,7 +278,8 @@ extension EffectSettings: SystemExclusiveData {
         return data
     }
 
-    public static var dataLength = 31
+    public var dataLength: Int { return EffectSettings.dataSize }
+    public static let dataSize = 31
 }
 
 // MARK: - CustomStringConvertible

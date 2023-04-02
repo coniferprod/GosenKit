@@ -114,8 +114,8 @@ public struct SinglePatch: Codable {
             var offset: Int = 0
             var b: Byte = 0
             
-            effects = EffectSettings(data: d.slice(from: offset, length: EffectSettings.dataLength))
-            offset += EffectSettings.dataLength
+            effects = EffectSettings(data: d.slice(from: offset, length: EffectSettings.dataSize))
+            offset += EffectSettings.dataSize
 
             geq = [Int]()
             for _ in 0..<SinglePatch.Common.geqBandCount {
@@ -160,8 +160,8 @@ public struct SinglePatch: Codable {
             b = d.next(&offset)
             amplitudeModulation = AmplitudeModulation(index: Int(b))!
 
-            effectControl = EffectControl(data: d.slice(from: offset, length: EffectControl.dataLength))
-            offset += EffectControl.dataLength
+            effectControl = EffectControl(data: d.slice(from: offset, length: EffectControl.dataSize))
+            offset += EffectControl.dataSize
 
             b = d.next(&offset)
             isPortamentoActive = (b == 1) ? true : false
@@ -235,14 +235,14 @@ public struct SinglePatch: Codable {
 
         b = d.next(&offset)  // checksum is the first byte
 
-        common = Common(data: d.slice(from: offset, length: Common.dataLength))
-        offset += Common.dataLength
+        common = Common(data: d.slice(from: offset, length: Common.dataSize))
+        offset += Common.dataSize
         
         sources = [Source]()
         for _ in 0..<common.sourceCount {
-            let source = Source(data: d.slice(from: offset, length: Source.dataLength))
+            let source = Source(data: d.slice(from: offset, length: Source.dataSize))
             sources.append(source)
-            offset += Source.dataLength
+            offset += Source.dataSize
         }
         
         additiveKits = AdditiveKitDictionary()
@@ -251,8 +251,8 @@ public struct SinglePatch: Codable {
         let additiveKitCount = sources.filter{ $0.oscillator.wave.isAdditive() }.count
         var kitIndex = 0
         while kitIndex < additiveKitCount {
-            let kit = AdditiveKit(data: d.slice(from: offset, length: AdditiveKit.dataLength))
-            offset += AdditiveKit.dataLength
+            let kit = AdditiveKit(data: d.slice(from: offset, length: AdditiveKit.dataSize))
+            offset += AdditiveKit.dataSize
 
             additiveKits["s\(kitIndex + 1)"] = kit
             kitIndex += 1
@@ -352,9 +352,8 @@ extension SinglePatch: SystemExclusiveData {
     }
 
     /// The length of single patch System Exclusive data.
-    /// NOTE: This result does not reflect the actual data length, because the number of additive kits is dynamic.
-    public static var dataLength: Int {
-        return 1 + Common.dataLength + 6 * Source.dataLength
+    public var dataLength: Int {
+        return 1 + Common.dataSize + self.sources.count * Source.dataSize
     }
 }
 
@@ -418,8 +417,10 @@ extension SinglePatch.Common: SystemExclusiveData {
         
         return data
     }
-        
-    public static var dataLength = 81
+
+    public var dataLength: Int { return SinglePatch.Common.dataSize }
+
+    public static let dataSize = 81
 }
 
 // MARK: - CustomStringConvertible

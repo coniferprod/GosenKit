@@ -135,7 +135,7 @@ public struct Filter: Codable {
         b = d.next(&offset)
         envelopeDepth = Int(b) - 64
         
-        envelope = Envelope(data: d.slice(from: offset, length: Envelope.dataLength))
+        envelope = Envelope(data: d.slice(from: offset, length: Envelope.dataSize))
     }
 }
 
@@ -165,7 +165,9 @@ extension Filter: SystemExclusiveData {
         return data
     }
     
-    public static var dataLength = 20
+    public var dataLength: Int { return Filter.dataSize }
+    
+    public static let dataSize = 20
 }
 
 extension Filter.Envelope: SystemExclusiveData {
@@ -180,7 +182,9 @@ extension Filter.Envelope: SystemExclusiveData {
         return data
     }
     
-    public static var dataLength = 11
+    public var dataLength: Int { return Filter.Envelope.dataSize }
+    
+    public static let dataSize = 11
 }
 
 // MARK: - CustomStringConvertible

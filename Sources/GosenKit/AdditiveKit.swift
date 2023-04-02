@@ -40,26 +40,26 @@ public struct AdditiveKit: Codable {
         let originalChecksum = d.next(&offset)
         //print("From SysEx, ADD kit checksum = \(String(originalChecksum, radix: 16))")
         
-        common = HarmonicCommon(data: d.slice(from: offset, length: HarmonicCommon.dataLength))
-        offset += HarmonicCommon.dataLength
+        common = HarmonicCommon(data: d.slice(from: offset, length: HarmonicCommon.dataSize))
+        offset += HarmonicCommon.dataSize
         
-        morf = Morf(data: d.slice(from: offset, length: Morf.dataLength))
-        offset += Morf.dataLength
+        morf = Morf(data: d.slice(from: offset, length: Morf.dataSize))
+        offset += Morf.dataSize
 
-        formantFilter = FormantFilter(data: d.slice(from: offset, length: FormantFilter.dataLength))
-        offset += FormantFilter.dataLength
+        formantFilter = FormantFilter(data: d.slice(from: offset, length: FormantFilter.dataSize))
+        offset += FormantFilter.dataSize
         
-        levels = HarmonicLevels(data: d.slice(from: offset, length: HarmonicLevels.dataLength))
-        offset += HarmonicLevels.dataLength
+        levels = HarmonicLevels(data: d.slice(from: offset, length: HarmonicLevels.dataSize))
+        offset += HarmonicLevels.dataSize
         
-        bands = FormantFilter.Bands(data: d.slice(from: offset, length: FormantFilter.Bands.dataLength))
-        offset += FormantFilter.Bands.dataLength
+        bands = FormantFilter.Bands(data: d.slice(from: offset, length: FormantFilter.Bands.dataSize))
+        offset += FormantFilter.Bands.dataSize
         
         envelopes = [HarmonicEnvelope]()
         var envelopeBytes = ByteArray()
         for _ in 0 ..< AdditiveKit.harmonicCount {
-            let envelopeData = d.slice(from: offset, length: HarmonicEnvelope.dataLength)
-            offset += HarmonicEnvelope.dataLength
+            let envelopeData = d.slice(from: offset, length: HarmonicEnvelope.dataSize)
+            offset += HarmonicEnvelope.dataSize
 
             let envelope = HarmonicEnvelope(data: envelopeData)
             envelopeBytes.append(contentsOf: envelopeData)
@@ -180,7 +180,9 @@ extension AdditiveKit: SystemExclusiveData {
         return data
     }
     
-    public static var dataLength = 806
+    public var dataLength: Int { return AdditiveKit.dataSize }
+    
+    public static let dataSize = 806
 }
 
 // MARK: - CustomStringComvertible

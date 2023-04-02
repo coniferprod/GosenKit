@@ -25,9 +25,9 @@ public struct MultiPatch: Codable {
             var offset: Int = 0
             var b: Byte = 0
             
-            let effectData = d.slice(from: offset, length: EffectSettings.dataLength)
+            let effectData = d.slice(from: offset, length: EffectSettings.dataSize)
             effects = EffectSettings(data: effectData)
-            offset += EffectSettings.dataLength
+            offset += EffectSettings.dataSize
             
             geq = [Int]()
             for _ in 0..<SinglePatch.Common.geqBandCount {
@@ -52,11 +52,11 @@ public struct MultiPatch: Codable {
             sectionMutes.append(b.isBitSet(2) ? false : true)
             sectionMutes.append(b.isBitSet(3) ? false : true)
 
-            let effectControl1Data = d.slice(from: offset, length: EffectControl.dataLength)
+            let effectControl1Data = d.slice(from: offset, length: EffectControl.dataSize)
             effectControl1 = EffectControl(data: effectControl1Data)
-            offset += EffectControl.dataLength
+            offset += EffectControl.dataSize
             
-            let effectControl2Data = d.slice(from: offset, length: EffectControl.dataLength)
+            let effectControl2Data = d.slice(from: offset, length: EffectControl.dataSize)
             effectControl2 = EffectControl(data: effectControl2Data)
         }
     }
@@ -152,13 +152,13 @@ public struct MultiPatch: Codable {
         var offset: Int = 0
         
         common = Common(data: d)
-        offset += Common.dataLength
+        offset += Common.dataSize
         
         sections = [Section]()
         for _ in 0..<MultiPatch.sectionCount {
-            let section = Section(data: d.slice(from: offset, length: Section.dataLength))
+            let section = Section(data: d.slice(from: offset, length: Section.dataSize))
             sections.append(section)
-            offset += Section.dataLength
+            offset += Section.dataSize
         }
     }
     
@@ -227,8 +227,8 @@ extension MultiPatch: SystemExclusiveData {
         return data
     }
     
-    public static var dataLength: Int {
-        return 1 + Common.dataLength + 4 * Section.dataLength
+    public var dataLength: Int {
+        return 1 + Common.dataSize + 4 * Section.dataSize
     }
 }
 
@@ -250,7 +250,9 @@ extension MultiPatch.Common: SystemExclusiveData {
         return data
     }
     
-    public static var dataLength = 54
+    public var dataLength: Int { return MultiPatch.Common.dataSize }
+    
+    public static let dataSize = 54
 }
 
 extension MultiPatch.Section: SystemExclusiveData {
@@ -275,5 +277,7 @@ extension MultiPatch.Section: SystemExclusiveData {
         return data
     }
     
-    public static var dataLength = 12
+    public var dataLength: Int { return MultiPatch.Section.dataSize }
+    
+    public static let dataSize = 12
 }

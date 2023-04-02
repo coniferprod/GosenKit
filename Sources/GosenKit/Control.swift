@@ -312,7 +312,7 @@ public struct EffectControl: Codable {
     public init(data d: ByteArray) {
         var offset: Int = 0
     
-        let length = Source.dataLength
+        let length = Source.dataSize
         source1 = Source(data: d.slice(from: offset, length: length))
         offset += length
         source2 = Source(data: d.slice(from: offset, length: length))
@@ -355,8 +355,10 @@ extension MacroController: SystemExclusiveData {
         }
         return data
     }
+
+    public var dataLength: Int { return MacroController.dataSize }
     
-    public static var dataLength = 4
+    public static let dataSize = 4
 }
 
 extension VelocitySwitch: SystemExclusiveData {
@@ -369,7 +371,7 @@ extension VelocitySwitch: SystemExclusiveData {
         return data
     }
     
-    public static var dataLength = 1
+    public var dataLength: Int { return 1 }
 }
 
 extension EffectControl.Source: SystemExclusiveData {
@@ -381,7 +383,9 @@ extension EffectControl.Source: SystemExclusiveData {
         return data
     }
     
-    public static var dataLength = 3
+    public var dataLength: Int { return EffectControl.Source.dataSize }
+    
+    public static let dataSize = 3
 }
 
 extension AssignableController: SystemExclusiveData {
@@ -393,7 +397,9 @@ extension AssignableController: SystemExclusiveData {
         return data
     }
     
-    public static var dataLength = 3
+    public var dataLength: Int { return AssignableController.dataSize }
+    
+    public static let dataSize = 3
 }
 
 extension EffectControl: SystemExclusiveData {
@@ -406,7 +412,9 @@ extension EffectControl: SystemExclusiveData {
         return data
     }
     
-    public static var dataLength = 6
+    public var dataLength: Int { return EffectControl.dataSize }
+    
+    public static let dataSize = 6
 }
 
 extension SwitchControl: SystemExclusiveData {
@@ -418,7 +426,7 @@ extension SwitchControl: SystemExclusiveData {
         return data
     }
     
-    public static var dataLength = 4
+    public var dataLength: Int { return 4 }
 }
 
 // MARK: - CustomStringConvertible

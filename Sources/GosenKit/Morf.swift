@@ -76,7 +76,7 @@ public struct Morf: Codable {
     public init(data d: ByteArray) {
         var offset: Int = 0
         
-        var length = CopyParameters.dataLength
+        var length = CopyParameters.dataSize
         copy1 = CopyParameters(data: d.slice(from: offset, length: length))
         offset += length
 
@@ -89,7 +89,7 @@ public struct Morf: Codable {
         copy4 = CopyParameters(data: d.slice(from: offset, length: length))
         offset += length
 
-        length = Envelope.dataLength
+        length = Envelope.dataSize
         envelope = Envelope(data: d.slice(from: offset, length: length))
     }
 }
@@ -101,7 +101,9 @@ extension Morf.CopyParameters: SystemExclusiveData {
         return ByteArray(arrayLiteral: Byte(patchNumber), Byte(sourceNumber))
     }
     
-    public static var dataLength = 2
+    public var dataLength: Int { return Morf.CopyParameters.dataSize }
+    
+    public static let dataSize = 2
 }
 
 extension Morf: SystemExclusiveData {
@@ -116,8 +118,10 @@ extension Morf: SystemExclusiveData {
 
         return data
     }
-    
-    public static var dataLength = 13
+
+    public var dataLength: Int { return Morf.dataSize }
+
+    public static let dataSize = 13
 }
 
 extension Morf.Envelope: SystemExclusiveData {
@@ -129,5 +133,7 @@ extension Morf.Envelope: SystemExclusiveData {
         return data
     }
     
-    public static var dataLength = 5
+    public var dataLength: Int { return Morf.Envelope.dataSize }
+    
+    public static let dataSize = 5
 }
