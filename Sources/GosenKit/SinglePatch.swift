@@ -114,16 +114,23 @@ public struct SinglePatch: Codable {
             var offset: Int = 0
             var b: Byte = 0
             
-            effects = EffectSettings(data: d.slice(from: offset, length: EffectSettings.dataSize))
+            let effectData = d.slice(from: offset, length: EffectSettings.dataSize)
+            print("Effect data = \(effectData.count) bytes")
+            self.effects = EffectSettings(data: effectData)
             offset += EffectSettings.dataSize
 
-            geq = [Int]()
+            self.geq = [Int]()
             for _ in 0..<SinglePatch.Common.geqBandCount {
                 b = d.next(&offset)
                 let v: Int = Int(b) - 64  // 58(-6) ~ 70(+6), so 64 is zero
                 //print("GEQ band \(i + 1): \(b) --> \(v)")
-                geq.append(Int(v))
+                self.geq.append(Int(v))
             }
+            var bands = "GEQ: "
+            for band in self.geq {
+                bands += "\(band) "
+            }
+            print(bands)
             
             // Eat the drum mark (39)
             offset += 1
@@ -232,11 +239,15 @@ public struct SinglePatch: Codable {
     public init(data d: ByteArray) {
         var offset: Int = 0
         var b: Byte = 0
+        
+        print("\(#file):\(#line) Single patch data = \(d.count) bytes")
+
 
         b = d.next(&offset)  // checksum is the first byte
 
         common = Common(data: d.slice(from: offset, length: Common.dataSize))
         offset += Common.dataSize
+        
         
         sources = [Source]()
         for _ in 0..<common.sourceCount {

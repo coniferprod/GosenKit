@@ -98,7 +98,7 @@ final class SinglePatchTests: XCTestCase {
             }
         }
     }
-    
+        
     func testPatchName_truncate() {
         @PatchName var longName = "MoreThan8Chars"
         XCTAssert(longName.count == PatchName.length)
