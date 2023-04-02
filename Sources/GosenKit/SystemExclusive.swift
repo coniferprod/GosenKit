@@ -140,6 +140,7 @@ public struct DumpCommand {
         
         print("\(#file):\(#line) data.count = \(data.count)")
         
+        // Iterate through all the bytes and pick up information
         for (index, b) in data.enumerated() {
             switch index {
             case 0: // channel byte
@@ -154,24 +155,14 @@ public struct DumpCommand {
                 if b != 0x0A {
                     return nil
                 }
-            case 4: // patch kind ("7th" in spec)
+            case 4: // patch kind ("7th" in spec): 0x00, 0x10, 0x11 or 0x20
                 maybeKind = PatchKind(rawValue: b)!
             case 5:  // bank ID ("8th" in spec)
-                if maybeKind == .drumKit || maybeKind == .drumInstrument {
+                switch maybeKind {
+                case .drumKit, .drumInstrument, .multi:
                     maybeBank = .none
-                }
-                else {
-                    if maybeCardinality == .one {
-                        if maybeKind == .multi {
-                            maybeBank = .none
-                        }
-                        else {
-                            maybeBank = BankIdentifier(rawValue: b)!
-                        }
-                    }
-                    else { // must be .block
-                        maybeBank = BankIdentifier(rawValue: b)!
-                    }
+                default:
+                    maybeBank = BankIdentifier(rawValue: b)!  // 0x0 ... 0x04
                 }
             default:
                 break
