@@ -138,6 +138,8 @@ public struct DumpCommand {
         var maybeBank: BankIdentifier = .none
         var maybeKind: PatchKind = .single
         
+        print("\(#file):\(#line) data.count = \(data.count)")
+        
         for (index, b) in data.enumerated() {
             switch index {
             case 0: // channel byte
@@ -155,7 +157,22 @@ public struct DumpCommand {
             case 4: // patch kind ("7th" in spec)
                 maybeKind = PatchKind(rawValue: b)!
             case 5:  // bank ID ("8th" in spec)
-                maybeBank = BankIdentifier(rawValue: b)!
+                if maybeKind == .drumKit || maybeKind == .drumInstrument {
+                    maybeBank = .none
+                }
+                else {
+                    if maybeCardinality == .one {
+                        if maybeKind == .multi {
+                            maybeBank = .none
+                        }
+                        else {
+                            maybeBank = BankIdentifier(rawValue: b)!
+                        }
+                    }
+                    else { // must be .block
+                        maybeBank = BankIdentifier(rawValue: b)!
+                    }
+                }
             default:
                 break
             }
@@ -164,24 +181,21 @@ public struct DumpCommand {
         var sub = ByteArray()
         
         if maybeCardinality == .one {
-            if maybeKind == .single {
-                sub.append(data[6])  // sub1 of single for all banks
-            }
-            else if maybeKind == .multi {
+            switch maybeKind {
+            case .single:
+                sub.append(data[6])  // sub1 of single for all banks ("9th" in spec)
+            case .multi:
                 maybeBank = .none
-                sub.append(data[5])  // sub1 of combi/multi
-            }
-            else if maybeKind == .drumInstrument {
+                sub.append(data[5])  // sub1 of combi/multi ("8th" in spec)
+            case .drumKit, .drumInstrument:  // no sub-bytes
                 maybeBank = .none
-                sub.append(data[5])
             }
-            // No sub-bytes for drum kit
         }
-        else if maybeCardinality == .block {
-            if maybeKind == .single {
-                if maybeBank != .b {  // not for PCM bank
+        else {  // must be .block
+            if maybeKind == .single {  // "block single" is the only one with a tone map
+                if maybeBank != .b {   // but not for PCM bank
                     // Get the tone map
-                    sub.append(contentsOf: ByteArray(data[6 ..< (6 + ToneMap.dataSize)]))
+                    sub.append(contentsOf: data.slice(from: 6, length: ToneMap.dataSize))
                 }
             }
             // No sub-bytes for block combi/multi or drum instrument
