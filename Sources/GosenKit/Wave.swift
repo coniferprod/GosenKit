@@ -34,6 +34,9 @@ public class Wave: Codable {
         // Now we should have a 10-bit binary string, convert it to a decimal number.
         // The wave number is zero-based in the SysEx file, but treated as one-based.
         if let number = Int(waveString, radix: 2) {
+            if number == 512 {  // ADD
+                return number  // don't adjust the ADD wave number
+            }
             return number + 1
         }
         return nil
