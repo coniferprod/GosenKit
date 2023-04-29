@@ -190,7 +190,7 @@ extension FormantFilter.Envelope: SystemExclusiveData {
         data.append(contentsOf: decay2.asData())
         data.append(contentsOf: release.asData())
         
-        [decayLoop.index!, velocityDepth + 64, keyScalingDepth + 64].forEach {
+        [decayLoop.index, velocityDepth + 64, keyScalingDepth + 64].forEach {
             data.append(Byte($0))
         }
         
@@ -216,7 +216,7 @@ extension FormantFilter: SystemExclusiveData {
     public func asData() -> ByteArray {
         var data = ByteArray()
 
-        [bias + 64, mode.index!, envelopeDepth + 64].forEach {
+        [bias + 64, mode.index, envelopeDepth + 64].forEach {
             data.append(Byte($0))
         }
 
@@ -244,7 +244,7 @@ extension FormantFilter.Bands: SystemExclusiveData {
 extension FormantFilter.LFO: SystemExclusiveData {
     public func asData() -> ByteArray {
         var data = ByteArray()
-        [speed, shape.index!, depth].forEach {
+        [speed, shape.index, depth].forEach {
             data.append(Byte($0))
         }
         return data

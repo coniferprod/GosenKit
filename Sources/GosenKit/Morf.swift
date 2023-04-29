@@ -127,7 +127,7 @@ extension Morf: SystemExclusiveData {
 extension Morf.Envelope: SystemExclusiveData {
     public func asData() -> ByteArray {
         var data = ByteArray()
-        [time1, time2, time3, time4, loopKind.index!].forEach {
+        [time1, time2, time3, time4, loopKind.index].forEach {
             data.append(Byte($0))
         }
         return data

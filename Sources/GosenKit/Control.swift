@@ -350,7 +350,7 @@ public struct AssignableController: Codable {
 extension MacroController: SystemExclusiveData {
     public func asData() -> ByteArray {
         var data = ByteArray()
-        [destination1.index!, depth1 + 64, destination2.index!, depth2 + 64].forEach {
+        [destination1.index, depth1 + 64, destination2.index, depth2 + 64].forEach {
             data.append(Byte($0))
         }
         return data
@@ -365,7 +365,7 @@ extension VelocitySwitch: SystemExclusiveData {
     public func asData() -> ByteArray {
         var data = ByteArray()
         let t = VelocitySwitch.conversionTable.firstIndex(of: threshold)!
-        let value = t | (self.kind.index! << 5)
+        let value = t | (self.kind.index << 5)
         //print("velocity switch = \(self.velocitySwitchType.rawValue), velocityThreshold = \(self.velocityThreshold) --> velo_sw = \(String(value, radix: 2))")
         data.append(Byte(value))
         return data
@@ -377,7 +377,7 @@ extension VelocitySwitch: SystemExclusiveData {
 extension EffectControl.Source: SystemExclusiveData {
     public func asData() -> ByteArray {
         var data = ByteArray()
-        [source.index!, destination.index!, depth + 64].forEach {
+        [source.index, destination.index, depth + 64].forEach {
             data.append(Byte($0))
         }
         return data
@@ -391,7 +391,7 @@ extension EffectControl.Source: SystemExclusiveData {
 extension AssignableController: SystemExclusiveData {
     public func asData() -> ByteArray {
         var data = ByteArray()
-        [source.index!, destination.index!, depth].forEach {
+        [source.index, destination.index, depth].forEach {
             data.append(Byte($0))
         }
         return data
@@ -420,7 +420,7 @@ extension EffectControl: SystemExclusiveData {
 extension SwitchControl: SystemExclusiveData {
     public func asData() -> ByteArray {
         var data = ByteArray()
-        [switch1.index!, switch2.index!, footSwitch1.index!, footSwitch2.index!].forEach {
+        [switch1.index, switch2.index, footSwitch1.index, footSwitch2.index].forEach {
             data.append(Byte($0))
         }
         return data

@@ -127,7 +127,7 @@ extension Oscillator: SystemExclusiveData {
         
         data.append(contentsOf: wave.asData())
         
-        [coarse + 24, fine + 64, fixedKey, keyScalingToPitch.index!].forEach {
+        [coarse + 24, fine + 64, fixedKey, keyScalingToPitch.index].forEach {
             data.append(Byte($0))
         }
         

@@ -250,7 +250,7 @@ extension EffectDefinition: SystemExclusiveData {
         var data = ByteArray()
         
         [
-            kind.index!, depth,
+            kind.index, depth,
             parameter1, parameter2, parameter3, parameter4
         ]
         .forEach {

@@ -395,7 +395,7 @@ extension SinglePatch.Common: SystemExclusiveData {
             nameIndex += 1
         }
 
-        [volume, polyphony.index!, 0, sourceCount].forEach {
+        [volume, polyphony.index, 0, sourceCount].forEach {
             data.append(Byte($0))
         }
         
@@ -407,7 +407,7 @@ extension SinglePatch.Common: SystemExclusiveData {
         }
         data.append(mute)  // src_mute_1
         
-        data.append(Byte(amplitudeModulation.index!))
+        data.append(Byte(amplitudeModulation.index))
         data.append(contentsOf: effectControl.asData())
         data.append(isPortamentoActive ? 1 : 0)
         data.append(Byte(portamentoSpeed))
@@ -415,8 +415,8 @@ extension SinglePatch.Common: SystemExclusiveData {
         // Pick out the destinations and depths as the SysEx spec wants them.
         assert(macros.count == SinglePatch.Common.macroCount)
         for macro in macros {
-            data.append(Byte(macro.destination1.index!))
-            data.append(Byte(macro.destination2.index!))
+            data.append(Byte(macro.destination1.index))
+            data.append(Byte(macro.destination2.index))
         }
 
         for macro in macros {

@@ -295,7 +295,7 @@ extension HarmonicCommon: SystemExclusiveData {
         
         data.append(isMorfEnabled ? 1 : 0)
         data.append(Byte(totalGain))
-        data.append(Byte(group.index!))
+        data.append(Byte(group.index))
         data.append(Byte(keyScalingToGain + 64))
         data.append(Byte(velocityCurve - 1))
         data.append(Byte(velocityDepth))

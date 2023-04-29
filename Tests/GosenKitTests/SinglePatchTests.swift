@@ -99,12 +99,12 @@ final class SinglePatchTests: XCTestCase {
         }
     }
         
-    func testPatchName_truncate() {
+    func testPatchName_truncated() {
         @PatchName var longName = "MoreThan8Chars"
         XCTAssert(longName.count == PatchName.length)
     }
     
-    func testPatchName_pad() {
+    func testPatchName_padded() {
         @PatchName var shortName = "Name"
         XCTAssert(shortName.count == PatchName.length)
         XCTAssert(shortName.last! == " ")

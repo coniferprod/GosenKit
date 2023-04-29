@@ -201,7 +201,7 @@ extension Source.Control.Pan: SystemExclusiveData {
     public func asData() -> ByteArray {
         var data = ByteArray()
         
-        data.append(Byte(kind.index!))
+        data.append(Byte(kind.index))
         data.append(Byte(value + 64))
         
         return data

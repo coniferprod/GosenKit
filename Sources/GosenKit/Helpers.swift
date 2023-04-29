@@ -4,18 +4,22 @@ import SyxPack
 
 
 extension CaseIterable where Self: Equatable {
-    public var index: Self.AllCases.Index? {
-        return Self.allCases.firstIndex { self == $0 }
+    /// Gets the index of an enum value
+    public var index: Self.AllCases.Index {
+        return Self.allCases.firstIndex(of: self)!
     }
 }
 
+/// Position of `String` where to add the pad characters.
 public enum PadFrom {
     case left
     case right
 }
 
 extension String {
-    public func pad(with character: String, toLength length: Int, from: PadFrom = .right) -> String {
+    /// Returns a copy of this `String` padded to `length` characters `from` left or right
+    /// using `with`.
+    public func padded(with character: Character, to length: Int, from: PadFrom = .right) -> String {
         let padCount = length - self.count
         guard padCount > 0 else {
             return self
@@ -29,6 +33,9 @@ extension String {
         }
     }
     
+    /// Returns a copy of this `String` adjusted to `length` characters.
+    /// If the string is longer than `length`, it will be truncated to `length` charcaters.
+    /// Otherwise it is padded from the right with the contents of `pad`.
     public func adjusted(length: Int, pad: String = " ") -> String {
         // If longer, truncate to `length`.
         // If shorter, pad from right with `pad` to the length `length`.
@@ -36,7 +43,7 @@ extension String {
             return String(self.prefix(length))
         }
         else {
-            return self.pad(with: " ", toLength: length, from: .right)
+            return self.padded(with: " ", to: length, from: .right)
             //return self.padding(toLength: length, withPad: " ", startingAt: self.count - 1)
         }
     }

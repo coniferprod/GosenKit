@@ -147,7 +147,7 @@ extension Filter: SystemExclusiveData {
         
         [
             isActive ? 0 : 1,
-            mode.index!,
+            mode.index,
             velocityCurve - 1,
             resonance,
             level,

@@ -84,8 +84,8 @@ public struct MultiPatch: Codable {
             b = d.next(&offset)
             let instrumentLSB = b
             
-            let instrumentMSBString = String(instrumentMSB, radix: 2).pad(with: "0", toLength: 2)
-            let instrumentLSBString = String(instrumentLSB, radix: 2).pad(with: "0", toLength: 7)
+            let instrumentMSBString = String(instrumentMSB, radix: 2).padded(with: "0", to: 2)
+            let instrumentLSBString = String(instrumentLSB, radix: 2).padded(with: "0", to: 7)
             let bitString = instrumentMSBString + instrumentLSBString
             // now we should have a 9-bit binary string, convert it to a decimal number
             singlePatchNumber = UInt(bitString, radix: 2)!
@@ -126,7 +126,7 @@ public struct MultiPatch: Codable {
         public func asBytes() -> (msb: Byte, lsb: Byte) {
             // Convert wave kit number to binary string with 10 digits
             // using a String extension (see Helpers.swift).
-            let waveBitString = String(self.singlePatchNumber, radix: 2).pad(with: "0", toLength: 9)
+            let waveBitString = String(self.singlePatchNumber, radix: 2).padded(with: "0", to: 9)
             
             // Take the first two bits and convert them to a number
             let msbBitString = waveBitString.prefix(2)

@@ -28,8 +28,8 @@ public class Wave: Codable {
     }
     
     public static func numberFromBytes(_ msb: Byte, _ lsb: Byte) -> Int? {
-        let waveMSBString = String(msb, radix: 2).pad(with: "0", toLength: 3, from: .left)
-        let waveLSBString = String(lsb, radix: 2).pad(with: "0", toLength: 7, from: .left)
+        let waveMSBString = String(msb, radix: 2).padded(with: "0", to: 3, from: .left)
+        let waveLSBString = String(lsb, radix: 2).padded(with: "0", to: 7, from: .left)
         let waveString = waveMSBString + waveLSBString
         // Now we should have a 10-bit binary string, convert it to a decimal number.
         // The wave number is zero-based in the SysEx file, but treated as one-based.
@@ -47,7 +47,7 @@ public class Wave: Codable {
         
         // Convert wave kit number to binary string with 10 digits
         // using a String extension (see Helpers.swift).
-        let waveBitString = String(num, radix: 2).pad(with: "0", toLength: 10, from: .left)
+        let waveBitString = String(num, radix: 2).padded(with: "0", to: 10, from: .left)
         
         // Take the first three bits and convert them to a number
         let msbBitString = waveBitString.prefix(3)

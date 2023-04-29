@@ -110,7 +110,7 @@ extension LFO: SystemExclusiveData {
     public func asData() -> ByteArray {
         var data = ByteArray()
         
-        [waveform.index!, speed, delayOnset, fadeInTime, fadeInToSpeed].forEach {
+        [waveform.index, speed, delayOnset, fadeInTime, fadeInToSpeed].forEach {
             data.append(Byte($0))
         }
 
