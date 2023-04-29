@@ -6,6 +6,7 @@ public struct HarmonicCommon: Codable {
         case low
         case high
         
+        /// Initializes the group from a data byte.
         public init?(index: Int) {
             switch index {
             case 0: self = .low
@@ -24,6 +25,7 @@ public struct HarmonicCommon: Codable {
     public var velocityCurve: Int  // 1~12 (stored in SysEx as 0~11)
     public var velocityDepth: Int  // 0~127
     
+    /// Initializes default harmonic common settings.
     public init() {
         isMorfEnabled = false
         totalGain = 0x33
@@ -33,6 +35,7 @@ public struct HarmonicCommon: Codable {
         velocityDepth = 0
     }
     
+    /// Initializes harmonic common settings from MIDI System Exclusive data bytes.
     public init(data d: ByteArray) {
         var offset: Int = 0
         var b: Byte = 0
@@ -64,11 +67,13 @@ public struct HarmonicEnvelope: Codable {
         public var rate: Int  // 0~127
         public var level: Int // 0~63
         
+        /// Initializes the segment with rate and level.
         public init(rate: Int, level: Int) {
             self.rate = rate
             self.level = level
         }
         
+        /// Initializes the segment from MIDI System Exclusive data bytes.
         public init(data d: ByteArray) {
             var offset: Int = 0
             var b: Byte = 0
@@ -89,6 +94,7 @@ public struct HarmonicEnvelope: Codable {
         case loop1
         case loop2
         
+        /// Initializes the loop kind from a data byte.
         public init?(index: Int) {
             switch index {
             case 0: self = .off
@@ -101,6 +107,7 @@ public struct HarmonicEnvelope: Codable {
 
     public var loopKind: LoopKind
     
+    /// Initializes the harmonic envelope with default settings.
     public init() {
         self.segments = [Segment]()
         self.segments.append(Segment(rate: 127, level: 63))
@@ -111,11 +118,13 @@ public struct HarmonicEnvelope: Codable {
         self.loopKind = .off
     }
     
+    /// Initializes the harmonic envelope with segments and loop kind.
     public init(segments: [Segment], loopKind: LoopKind) {
         self.segments = segments
         self.loopKind = loopKind
     }
     
+    /// Initializes the harmonic envelope from MIDI System Exclusive data bytes.
     public init(data d: ByteArray) {
         var offset: Int = 0
         var b: Byte = 0
@@ -187,6 +196,8 @@ public struct HarmonicLevels: Codable {
     
     public static let harmonicCount = 64
     
+    /// Initializes default harmonic levels. For both soft and loud,
+    /// the first level is initialized to 127 and the rest to zero.
     public init() {
         soft = [Int]()
         soft.append(127)
@@ -201,11 +212,13 @@ public struct HarmonicLevels: Codable {
         }
     }
     
+    /// Initializes harmonic levels with soft and loud harmonics.
     public init(soft: [Int], loud: [Int]) {
         self.soft = soft
         self.loud = loud
     }
-    
+
+    /// Initializes harmonic levels from MIDI System Exclusive data bytes.
     public init(data d: ByteArray) {
         var offset: Int = 0
         var b: Byte = 0
@@ -231,6 +244,7 @@ public struct HarmonicLevels: Codable {
 // MARK: - SystemExclusiveData
 
 extension HarmonicEnvelope: SystemExclusiveData {
+    /// Gets the MIDI System Exclusive data bytes for this harmonic envelope.
     public func asData() -> ByteArray {
         var data = ByteArray()
         
@@ -270,6 +284,7 @@ extension HarmonicEnvelope: SystemExclusiveData {
         return data
     }
     
+    /// The number of data bytes in the harmonic envelope.
     public var dataLength: Int { return HarmonicEnvelope.dataSize }
     
     public static let dataSize = 4 * 2 // four segments with two bytes each
@@ -277,6 +292,7 @@ extension HarmonicEnvelope: SystemExclusiveData {
 
 
 extension HarmonicLevels: SystemExclusiveData {
+    /// Gets the MIDI System Exclusive data bytes for the harmonic levels.
     public func asData() -> ByteArray {
         var data = ByteArray()
         soft.forEach { data.append(Byte($0)) }
@@ -284,12 +300,14 @@ extension HarmonicLevels: SystemExclusiveData {
         return data
     }
     
+    /// The number of data bytes in the harmonic levels.
     public var dataLength: Int { return HarmonicLevels.dataSize }
 
     public static let dataSize: Int = 128
 }
 
 extension HarmonicCommon: SystemExclusiveData {
+    /// Gets the MIDI System Exclusive data bytes for the harmonic common settings.
     public func asData() -> ByteArray {
         var data = ByteArray()
         
@@ -303,16 +321,19 @@ extension HarmonicCommon: SystemExclusiveData {
         return data
     }
     
+    /// The number of data bytes in the harmonic common settings.
     public var dataLength: Int { return HarmonicCommon.dataSize }
 
     public static let dataSize = 6
 }
 
 extension HarmonicEnvelope.Segment: SystemExclusiveData {
+    /// Gets the MIDI System Exclusive data bytes for this harmonic envelope segment.
     public func asData() -> ByteArray {
         return ByteArray(arrayLiteral: Byte(rate), Byte(level))
     }
     
+    /// The number of data bytes in this harmonic envelope segment.
     public var dataLength: Int { return HarmonicEnvelope.Segment.dataSize }
 
     public static let dataSize = 2
@@ -321,12 +342,14 @@ extension HarmonicEnvelope.Segment: SystemExclusiveData {
 // MARK: - CustomStringConvertible
 
 extension HarmonicEnvelope.Segment: CustomStringConvertible {
+    /// Gets a printable representation of this harmonic envelope segment.
     public var description: String {
         return "L\(level) R\(rate)"
     }
 }
 
 extension HarmonicEnvelope: CustomStringConvertible {
+    /// Gets a printable representation of this harmonic envelope.
     public var description: String {
         var s = "  Atk  DC1  DC2  RLS\n"
         

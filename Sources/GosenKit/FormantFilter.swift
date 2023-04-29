@@ -1,7 +1,10 @@
 import SyxPack
 
+/// Represents a formant filter.
 public struct FormantFilter: Codable {
+    /// Formant filter envelope.
     public struct Envelope: Codable {
+        /// Formant filter envelope segment.
         public struct Segment: Codable {
             public var rate: Int  // 0~127
             public var level: Int // -63(1)~+63(127)
@@ -69,6 +72,7 @@ public struct FormantFilter: Codable {
         }
     }
     
+    /// Formant filter LFO.
     public struct LFO: Codable {
         public enum Shape: String, Codable, CaseIterable {
             case triangle
@@ -110,6 +114,7 @@ public struct FormantFilter: Codable {
         }
     }
 
+    /// Formant filter mode.
     public enum Mode: String, Codable, CaseIterable {
         case envelope
         case lfo
@@ -123,6 +128,7 @@ public struct FormantFilter: Codable {
         }
     }
 
+    /// Formant filter bands.
     public struct Bands: Codable {
         public var levels: [Int]  // all 0~127
 

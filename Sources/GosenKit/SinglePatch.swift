@@ -3,6 +3,7 @@ import Foundation
 import SyxPack
 
 
+/// PatchName to wrap a `String` of exactly eight characters.
 @propertyWrapper public struct PatchName: Codable {
     public static let length = 8
     
@@ -29,6 +30,7 @@ public struct SinglePatch: Codable {
         case solo1
         case solo2
         
+        /// Initializes a polyphony mode from data.
         public init?(index: Int) {
             switch index {
             case 0: self = .poly
@@ -48,6 +50,7 @@ public struct SinglePatch: Codable {
         case source5
         case source6
 
+        /// Initializes an amplitude modulation setting from data.
         public init?(index: Int) {
             switch index {
             case 0: self = .off
@@ -61,7 +64,7 @@ public struct SinglePatch: Codable {
         }
     }
 
-    /// Portamento.
+    /// Portamento setting.
     public enum Portamento {
         case off
         case on(speed: UInt)
@@ -429,6 +432,7 @@ extension SinglePatch.Common: SystemExclusiveData {
         return data
     }
 
+    /// The number of bytes in the single patch common data.
     public var dataLength: Int { return SinglePatch.Common.dataSize }
 
     public static let dataSize = 81

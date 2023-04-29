@@ -3,8 +3,11 @@ import Foundation
 import SyxPack
 
 
+/// Represents a source in a singe patch.
 public struct Source: Codable {
+    /// Represents the control settings of a source.
     public struct Control: Codable {
+        /// Macro and assignable controller settings.
         public struct Modulation: Codable {
             public var pressure: MacroController
             public var wheel: MacroController
@@ -12,6 +15,7 @@ public struct Source: Codable {
             public var assignable1: AssignableController
             public var assignable2: AssignableController
             
+            /// Initializes default modulation settings.
             public init() {
                 pressure = MacroController()
                 wheel = MacroController()
@@ -20,6 +24,7 @@ public struct Source: Codable {
                 assignable2 = AssignableController()
             }
             
+            /// Initializes modulation settings from MIDI System Exclusive data.
             public init(data d: ByteArray) {
                 var offset: Int = 0
 
@@ -40,13 +45,16 @@ public struct Source: Codable {
             }
         }
 
+        /// Pan settings.
         public struct Pan: Codable {
+            /// Pan kind.
             public enum Kind: String, Codable, CaseIterable {
                 case normal
                 case random
                 case keyScale
                 case negativeKeyScale
                 
+                /// Initializes the pan kind from a data byte.
                 public init?(index: Int) {
                     switch index {
                     case 0: self = .normal
@@ -61,11 +69,19 @@ public struct Source: Codable {
             public var kind: Kind
             public var value: Int
             
+            /// Initializes default pan settings.
+            public init() {
+                self.kind = .normal
+                self.value = 0
+            }
+            
+            /// Initializes pan settings from kind and value.
             public init(kind: Kind, value: Int) {
                 self.kind = kind
                 self.value = value
             }
             
+            /// Initializes pan settings from MIDI System Exclusive data.
             public init(data d: ByteArray) {
                 var offset: Int = 0
                 var b: Byte = 0
@@ -89,6 +105,7 @@ public struct Source: Codable {
         public var keyOnDelay: Int
         public var pan: Pan
         
+        /// Initializes default control settings.
         public init() {
             zone = Zone(high: Key(note: 127), low: Key(note: 0))
             velocitySwitch = VelocitySwitch(kind: .off, threshold: 4)
@@ -101,6 +118,7 @@ public struct Source: Codable {
             pan = Pan(kind: .normal, value: 0)
         }
         
+        /// Initializes control settings from MIDI System Exclusive data bytes.
         public init(data d: ByteArray) {
             var offset: Int = 0
             var b: Byte = 0
@@ -144,6 +162,7 @@ public struct Source: Codable {
     public var lfo: LFO
     public var control: Control
 
+    /// Initializes a source with default settings.
     public init() {
         oscillator = Oscillator()
         filter = Filter()
@@ -152,7 +171,7 @@ public struct Source: Codable {
         control = Control()
     }
     
-    /// Initializes a source from system exclusive data.
+    /// Initializes a source from MIDI System Exclusive data bytes.
     public init(data d: ByteArray) {
         var offset: Int = 0
         
