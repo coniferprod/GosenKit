@@ -15,7 +15,7 @@ This feature requires Swift 5.3.
 
 ## Dissection of the PowerK5K patch
 
-PowerK5K is a single patch from "the Wizoo book".
+PowerK5K is a single patch from the K5000 factory sounds v4.04.
 
     00000000  f0   // SysEx initiator
     00000001  40   // Kawai manufacturer ID
@@ -41,7 +41,7 @@ relative to the start of the payload, not the whole message.
     0000001A  0B 00 00 00 00 00  // effect 4 settings
     00000020  45 44 43 40 41 46 45  // GEQ, 7 bands
     00000027  00  // drum mark
-    00000028  50 6f 77 65 72 4b 35 4b  // name (8 bytes)
+    00000028  50 6f 77 65 72 4b 35 4b  // name (8 bytes): P, o, w, e, r, K, 5, K
     00000030  50  // volume (80)
     00000031  00  // polyphony
     00000032  00  // no use
@@ -54,7 +54,7 @@ relative to the start of the payload, not the whole message.
     0000003E  11 0B 01 12 04 0D 00 00 5F 21 21 5F 5F 5F 00 00    // macro controller settings for K5000S/R (16 bytes)
     0000004E  01 0A 01 0A // SW1 and SW2 parameters
     
-    // Source data
+    // SOURCE 1 (86 bytes)
     // Control
     00000052  00 7F  // zone lo and hi
     00000054  10  // velo sw
@@ -69,9 +69,96 @@ relative to the start of the payload, not the whole message.
     0000006C  03 40 // pan
     
     // DCO
-    0000006E  02 66 // wave kit MSB and LSB      
+    0000006E  02 66 // wave kit MSB and LSB
+    00000070  34 // coarse
+    00000071  40 // fine
+    00000072  00 // fixed key
+    00000073  00 // KS Pitch
+    00000074  40 04 40 40 40 40 // Pitch Env
     
+    // DCF
+    0000007A  00 // DCF
+    0000007B  00 // Mode
+    0000007C  05 // Velo Curve
+    0000007D  02 // Resonance
+    0000007E  00 // DCF Level
+    0000007F  59 // Cutoff
+    00000080  40 // Cutoff KS Depth
+    00000081  40 // Cutoff Velo Depth
+    00000082  54 // DCF Env Depth
+    00000083  00 7F 3D 65 40 74  // DCF Env
+    00000089  40 40 // DCF KS To Env
+    0000008B  4D 40 40  // DCF Velo To Env
     
+    // DCA
+    0000008E  01  // DCA Velo Curve
+    0000008F  00 7F 7F 5E 7F 74  // DCA Env
+    00000095  40 40 40 40  // DCA KS to Env
+    00000099  37 40 40 40  // DCA Velo Sense
     
+    // LFO
+    0000009D  00  // Waveform
+    0000009E  03  // Speed
+    0000009F  00  // Delay onset
+    000000A0  00 00 // Fade in 
+    000000A2  00 40  // Pitch (Vibrato)
+    000000A4  10 40  // DCF (Growl)
+    000000A6  00 40  // DCA (Tremolo)
     
+    // SOURCE 2 (86 bytes))
+    000000A8  00 7F  // zone lo and hi
+    000000AA  10  // velo sw
+    000000AB  01  // effect path
+    000000AC  6D  // volume
+    000000AD  02 00 // bender
+    000000AF  00 40 00 40  // pressure
+    000000B3  01 21 00 40  // wheel
+    000000B7  02 5F 00 40  // expression
+    000000BB  00 00 40 00 00 40 // assignable
+    000000C1  00  // key on delay
+    000000C2  00 10 // pan
     
+    // DCO
+    000000C4  03 0C  // wave kit MSB and LSB
+    000000C6  58  // coarse
+    000000C7  40  // fine
+    000000C8  00  // fixed key
+    000000C9  00  // KS Pitch
+    000000CA  01 7F 40 7F 40 40  // Pitch Env
+    
+    // DCF
+    000000D0  00  // DCF
+    000000D1  00  // mode
+    000000D2  05  // Velo curve
+    000000D3  03  // Resonance
+    000000D4  00  // DCF Level
+    000000D5  7A  // Cutoff 
+    000000D6  40  // Cutoff KS Depth
+    000000D7  40  // Cutoff Velo Depth
+    000000D8  40  // DCF Env Depth
+    000000D9  00 75 6D 53 7F 74 // DCF Env
+    000000DF  40 40 // DCF KS To Env
+    000000E1  78 40 40 // DCF Velo To Env
+    
+    // DCA
+    000000E4  01  // DCA Velo Curve
+    000000E5  00 7F 7F 5C 7F 74   // DCA Env
+    000000EB  40 40 40 40  // DCA KS To Env
+    000000EF  00 40 40 40  // DCA Velo Sense
+    
+    // LFO
+    000000F3  00  // Waveform
+    000000F4  01  // Speed
+    000000F5  01  // Delay onset
+    000000F6  0E 0A  // Fade in
+    000000F8  00 40  // Pitch (vibrato) 
+    000000FA  17 40  // DCF (Growl)           
+    000000FC  00 40  // DCA (Tremolo)
+    
+    // SOURCE 3 (86 bytes)
+    000000FE
+    
+    // SOURCE 4
+    // SOURCE 5
+    
+    // ADD Kits for ADD sources, ordered by source number
