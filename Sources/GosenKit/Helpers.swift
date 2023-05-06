@@ -44,7 +44,6 @@ extension String {
         }
         else {
             return self.padded(with: " ", to: length, from: .right)
-            //return self.padding(toLength: length, withPad: " ", startingAt: self.count - 1)
         }
     }
 }
@@ -162,4 +161,29 @@ public struct Zone: Codable {
         self.high = high
         self.low = low
     }
+}
+
+public class PatchName: Codable {
+    public static let length = 8
+    
+    private var value: String
+    
+    public var name: String { value }
+    
+    public init(_ name: String) {
+        // Make the name exactly `length` characters,
+        // padding from the right if necessary.
+        self.value = name.adjusted(length: PatchName.length, pad: " ")
+    }
+    
+    public init(data: ByteArray) {
+        self.value = String(data: Data(data), encoding: .ascii) ?? "--------"
+    }
+}
+
+// MARK: - SystemExclusiveData
+
+extension PatchName: SystemExclusiveData {
+    public func asData() -> ByteArray { ByteArray(self.value.utf8) }
+    public var dataLength: Int { PatchName.length }
 }

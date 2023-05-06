@@ -13,7 +13,7 @@ public struct MultiPatch: Codable {
 
         public var effects: EffectSettings
         public var geq: [Int]  // all 0...127
-        @PatchName public var name: String // 8 characters
+        public var name: PatchName
         public var volume: UInt
         public var sectionMutes: [Bool]
         public var effectControl1: EffectControl
@@ -38,7 +38,7 @@ public struct MultiPatch: Codable {
             }
             offset += Common.geqBandCount
             
-            name = String(data: Data(d.slice(from: offset, length: PatchName.length)), encoding: .ascii) ?? "--------"
+            name = PatchName(data: d.slice(from: offset, length: PatchName.length))
             offset += PatchName.length
 
             b = d.next(&offset)
@@ -242,9 +242,8 @@ extension MultiPatch.Common: SystemExclusiveData {
         
         geq.forEach { data.append(Byte($0 + 64)) } // 58(-6)~70(+6)
         
-        let nameBuffer: ByteArray = Array(name.utf8)
-        data.append(contentsOf: nameBuffer)
-        
+        data.append(contentsOf: name.asData())
+
         data.append(Byte(volume))
                 
         return data

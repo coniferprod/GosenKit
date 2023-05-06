@@ -4,7 +4,7 @@ import XCTest
 final class SinglePatchTests: XCTestCase {
     func testName() {
         let single = SinglePatch()
-        XCTAssertEqual(single.common.name, "NewSound")
+        XCTAssertEqual(single.common.name.name, "NewSound")
     }
 
     func testDefaultSourceCount() {
@@ -94,19 +94,19 @@ final class SinglePatchTests: XCTestCase {
         if let patchURL = Bundle.module.url(forResource: "PowerK5K", withExtension: "syx") {
             if let patchData = try? Data(contentsOf: patchURL) {
                 let patch = SinglePatch(data: patchData.bytes)
-                XCTAssert(patch.common.name == "PowerK5K")
+                XCTAssert(patch.common.name.name == "PowerK5K")
             }
         }
     }
         
     func testPatchName_truncated() {
-        @PatchName var longName = "MoreThan8Chars"
-        XCTAssert(longName.count == PatchName.length)
+        var longName = PatchName("MoreThan8Chars")
+        XCTAssert(longName.name.count == PatchName.length)
     }
     
     func testPatchName_padded() {
-        @PatchName var shortName = "Name"
-        XCTAssert(shortName.count == PatchName.length)
-        XCTAssert(shortName.last! == " ")
+        var shortName = PatchName("Name")
+        XCTAssert(shortName.name.count == PatchName.length)
+        XCTAssert(shortName.name.last! == " ")
     }
 }

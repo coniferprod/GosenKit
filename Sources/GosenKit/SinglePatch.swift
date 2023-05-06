@@ -3,21 +3,6 @@ import Foundation
 import SyxPack
 
 
-/// PatchName to wrap a `String` of exactly eight characters.
-@propertyWrapper public struct PatchName: Codable {
-    public static let length = 8
-    
-    public var wrappedValue: String {
-        didSet {
-            wrappedValue = wrappedValue.adjusted(length: PatchName.length)
-        }
-    }
-    
-    public init(wrappedValue: String) {
-        self.wrappedValue = wrappedValue.adjusted(length: PatchName.length)
-    }
-}
-
 /// Additive kits keyed by source ("s1": ... etc.)
 public typealias AdditiveKitDictionary = [String: AdditiveKit]
 
@@ -72,7 +57,7 @@ public struct SinglePatch: Codable {
     
     /// Single patch common settings.
     public struct Common: Codable {
-        @PatchName public var name: String
+        public var name: PatchName
         public var volume: Int
         public var polyphony: Polyphony
         public var sourceCount: Int
@@ -92,7 +77,7 @@ public struct SinglePatch: Codable {
         
         /// Initializes the common part with default values.
         public init() {
-            name = "NewSound"
+            name = PatchName("NewSound")
             volume = 115
             polyphony = .poly
             sourceCount = 2
@@ -138,9 +123,7 @@ public struct SinglePatch: Codable {
             // Eat the drum mark (39)
             offset += 1
             
-            //print("Start name, offset = \(offset)")
-
-            name = String(data: Data(d.slice(from: offset, length: PatchName.length)), encoding: .ascii) ?? "--------"
+            name = PatchName(data: d.slice(from: offset, length: PatchName.length))
             offset += PatchName.length
             
             b = d.next(&offset)
@@ -385,18 +368,7 @@ extension SinglePatch.Common: SystemExclusiveData {
         
         data.append(0)  // drum_mark
 
-        // TODO: Ensure that name contains only ASCII characters
-        
-        //print("patch name = '\(name)'")
-        let nameBuffer: ByteArray = Array(name.utf8)
-        data.append(contentsOf: nameBuffer)
-
-        // Pad name to exactly eight characters with spaces
-        var nameIndex = name.count
-        while nameIndex < 8 {
-            data.append(0x20)
-            nameIndex += 1
-        }
+        data.append(contentsOf: name.asData())
 
         [volume, polyphony.index, 0, sourceCount].forEach {
             data.append(Byte($0))
