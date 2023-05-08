@@ -441,7 +441,7 @@ extension SinglePatch.Common: CustomStringConvertible {
         s += "Name = '\(name.value)' Volume = \(volume) Polyphony = \(polyphony)\n"
         let portamentoStatus = isPortamentoActive ? "ON" : "OFF"
         s += "Portamento = \(portamentoStatus), speed = \(portamentoSpeed)\n"
-        s += "AM = \(amplitudeModulation.rawValue)\n"
+        s += "AM = \(amplitudeModulation)\n"
         s += "\(effects)\n"
         
         s += "GEQ: "
