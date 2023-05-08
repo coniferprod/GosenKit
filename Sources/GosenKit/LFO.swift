@@ -1,7 +1,7 @@
 import SyxPack
 
 public struct LFO: Codable {
-    public enum Waveform: String, Codable, CaseIterable {
+    public enum Waveform: Int, Codable, CaseIterable {
         case triangle
         case square
         case sawtooth
@@ -134,4 +134,42 @@ extension LFO.Control: SystemExclusiveData {
     public var dataLength: Int { return LFO.Control.dataSize }
 
     public static let dataSize = 2
+}
+
+// MARK: - CustomStringConvertible
+
+extension LFO: CustomStringConvertible {
+    public var description: String {
+        var result = ""
+        result += "Waveform=\(self.waveform) Speed=\(self.speed) FadeInTime=\(self.fadeInTime) FadeInToSpeed=\(self.fadeInToSpeed) DelayOnset=\(self.delayOnset)\n"
+        result += "Vibrato: \(self.vibrato) Growl: \(self.growl) Tremolo: \(self.tremolo)"
+        return result
+    }
+}
+
+extension LFO.Waveform: CustomStringConvertible {
+    public var description: String {
+        var result = ""
+        switch self {
+        case .triangle:
+            result = "TRI"
+        case .square:
+            result = "SQR"
+        case .sawtooth:
+            result = "SAW"
+        case .sine:
+            result = "SIN"
+        case .random:
+            result = "RND"
+        }
+        return result
+    }
+}
+
+extension LFO.Control: CustomStringConvertible {
+    public var description: String {
+        var result = ""
+        result += "Depth=\(self.depth) KeyScaling=\(self.keyScaling)"
+        return result
+    }
 }

@@ -317,25 +317,35 @@ extension EffectSettings: CustomStringConvertible {
         result += effectName.name
         
         if effectNumber == 0 {
-            result += " dry/wet"
+            result += " Dry/Wet"
         }
         else {
-            result += " depth"
+            result += " Depth"
         }
-        result += "\(effectDefinition.depth), "
+        result += "=\(effectDefinition.depth) "
         
-        result += "\(effectName.parameterNames[0])=\(effectDefinition.parameter1), "
-        result += "\(effectName.parameterNames[1])=\(effectDefinition.parameter2), "
-        result += "\(effectName.parameterNames[2])=\(effectDefinition.parameter3), "
-        result += "\(effectName.parameterNames[3])=\(effectDefinition.parameter4)\n"
+        if effectName.parameterNames[0] != "?" {
+            result += "\(effectName.parameterNames[0])=\(effectDefinition.parameter1) "
+        }
+        
+        if effectName.parameterNames[1] != "?" {
+            result += "\(effectName.parameterNames[1])=\(effectDefinition.parameter2) "
+        }
+
+        if effectName.parameterNames[2] != "?" {
+            result += "\(effectName.parameterNames[2])=\(effectDefinition.parameter3) "
+        }
+        
+        if effectName.parameterNames[3] != "?" {
+            result += "\(effectName.parameterNames[3])=\(effectDefinition.parameter4)"
+        }
 
         return result
     }
     
     /// Gets a printable representation of the effect settings.
     public var description: String {
-        var s = ""
-        s += "Effect Settings:\n"
+        var s = "\nEffect Settings:\n"
         s += "Algorithm = \(algorithm)\n"
         
         s += getEffectString(effectDefinition: reverb, effectNumber: 0)

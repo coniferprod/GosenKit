@@ -302,10 +302,10 @@ extension Source.Control: CustomStringConvertible {
         s += "Velocity Switch: \(velocitySwitch)\n"
         s += "Effect Path = \(effectPath)\n"
         s += "Volume = \(volume)\n"
-        s += "Bender Pitch = \(benderPitch), Bender Cutoff = \(benderCutoff)\n"
-        s += "Modulation:\n\(modulation)\n"
+        s += "Bender: pitch = \(benderPitch), cutoff = \(benderCutoff)\n"
+        s += "Modulation = \(modulation)\n"
         s += "Key On Delay = \(keyOnDelay)\n"
-        s += "Pan Settings:\n\(pan)\n"
+        s += "Pan Settings: \(pan)\n"
         return s
     }
 }
@@ -321,7 +321,24 @@ extension Source.Control.Modulation: CustomStringConvertible {
 extension Source.Control.Pan: CustomStringConvertible {
     public var description: String {
         var s = ""
-        s += "kind=\(kind.rawValue), value=\(value)"
+        s += "kind=\(kind), value=\(value)"
         return s
+    }
+}
+
+extension Source.Control.Pan.Kind: CustomStringConvertible {
+    public var description: String {
+        var result = ""
+        switch self {
+        case .normal:
+            result = "Normal"
+        case .random:
+            result = "Random"
+        case .keyScale:
+            result = "Key Scale"
+        case .negativeKeyScale:
+            result = "Negative Key Scale"
+        }
+        return result
     }
 }

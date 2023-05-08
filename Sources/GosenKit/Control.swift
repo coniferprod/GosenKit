@@ -208,7 +208,7 @@ public struct SwitchControl: Codable {
     }
 }
 
-public enum ControlSource: String, Codable, CaseIterable {
+public enum ControlSource: Int, Codable, CaseIterable {
     case bender
     case channelPressure
     case wheel
@@ -245,7 +245,7 @@ public enum ControlSource: String, Codable, CaseIterable {
     }
 }
 
-public enum EffectDestination: String, Codable, CaseIterable {
+public enum EffectDestination: Int, Codable, CaseIterable {
     case effect1DryWet
     case effect1Parameter
     case effect2DryWet
@@ -434,7 +434,7 @@ extension SwitchControl: SystemExclusiveData {
 extension AssignableController: CustomStringConvertible {
     public var description: String {
         var s = ""
-        s += "source=\(source.rawValue), destination=\(destination.rawValue), depth=\(depth)"
+        s += "source=\(source), destination=\(destination), depth=\(depth)"
         return s
     }
 }
@@ -442,14 +442,14 @@ extension AssignableController: CustomStringConvertible {
 extension EffectControl.Source: CustomStringConvertible {
     public var description: String {
         var s = ""
-        s += "source=\(source.rawValue), destination=\(destination.rawValue), depth=\(depth)"
+        s += "source=\(source), destination=\(destination), depth=\(depth)"
         return s
     }
 }
 
 extension EffectControl: CustomStringConvertible {
     public var description: String {
-        var s = "Effect Control:\n"
+        var s = "\nEffect Control:\n"
         s += "    Source1: \(source1)\n"
         s += "    Source2: \(source2)\n"
         return s
@@ -459,8 +459,8 @@ extension EffectControl: CustomStringConvertible {
 extension MacroController: CustomStringConvertible {
     public var description: String {
         var s = ""
-        s += "destination1=\(destination1.rawValue), depth1=\(depth1)\n"
-        s += "destination2=\(destination2.rawValue), depth1=\(depth2)\n"
+        s += "destination1=\(destination1), depth1=\(depth1)\n"
+        s += "destination2=\(destination2), depth1=\(depth2)\n"
         return s
     }
 }
@@ -470,5 +470,163 @@ extension VelocitySwitch: CustomStringConvertible {
         var s = ""
         s += "\(kind.rawValue), threshold=\(threshold)"
         return s
+    }
+}
+
+extension ControlSource: CustomStringConvertible {
+    public var description: String {
+        var result = ""
+        switch self {
+        case .bender:
+            result = "Bender"
+        case .channelPressure:
+            result = "Channel Pressure"
+        case .wheel:
+            result = "Wheel"
+        case .expression:
+            result = "Expression"
+        case .midiVolume:
+            result = "MIDI Volume"
+        case .panPot:
+            result = "Pan Pot"
+        case .generalController1:
+            result = "General Controller 1"
+        case .generalController2:
+            result = "General Controller 2"
+        case .generalController3:
+            result = "General Controller 3"
+        case .generalController4:
+            result = "General Controller 4"
+        case .generalController5:
+            result = "General Controller 5"
+        case .generalController6:
+            result = "General Controller 6"
+        case .generalController7:
+            result = "General Controller 7"
+        case .generalController8:
+            result = "General Controller 8"
+        }
+        return result
+    }
+}
+
+extension ControlDestination: CustomStringConvertible {
+    public var description: String {
+        var result = ""
+        switch self {
+        case .pitchOffset:
+            result = "Pitch Offset"
+        case .cutoffOffset:
+            result = "Cutoff Offset"
+        case .level:
+            result = "Level"
+        case .vibratoDepthOffset:
+            result = "Vibrato Depth Offset"
+        case .growlDepthOffset:
+            result = "Growl Depth Offset"
+        case .tremoloDepthOffset:
+            result = "Tremolo Depth Offset"
+        case .lfoSpeedOffset:
+            result = "LFO Speed Offset"
+        case .attackTimeOffset:
+            result = "Attack Time Offset"
+        case .decay1TimeOffset:
+            result = "Decay 1 Time Offset"
+        case .releaseTimeOffset:
+            result = "Release Time Offset"
+        case .velocityOffset:
+            result = "Velocity Offset"
+        case .resonanceOffset:
+            result = "Resonance Offset"
+        case .panPotOffset:
+            result = "Pan Pot Offset"
+        case .formantFilterBiasOffset:
+            result = "Formant Filter Bias Offset"
+        case .formantFilterEnvelopeLfoDepthOffset:
+            result = "Formant Filter Envelope LFO Depth Offset"
+        case .formantFilterEnvelopeLfoSpeedOffset:
+            result = "Formant Filter Envelope LFO Speed Offset"
+        case .harmonicLowOffset:
+            result = "Harmonic Low Offset"
+        case .harmonicHighOffset:
+            result = "Harmonic High Offset"
+        case .harmonicEvenOffset:
+            result = "Harmonic Even Offset"
+        case .harmonicOddOffset:
+            result = "Harmonic Odd Offset"
+        }
+        return result
+    }
+}
+
+extension EffectDestination: CustomStringConvertible {
+    public var description: String {
+        var result = ""
+        switch self {
+        case .effect1DryWet:
+            result = "Effect 1 Dry/Wet"
+        case .effect1Parameter:
+            result = "Effect 1 Parameter"
+        case .effect2DryWet:
+            result = "Effect 2 Dry/Wet"
+        case .effect2Parameter:
+            result = "Effect 2 Parameter"
+        case .effect3DryWet:
+            result = "Effect 3 Dry/Wet"
+        case .effect3Parameter:
+            result = "Effect 3 Parameter"
+        case .effect4DryWet:
+            result = "Effect 4 Dry/Wet"
+        case .effect4Parameter:
+            result = "Effect 4 Parameter"
+        case .reverbDryWet1:
+            result = "Reverb Dry/Wet 1"
+        case .reverbDryWet2:
+            result = "Reverb Dry/Wet 2"
+        }
+        return result
+    }
+}
+
+extension SwitchControl.Kind: CustomStringConvertible {
+    public var description: String {
+        var result = ""
+        switch self {
+        case .off:
+            result = "OFF"
+        case .harmMax:
+            result = "HARMMAX"
+        case .harmBright:
+            result = "HARMBRIT"
+        case .harmDark:
+            result = "HARMDARK"
+        case .harmSaw:
+            result = "HARMSAW"
+        case .selectLoud:
+            result = "SELECTLOUD"
+        case .addLoud:
+            result = "DHL LOUD"
+        case .addFifth:
+            result = "DHL 5TH"
+        case .addOdd:
+            result = "DHL ODD"
+        case .addEven:
+            result = "DHL EVEN"
+        case .he1:
+            result = "DHE#1"
+        case .he2:
+            result = "DHE#2"
+        case .harmonicEnvelopeLoop:
+            result = "DHE LOOP ON"
+        case .ffMax:
+            result = "DHF MAX"
+        case .ffComb:
+            result = "DHF COMB"
+        case .ffHiCut:
+            result = "DHF HICUT"
+        case .ffComb2:
+            result = "DHF COMB2"
+        }
+        return result
     }
 }

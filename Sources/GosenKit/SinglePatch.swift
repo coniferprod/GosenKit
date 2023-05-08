@@ -456,10 +456,10 @@ extension SinglePatch.Common: CustomStringConvertible {
             s += "User \(index + 1):\n\(element)\n"
         }
         
-        s += "Switch1=\(switches.switch1.rawValue)\n"
-        s += "Switch2=\(switches.switch2.rawValue)\n"
-        s += "FootSwitch1=\(switches.footSwitch1.rawValue)\n"
-        s += "FootSwitch2=\(switches.footSwitch2.rawValue)\n"
+        s += "Switch1=\(switches.switch1)\n"
+        s += "Switch2=\(switches.switch2)\n"
+        s += "FootSwitch1=\(switches.footSwitch1)\n"
+        s += "FootSwitch2=\(switches.footSwitch2)\n"
 
         s += "\n"
         return s

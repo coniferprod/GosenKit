@@ -170,9 +170,9 @@ extension Oscillator: SystemExclusiveData {
 extension Oscillator: CustomStringConvertible {
     /// Gets a text representation of the oscillator.
     public var description: String {
-        var s = "Wave: \(wave) "
+        var s = "Wave: '\(wave)' "
         s += "Coarse=\(coarse) Fine=\(fine) KStoPitch=\(keyScalingToPitch.rawValue) FixedKey=\(fixedKey)\n"
-        s += "Pitch Envelope:\n\(pitchEnvelope)\n"
+        s += "Pitch Envelope = \(pitchEnvelope)\n"
         return s
     }
 }
@@ -184,5 +184,22 @@ extension Oscillator.PitchEnvelope: CustomStringConvertible {
         s += "start=\(start), attackTime=\(attackTime), attackLevel=\(attackLevel), decayTime=\(decayTime)\n"
         s += "timeVelSens=\(timeVelocitySensitivity) levelVelSens=\(levelVelocitySensitivity)\n"
         return s
+    }
+}
+
+extension Oscillator.KeyScaling: CustomStringConvertible {
+    public var description: String {
+        var result = ""
+        switch self {
+        case .zeroCent:
+            result = "0cent"
+        case .twentyFiveCent:
+            result = "25cent"
+        case .thirtyTreeCent:
+            result = "33cent"
+        case .fiftyCent:
+            result = "50cent"
+        }
+        return result
     }
 }
