@@ -167,32 +167,51 @@ public struct PatchName: Codable {
     /// Length of patch name in characters.
     public static let length = 8
     
-    /// Read-only property to get the value.
-    public var value: String { return _value }
+    private(set) var _value: String = PatchName.wrapped(name: " ")
     
-    private(set) var _value: String
+    private static func wrapped(name: String) -> String {
+        return name.adjusted(length: PatchName.length, pad: " ")
+    }
     
+    /// Value of the wrapped String.
+    public var value: String {
+        get {
+            return _value
+        }
+        
+        set {
+            self._value = PatchName.wrapped(name: newValue)
+        }
+    }
+        
     /// Initializes the patch name from a `String`.
     /// The name is padded or truncated to `length` characters if necessary.
     public init(_ name: String) {
-        self._value = name.adjusted(length: PatchName.length, pad: " ")
+        self.value = name  // let property setter handle the adjustment
     }
     
     /// Initializes the patch name from MIDI System Exclusive data bytes.
     public init(data: ByteArray) {
-        self._value = String(data: Data(data), encoding: .ascii) ?? "--------"
+        self.value = String(data: Data(data), encoding: .ascii) ?? "--------"
     }
 }
 
 public struct InstrumentNumber: Codable {
     /// Read-only property to get the value.
-    public var value: UInt { _value }
+    public var value: UInt {
+        get {
+            return _value
+        }
+        set {
+            _value = newValue
+        }
+    }
     
-    private(set) var _value: UInt
+    private(set) var _value: UInt = 1  // defaults to Inst. No 1 (A001)
         
     /// Initializes the instrument number.
     public init(number: UInt) {
-        self._value = number
+        self.value = number
     }
     
     /// Initializes the instrument number from MIDI System Exclusive bytes.
@@ -201,7 +220,7 @@ public struct InstrumentNumber: Codable {
         let instrumentLSBString = String(lsb, radix: 2).padded(with: "0", to: 7)
         let bitString = instrumentMSBString + instrumentLSBString
         // now we should have a 9-bit binary string, convert it to a decimal number
-        self._value = UInt(bitString, radix: 2)!
+        self.value = UInt(bitString, radix: 2)!
     }
 }
 
