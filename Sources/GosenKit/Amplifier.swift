@@ -1,6 +1,8 @@
 import SyxPack
 
+/// Amplifier (DCA)
 public struct Amplifier: Codable {
+    /// Amplifier envelope
     public struct Envelope: Codable, Equatable {
         // All values are 0...127
         public var attackTime: Int
@@ -10,6 +12,7 @@ public struct Amplifier: Codable {
         public var decay2Level: Int
         public var releaseTime: Int
         
+        /// Initialize amplifier envelope with default values.
         public init() {
             attackTime = 0
             decay1Time = 0
@@ -19,6 +22,7 @@ public struct Amplifier: Codable {
             releaseTime = 0
         }
         
+        /// Initialize amplifier envelope with explicit values.
         public init(attackTime: Int, decay1Time: Int, decay1Level: Int, decay2Time: Int, decay2Level: Int, releaseTime: Int) {
             self.attackTime = attackTime
             self.decay1Time = decay1Time
@@ -28,6 +32,7 @@ public struct Amplifier: Codable {
             self.releaseTime = releaseTime
         }
         
+        /// Initialize amplifier envelope from MIDI System Exclusive data bytes.
         public init(data d: ByteArray) {
             //print("Amplifier envelope data (\(d.count) bytes): \(d.hexDump)")
 
@@ -54,7 +59,9 @@ public struct Amplifier: Codable {
         }
     }
 
+    /// Amplifier modulation settings.
     public struct Modulation: Codable {
+        /// Key scaling control for amplifier modulation.
         public struct KeyScalingControl: Codable {
             // All values are -63...+63
             public var level: Int
@@ -96,6 +103,7 @@ public struct Amplifier: Codable {
             }
         }
 
+        /// Velocity control for amplifier modulation.
         public struct VelocityControl: Codable {
             // Almost the same as KeyScalingControl, but level is positive only (0...63),
             // others are -63...+63.

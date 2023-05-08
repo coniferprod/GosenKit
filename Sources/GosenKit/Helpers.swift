@@ -163,35 +163,39 @@ public struct Zone: Codable {
     }
 }
 
-public class PatchName: Codable {
+public struct PatchName: Codable {
+    /// Length of patch name in characters.
     public static let length = 8
     
-    private var _value: String
+    /// Read-only property to get the value.
+    public var value: String { return _value }
     
-    public var value: String { _value }
+    private(set) var _value: String
     
+    /// Initializes the patch name from a `String`.
+    /// The name is padded or truncated to `length` characters if necessary.
     public init(_ name: String) {
-        // Make the name exactly `length` characters,
-        // padding from the right if necessary.
         self._value = name.adjusted(length: PatchName.length, pad: " ")
     }
     
+    /// Initializes the patch name from MIDI System Exclusive data bytes.
     public init(data: ByteArray) {
         self._value = String(data: Data(data), encoding: .ascii) ?? "--------"
     }
 }
 
-public class InstrumentNumber: Codable {
-    private var _value: UInt
-    
+public struct InstrumentNumber: Codable {
+    /// Read-only property to get the value.
     public var value: UInt { _value }
     
-    /// Initializes an instrument number.
+    private(set) var _value: UInt
+        
+    /// Initializes the instrument number.
     public init(number: UInt) {
         self._value = number
     }
     
-    /// Constructs an instrument number from MIDI System Exclusive bytes.
+    /// Initializes the instrument number from MIDI System Exclusive bytes.
     public init(msb: Byte, lsb: Byte) {
         let instrumentMSBString = String(msb, radix: 2).padded(with: "0", to: 2)
         let instrumentLSBString = String(lsb, radix: 2).padded(with: "0", to: 7)

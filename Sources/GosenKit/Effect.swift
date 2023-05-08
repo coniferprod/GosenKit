@@ -340,6 +340,7 @@ extension EffectSettings: CustomStringConvertible {
             result += "\(effectName.parameterNames[3])=\(effectDefinition.parameter4)"
         }
 
+        result += "\n"
         return result
     }
     

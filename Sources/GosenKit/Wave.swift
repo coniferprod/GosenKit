@@ -2,10 +2,11 @@ import SyxPack
 
 
 /// Wave for PCM sources, with special case for additive.
-public class Wave: Codable {
-    public var number: Int  // wave number 1~464 or 512
+public struct Wave: Codable {
+    private(set) var number: Int  // wave number 1~464 or 512
     
-    public static let additive = Wave(number: 512)
+    private static let additiveWaveNumber: Int = 512
+    public static let additive = Wave(number: additiveWaveNumber)
     
     public init(number: Int) {
         self.number = number
@@ -16,15 +17,16 @@ public class Wave: Codable {
     }
     
     public var name: String {
-        if self.number == 512 {
+        if self.isAdditive {
             return "ADD"
         }
         
-        return Wave.names[self.number]
+        return Wave.names[Int(self.number)]
     }
     
-    public func isAdditive() -> Bool {
-        return self.number == 512
+    /// Is this wave the additive wave or not.
+    public var isAdditive: Bool {
+        return self.number == Wave.additiveWaveNumber
     }
     
     public static func numberFromBytes(_ msb: Byte, _ lsb: Byte) -> Int? {
@@ -34,7 +36,7 @@ public class Wave: Codable {
         // Now we should have a 10-bit binary string, convert it to a decimal number.
         // The wave number is zero-based in the SysEx file, but treated as one-based.
         if let number = Int(waveString, radix: 2) {
-            if number == 512 {  // ADD
+            if number == Wave.additiveWaveNumber {
                 return number  // don't adjust the ADD wave number
             }
             return number + 1
@@ -43,7 +45,8 @@ public class Wave: Codable {
     }
     
     private func asBytes() -> (msb: Byte, lsb: Byte) {
-        let num = self.isAdditive() ? self.number : self.number - 1  // adjust wave number to 0~463 (but don't adjust ADD wave 512)
+        // Adjust wave number to 0~463 (but don't adjust ADD wave 512)
+        let num = self.isAdditive ? self.number : self.number - 1
         
         // Convert wave kit number to binary string with 10 digits
         // using a String extension (see Helpers.swift).
@@ -569,7 +572,7 @@ extension Wave: SystemExclusiveData {
 
 extension Wave: CustomStringConvertible {
     public var description: String {
-        if self.isAdditive() {
+        if self.isAdditive {
             return "ADD"
         }
         else {

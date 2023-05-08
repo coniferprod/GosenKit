@@ -12,6 +12,7 @@ public struct AdditiveKit: Codable {
     public var bands: FormantFilter.Bands
     public var envelopes: [HarmonicEnvelope]
     
+    /// Initializes an additive kit with default values.
     public init() {
         common = HarmonicCommon()
         morf = Morf()
@@ -34,10 +35,11 @@ public struct AdditiveKit: Codable {
         }
     }
     
+    /// Initializes an additive kit from MIDI System Exclusive data bytes.
     public init(data d: ByteArray) {
         var offset: Int = 0
 
-        let originalChecksum = d.next(&offset)
+        let _ = d.next(&offset)
         //print("From SysEx, ADD kit checksum = \(String(originalChecksum, radix: 16))")
         
         common = HarmonicCommon(data: d.slice(from: offset, length: HarmonicCommon.dataSize))
@@ -68,9 +70,11 @@ public struct AdditiveKit: Codable {
         }
     }
 
-    // Additive kit checksum:
-    // {(HCKIT sum) + (HCcode1 sum) + (HCcode2 sum) + (FF sum) + (HCenv sum) + (loud sense select) + 0xA5} & 0x7F
+    /// The checksum of the additive kit.
     public var checksum: Byte {
+        // Additive kit checksum:
+        // {(HCKIT sum) + (HCcode1 sum) + (HCcode2 sum) + (FF sum) + (HCenv sum) + (loud sense select) + 0xA5} & 0x7F
+
         var totalSum: Int = 0
         var byteCount = 0
         

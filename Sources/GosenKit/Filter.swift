@@ -1,10 +1,13 @@
 import SyxPack
 
+/// Filter (DCF).
 public struct Filter: Codable {
-    public enum Mode: String, Codable, CaseIterable {
+    /// Filter mode.
+    public enum Mode: Int, Codable, CaseIterable {
         case lowPass
         case highPass
         
+        /// Initializes filter mode from SysEx byte.
         public init?(index: Int) {
             switch index {
             case 0: self = .lowPass
@@ -14,6 +17,7 @@ public struct Filter: Codable {
         }
     }
 
+    /// Filter envelope.
     public struct Envelope: Codable {
         public var attackTime: Int
         public var decay1Time: Int
@@ -192,11 +196,24 @@ extension Filter.Envelope: SystemExclusiveData {
 extension Filter: CustomStringConvertible {
     public var description: String {
         var s = ""
-        s += "Active=" + (isActive ? "YES" : "NO") + " Mode=\(mode.rawValue)\n"
+        s += "Active=" + (isActive ? "YES" : "NO") + " Mode=\(mode)\n"
         s += "Cutoff=\(cutoff) Resonance=\(resonance) Level=\(level)\n"
         s += "Vel.Curve=\(velocityCurve) KStoCut=\(keyScalingToCutoff) VelToCut=\(velocityToCutoff)\n"
         s += "Env.Depth=\(envelopeDepth)\n"
         s += "Filter Envelope:\n\(envelope)\n"
+        return s
+    }
+}
+
+extension Filter.Mode: CustomStringConvertible {
+    public var description: String {
+        var s = ""
+        switch self {
+        case .lowPass:
+            s = "LP"
+        case .highPass:
+            s = "HP"
+        }
         return s
     }
 }

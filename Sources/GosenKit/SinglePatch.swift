@@ -242,7 +242,7 @@ public struct SinglePatch: Codable {
         additiveKits = AdditiveKitDictionary()
         
         // How many additive kits should we expect then?
-        let additiveKitCount = sources.filter{ $0.oscillator.wave.isAdditive() }.count
+        let additiveKitCount = sources.filter{ $0.oscillator.wave.isAdditive }.count
         var kitIndex = 0
         while kitIndex < additiveKitCount {
             let kit = AdditiveKit(data: d.slice(from: offset, length: AdditiveKit.dataSize))
