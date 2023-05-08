@@ -1,8 +1,10 @@
 import SyxPack
 
 
+/// Effect definition.
 public struct EffectDefinition: Codable {
-    public enum Kind: String, Codable, CaseIterable {
+    /// Effect kind enumeration.
+    public enum Kind: Int, Codable, CaseIterable {
         case hall1
         case hall2
         case hall3
@@ -52,6 +54,8 @@ public struct EffectDefinition: Codable {
         case overdriveAndDelay
         case distortionAndDelay
         
+        /// Initialize effect definition from System Exclusive byte value.
+        /// Fails if byte is outside the enum value range.
         public init?(index: Int) {
             switch index {
             case 0: self = .hall1
@@ -107,12 +111,17 @@ public struct EffectDefinition: Codable {
         }
     }
     
+    /// Name of the effect and its parameters.
     public struct Name: Codable {
+        /// Effect name.
         public var name: String
+        
+        /// Effect parameter names. There are always four values,
+        /// and unused parameters are represented with "?".
         public var parameterNames: [String]
     }
 
-    public static let names = [Name]([
+    public static let names: [Name] = [
         /*  0 */ Name(name: "Hall 1", parameterNames: ["Dry/Wet 2", "Reverb Time", "Predelay Time", "High Frequency Damping"]),
         /*  1 */ Name(name: "Hall 2", parameterNames: ["Dry/Wet 2", "Reverb Time", "Predelay Time", "High Frequency Damping"]),
         /*  2 */ Name(name: "Hall 3", parameterNames: ["Dry/Wet 2", "Reverb Time", "Predelay Time", "High Frequency Damping"]),
@@ -161,7 +170,7 @@ public struct EffectDefinition: Codable {
         /* 45 */ Name(name: "Distortion", parameterNames: ["EQ Low", "EQ High", "Output Level", "Drive"]),
         /* 46 */ Name(name: "Overdrive & Delay", parameterNames: ["EQ Low", "EQ High", "Delay Time", "Drive"]),
         /* 47 */ Name(name: "Distortion & Delay", parameterNames: ["EQ Low", "EQ High", "Delay Time", "Drive"]),
-    ])
+    ]
 
     public var kind: Kind  // reverb = 0...10, other effects = 11...47
     public var depth: Int  // 0~100  // reverb dry/wet1 = depth
@@ -170,6 +179,7 @@ public struct EffectDefinition: Codable {
     public var parameter3: Int
     public var parameter4: Int
     
+    /// Initializes the effect definition with default values.
     public init() {
         kind = .room1
         depth = 0
@@ -179,6 +189,7 @@ public struct EffectDefinition: Codable {
         parameter4 = 0
     }
     
+    /// Initializes the effect definition from MIDI System Exclusive data.
     public init(data d: ByteArray) {
         var offset: Int = 0
         var b: Byte = 0
@@ -203,6 +214,7 @@ public struct EffectDefinition: Codable {
     }
 }
 
+/// Represents the effect settings for a patch.
 public struct EffectSettings: Codable {
     public var algorithm: Int  // 1...4
     public var reverb: EffectDefinition
@@ -211,6 +223,7 @@ public struct EffectSettings: Codable {
     public var effect3: EffectDefinition
     public var effect4: EffectDefinition
     
+    /// Initializes the effect settings with defaults.
     public init() {
         algorithm = 1
         reverb = EffectDefinition()
@@ -220,6 +233,7 @@ public struct EffectSettings: Codable {
         effect4 = EffectDefinition()
     }
     
+    /// Initializes the effect settings from MIDI System Exclusive data bytes.
     public init(data d: ByteArray) {
         var offset: Int = 0
         var b: Byte = 0
@@ -246,6 +260,7 @@ public struct EffectSettings: Codable {
 // MARK: - SystemExclusiveData
 
 extension EffectDefinition: SystemExclusiveData {
+    /// Gets the effect definition as MIDI System Exclusive data bytes.
     public func asData() -> ByteArray {
         var data = ByteArray()
         
@@ -260,7 +275,9 @@ extension EffectDefinition: SystemExclusiveData {
         return data
     }
     
+    /// Number of MIDI System Exclusive bytes.
     public var dataLength: Int { return EffectDefinition.dataSize }
+    
     public static let dataSize = 6
 }
 
@@ -285,15 +302,48 @@ extension EffectSettings: SystemExclusiveData {
 // MARK: - CustomStringConvertible
 
 extension EffectSettings: CustomStringConvertible {
+    // Helper function to construct a printable effect definition string.
+    private func getEffectString(effectDefinition: EffectDefinition, effectNumber: Int) -> String {
+        var result = ""
+        
+        if effectNumber == 0 {  // means reverb
+            result += "Reverb: "
+        }
+        else {
+            result += "Effect \(effectNumber): "
+        }
+
+        let effectName = EffectDefinition.names[effectDefinition.kind.rawValue]
+        result += effectName.name
+        
+        if effectNumber == 0 {
+            result += " dry/wet"
+        }
+        else {
+            result += " depth"
+        }
+        result += "\(effectDefinition.depth), "
+        
+        result += "\(effectName.parameterNames[0])=\(effectDefinition.parameter1), "
+        result += "\(effectName.parameterNames[1])=\(effectDefinition.parameter2), "
+        result += "\(effectName.parameterNames[2])=\(effectDefinition.parameter3), "
+        result += "\(effectName.parameterNames[3])=\(effectDefinition.parameter4)\n"
+
+        return result
+    }
+    
+    /// Gets a printable representation of the effect settings.
     public var description: String {
         var s = ""
         s += "Effect Settings:\n"
         s += "Algorithm = \(algorithm)\n"
-        s += "Reverb: type=\(reverb.kind.rawValue), dry/wet=\(reverb.depth), para1=\(reverb.parameter1), para2=\(reverb.parameter2), para3=\(reverb.parameter3), para4=\(reverb.parameter4)\n"
-        s += "Effect1: type=\(effect1.kind.rawValue), depth=\(effect1.depth), para1=\(effect1.parameter1), para2=\(effect1.parameter2), para3=\(effect1.parameter3), para4=\(effect1.parameter4)\n"
-        s += "Effect2: type=\(effect2.kind.rawValue), depth=\(effect2.depth), para1=\(effect2.parameter1), para2=\(effect2.parameter2), para3=\(effect2.parameter3), para4=\(effect2.parameter4)\n"
-        s += "Effect3: type=\(effect3.kind.rawValue), depth=\(effect3.depth), para1=\(effect3.parameter1), para2=\(effect3.parameter2), para3=\(effect3.parameter3), para4=\(effect3.parameter4)\n"
-        s += "Effect4: type=\(effect4.kind.rawValue), depth=\(effect4.depth), para1=\(effect4.parameter1), para2=\(effect4.parameter2), para3=\(effect4.parameter3), para4=\(effect4.parameter4)"
+        
+        s += getEffectString(effectDefinition: reverb, effectNumber: 0)
+        s += getEffectString(effectDefinition: effect1, effectNumber: 1)
+        s += getEffectString(effectDefinition: effect2, effectNumber: 2)
+        s += getEffectString(effectDefinition: effect3, effectNumber: 3)
+        s += getEffectString(effectDefinition: effect4, effectNumber: 4)
+
         return s
     }
 }
