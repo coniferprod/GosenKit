@@ -9,7 +9,7 @@ public struct MultiPatch: Codable {
     
     /// Common settings for multi patch.
     public struct Common: Codable {
-        static let geqBandCount = 7
+        public static let geqBandCount = 7
 
         public var effects: EffectSettings
         public var geq: [Int]  // all 0...127
@@ -19,6 +19,17 @@ public struct MultiPatch: Codable {
         public var effectControl1: EffectControl
         public var effectControl2: EffectControl
 
+        /// Initialize common settings with defaults.
+        public init() {
+            effects = EffectSettings()
+            geq = [Int](repeating: 0, count: Common.geqBandCount)
+            name = PatchName("NewMulti")
+            volume = 127
+            sectionMutes = [Bool](repeating: false, count: MultiPatch.sectionCount)
+            effectControl1 = EffectControl()
+            effectControl2 = EffectControl()
+        }
+        
         /// Initializes the common part of a multi patch from MIDI System Exclusive data.
         /// - Parameter d: A byte array with the System Exclusive data.
         public init(data d: ByteArray) {
@@ -63,7 +74,7 @@ public struct MultiPatch: Codable {
     
     /// One section of a multi patch.
     public struct Section: Codable {
-        public var singlePatchNumber: UInt
+        public var single: InstrumentNumber
         public var volume: UInt
         public var pan: Int
         public var effectPath: UInt
@@ -72,6 +83,19 @@ public struct MultiPatch: Codable {
         public var zone: Zone
         public var velocitySwitch: VelocitySwitch
         public var receiveChannel: UInt8
+        
+        /// Initializes a multi section with defaults.
+        public init() {
+            single = InstrumentNumber(number: 0)
+            volume = 127
+            pan = 0
+            effectPath = 0
+            transpose = 0
+            tune = 0
+            zone = Zone(high: Key(note: 0), low: Key(note: 127))
+            velocitySwitch = VelocitySwitch(kind: .off, threshold: 0)  // TODO: check these
+            receiveChannel = 1
+        }
         
         /// Initializes a multi section from MIDI System Exclusive data.
         /// - Parameter d: A byte array with the System Exclusive data.
@@ -84,12 +108,8 @@ public struct MultiPatch: Codable {
             b = d.next(&offset)
             let instrumentLSB = b
             
-            let instrumentMSBString = String(instrumentMSB, radix: 2).padded(with: "0", to: 2)
-            let instrumentLSBString = String(instrumentLSB, radix: 2).padded(with: "0", to: 7)
-            let bitString = instrumentMSBString + instrumentLSBString
-            // now we should have a 9-bit binary string, convert it to a decimal number
-            singlePatchNumber = UInt(bitString, radix: 2)!
-
+            single = InstrumentNumber(msb: instrumentMSB, lsb: instrumentLSB)
+            
             b = d.next(&offset)
             volume = UInt(b)
             
@@ -121,23 +141,7 @@ public struct MultiPatch: Codable {
             
             b = d.next(&offset)
             receiveChannel = b
-        }
-        
-        public func asBytes() -> (msb: Byte, lsb: Byte) {
-            // Convert wave kit number to binary string with 10 digits
-            // using a String extension (see Helpers.swift).
-            let waveBitString = String(self.singlePatchNumber, radix: 2).padded(with: "0", to: 9)
-            
-            // Take the first two bits and convert them to a number
-            let msbBitString = waveBitString.prefix(2)
-            let msb = Byte(msbBitString, radix: 2)!
-            
-            // Take the last seven bits and convert them to a number
-            let lsbBitString = waveBitString.suffix(7)
-            let lsb = Byte(lsbBitString, radix: 2)!
-
-            return (msb, lsb)
-        }
+        }        
     }
     
     /// Multi patch common settings.
@@ -145,6 +149,12 @@ public struct MultiPatch: Codable {
     
     /// Multi patch sections.
     public var sections: [Section]
+    
+    /// Initializes a default multi patch.
+    public init() {
+        common = Common()
+        sections = [Section](repeating: Section(), count: MultiPatch.sectionCount)
+    }
     
     /// Initializes a multi patch from MIDI System Exclusive data.
     /// - Parameter d: A byte array with the System Exclusive data.
@@ -260,9 +270,8 @@ extension MultiPatch.Section: SystemExclusiveData {
     public func asData() -> ByteArray {
         var data = ByteArray()
         
-        let (instrumentMSB, instrumentLSB) = self.asBytes()
-        data.append(instrumentMSB)
-        data.append(instrumentLSB)
+        data.append(contentsOf: single.asData())
+        
         data.append(Byte(volume))
         data.append(Byte(pan))
         data.append(Byte(effectPath))

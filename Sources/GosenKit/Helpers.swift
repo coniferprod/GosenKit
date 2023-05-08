@@ -166,18 +166,38 @@ public struct Zone: Codable {
 public class PatchName: Codable {
     public static let length = 8
     
-    private var value: String
+    private var _value: String
     
-    public var name: String { value }
+    public var value: String { _value }
     
     public init(_ name: String) {
         // Make the name exactly `length` characters,
         // padding from the right if necessary.
-        self.value = name.adjusted(length: PatchName.length, pad: " ")
+        self._value = name.adjusted(length: PatchName.length, pad: " ")
     }
     
     public init(data: ByteArray) {
-        self.value = String(data: Data(data), encoding: .ascii) ?? "--------"
+        self._value = String(data: Data(data), encoding: .ascii) ?? "--------"
+    }
+}
+
+public class InstrumentNumber: Codable {
+    private var _value: UInt
+    
+    public var value: UInt { _value }
+    
+    /// Initializes an instrument number.
+    public init(number: UInt) {
+        self._value = number
+    }
+    
+    /// Constructs an instrument number from MIDI System Exclusive bytes.
+    public init(msb: Byte, lsb: Byte) {
+        let instrumentMSBString = String(msb, radix: 2).padded(with: "0", to: 2)
+        let instrumentLSBString = String(lsb, radix: 2).padded(with: "0", to: 7)
+        let bitString = instrumentMSBString + instrumentLSBString
+        // now we should have a 9-bit binary string, convert it to a decimal number
+        self._value = UInt(bitString, radix: 2)!
     }
 }
 
@@ -186,4 +206,24 @@ public class PatchName: Codable {
 extension PatchName: SystemExclusiveData {
     public func asData() -> ByteArray { ByteArray(self.value.utf8) }
     public var dataLength: Int { PatchName.length }
+}
+
+extension InstrumentNumber: SystemExclusiveData {
+    public func asData() -> ByteArray {
+        // Convert instrument number to binary string with 9 digits
+        // using a String extension (see Helpers.swift).
+        let bitString = String(self._value, radix: 2).padded(with: "0", to: 9)
+        
+        // Take the first two bits and convert them to a number
+        let msbBitString = bitString.prefix(2)
+        let msb = Byte(bitString, radix: 2)!
+        
+        // Take the last seven bits and convert them to a number
+        let lsbBitString = bitString.suffix(7)
+        let lsb = Byte(lsbBitString, radix: 2)!
+
+        return ByteArray(arrayLiteral: msb, lsb)
+    }
+    
+    public var dataLength: Int { 2 }
 }

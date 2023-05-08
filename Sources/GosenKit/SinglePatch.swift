@@ -224,16 +224,13 @@ public struct SinglePatch: Codable {
     /// - Parameter d: A byte array with the System Exclusive data.
     public init(data d: ByteArray) {
         var offset: Int = 0
-        var b: Byte = 0
         
-        print("\(#file):\(#line) Single patch data = \(d.count) bytes")
+        //print("\(#file):\(#line) Single patch data = \(d.count) bytes")
 
-
-        b = d.next(&offset)  // checksum is the first byte
+        _ = d.next(&offset)  // checksum is the first byte
 
         common = Common(data: d.slice(from: offset, length: Common.dataSize))
         offset += Common.dataSize
-        
         
         sources = [Source]()
         for _ in 0..<common.sourceCount {
@@ -441,7 +438,7 @@ extension SinglePatch.Common: CustomStringConvertible {
     /// Printable description of the patch common settings.
     public var description: String {
         var s = ""
-        s += "Name = '\(name)' Volume = \(volume) Polyphony = \(polyphony.rawValue)\n"
+        s += "Name = '\(name.value)' Volume = \(volume) Polyphony = \(polyphony)\n"
         let portamentoStatus = isPortamentoActive ? "ON" : "OFF"
         s += "Portamento = \(portamentoStatus), speed = \(portamentoSpeed)\n"
         s += "AM = \(amplitudeModulation.rawValue)\n"
@@ -466,6 +463,33 @@ extension SinglePatch.Common: CustomStringConvertible {
 
         s += "\n"
         return s
+    }
+}
+
+extension SinglePatch.Polyphony: CustomStringConvertible {
+    /// Printable description of the polyphony setting.
+    public var description: String {
+        self.rawValue.uppercased()
+    }
+}
+
+extension SinglePatch.AmplitudeModulation: CustomStringConvertible {
+    /// Printable description of the Amplitude Modulation setting.
+    public var description: String {
+        switch self {
+        case .off:
+            return "OFF"
+        case .source2:
+            return "1->2"
+        case .source3:
+            return "2->3"
+        case .source4:
+            return "3->4"
+        case .source5:
+            return "4->5"
+        case .source6:
+            return "5->6"
+        }
     }
 }
 
