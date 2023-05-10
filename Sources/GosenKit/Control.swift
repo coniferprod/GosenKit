@@ -133,25 +133,6 @@ public struct MacroController: Codable {
         self.depth2 = depth2
     }
     
-    public init(data d: ByteArray) {
-        var offset: Int = 0
-        var b: Byte = 0
-        
-        b = d.next(&offset)
-        destination1 = ControlDestination(index: Int(b))!
-
-        b = d.next(&offset)
-        depth1 = Int(b) - 64
-        //print("depth1 byte = \(String(b, radix: 16))h, converted to \(depth1)")
-        
-        b = d.next(&offset)
-        destination2 = ControlDestination(index: Int(b))!
-
-        b = d.next(&offset)
-        depth2 = Int(b) - 64
-        //print("depth2 byte = \(String(b, radix: 16))h, converted to \(depth2)")
-    }
-    
     public static func parse(from data: ByteArray) -> Result<MacroController, ParseError> {
         var offset: Int = 0
         var b: Byte = 0
@@ -316,20 +297,6 @@ public struct EffectControl: Codable {
             depth = 0
         }
         
-        public init(data d: ByteArray) {
-            var offset: Int = 0
-            var b: Byte = 0
-        
-            b = d.next(&offset)
-            source = ControlSource(index: Int(b))!
-            
-            b = d.next(&offset)
-            destination = EffectDestination(index: Int(b))!
-            
-            b = d.next(&offset)
-            depth = Int(b) - 64
-        }
-        
         public static func parse(from data: ByteArray) -> Result<Source, ParseError> {
             var offset: Int = 0
             var b: Byte = 0
@@ -355,15 +322,6 @@ public struct EffectControl: Codable {
     public init() {
         source1 = Source()
         source2 = Source()
-    }
-    
-    public init(data d: ByteArray) {
-        var offset: Int = 0
-    
-        let length = Source.dataSize
-        source1 = Source(data: d.slice(from: offset, length: length))
-        offset += length
-        source2 = Source(data: d.slice(from: offset, length: length))
     }
     
     public static func parse(from data: ByteArray) -> Result<EffectControl, ParseError> {
@@ -400,20 +358,6 @@ public struct AssignableController: Codable {
         source = .bender
         destination = .cutoffOffset
         depth = 0
-    }
-    
-    public init(data d: ByteArray) {
-        var offset: Int = 0
-        var b: Byte = 0
-        
-        b = d.next(&offset)
-        source = ControlSource(index: Int(b))!
-        
-        b = d.next(&offset)
-        destination = ControlDestination(index: Int(b))!
-        
-        b = d.next(&offset)
-        depth = Int(b)
     }
     
     public static func parse(from data: ByteArray) -> Result<AssignableController, ParseError> {

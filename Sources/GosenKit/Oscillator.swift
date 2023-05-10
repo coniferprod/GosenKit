@@ -21,28 +21,31 @@ public struct Oscillator: Codable {
             levelVelocitySensitivity = 0
         }
         
-        /// Initializes a pitch envelope from MIDI System Exclusive data bytes.
-        public init(data d: ByteArray) {
+        public static func parse(from data: ByteArray) -> Result<PitchEnvelope, ParseError> {
             var offset: Int = 0
             var b: Byte = 0
+
+            var temp = PitchEnvelope()
             
-            b = d.next(&offset)
-            start = Int(b) - 64
+            b = data.next(&offset)
+            temp.start = Int(b) - 64
             
-            b = d.next(&offset)
-            attackTime = Int(b)
+            b = data.next(&offset)
+            temp.attackTime = Int(b)
             
-            b = d.next(&offset)
-            attackLevel = Int(b) - 64
+            b = data.next(&offset)
+            temp.attackLevel = Int(b) - 64
             
-            b = d.next(&offset)
-            decayTime = Int(b)
+            b = data.next(&offset)
+            temp.decayTime = Int(b)
             
-            b = d.next(&offset)
-            timeVelocitySensitivity = Int(b) - 64
+            b = data.next(&offset)
+            temp.timeVelocitySensitivity = Int(b) - 64
             
-            b = d.next(&offset)
-            levelVelocitySensitivity = Int(b) - 64
+            b = data.next(&offset)
+            temp.levelVelocitySensitivity = Int(b) - 64
+
+            return .success(temp)
         }
     }
 
@@ -106,7 +109,12 @@ public struct Oscillator: Codable {
         b = data.next(&offset)
         temp.keyScalingToPitch = KeyScaling(index: Int(b))!
 
-        temp.pitchEnvelope = PitchEnvelope(data: data.slice(from: offset, length: PitchEnvelope.dataSize))
+        switch PitchEnvelope.parse(from: data.slice(from: offset, length: PitchEnvelope.dataSize)) {
+        case .success(let env):
+            temp.pitchEnvelope = env
+        case .failure(let error):
+            return .failure(error)
+        }
 
         return .success(temp)
     }

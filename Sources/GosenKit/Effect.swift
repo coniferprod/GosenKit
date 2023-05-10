@@ -189,30 +189,6 @@ public struct EffectDefinition: Codable {
         parameter4 = 0
     }
     
-    /// Initializes the effect definition from MIDI System Exclusive data.
-    public init(data d: ByteArray) {
-        var offset: Int = 0
-        var b: Byte = 0
-        
-        b = d.next(&offset)
-        kind = Kind(index: Int(b))!
-
-        b = d.next(&offset)
-        depth = Int(b)
-
-        b = d.next(&offset)
-        parameter1 = Int(b)
-
-        b = d.next(&offset)
-        parameter2 = Int(b)
-
-        b = d.next(&offset)
-        parameter3 = Int(b)
-
-        b = d.next(&offset)
-        parameter4 = Int(b)
-    }
-    
     public static func parse(from data: ByteArray) -> Result<EffectDefinition, ParseError> {
         var offset: Int = 0
         var b: Byte = 0
@@ -260,29 +236,6 @@ public struct EffectSettings: Codable {
         effect4 = EffectDefinition()
     }
     
-    /// Initializes the effect settings from MIDI System Exclusive data bytes.
-    public init(data d: ByteArray) {
-        var offset: Int = 0
-        var b: Byte = 0
-        
-        b = d.next(&offset)
-        algorithm = Int(b + 1)  // adjust 0~3 to 1~4
-        
-        reverb = EffectDefinition(data: d.slice(from: offset, length: EffectDefinition.dataSize))
-        offset += EffectDefinition.dataSize
-        
-        effect1 = EffectDefinition(data: d.slice(from: offset, length: EffectDefinition.dataSize))
-        offset += EffectDefinition.dataSize
-        
-        effect2 = EffectDefinition(data: d.slice(from: offset, length: EffectDefinition.dataSize))
-        offset += EffectDefinition.dataSize
-        
-        effect3 = EffectDefinition(data: d.slice(from: offset, length: EffectDefinition.dataSize))
-        offset += EffectDefinition.dataSize
-        
-        effect4 = EffectDefinition(data: d.slice(from: offset, length: EffectDefinition.dataSize))
-    }
-
     public static func parse(from data: ByteArray) -> Result<EffectSettings, ParseError> {
         var offset: Int = 0
         var b: Byte = 0

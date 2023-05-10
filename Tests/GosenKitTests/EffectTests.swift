@@ -16,15 +16,23 @@ final class EffectTests: XCTestCase {
             0x0B, 0x00, 0x00, 0x00, 0x00, 0x00   // effect 4
         ]
 
-        let effectSettings = EffectSettings(data: effectData)
-
-        XCTAssertEqual(effectSettings.algorithm, 3)  // original byte is 0x02, algorithm values are 1~4
+        switch EffectSettings.parse(from: effectData) {
+        case .success(let effect):
+            XCTAssertEqual(effect.algorithm, 3)  // original byte is 0x02, algorithm values are 1~4
+        case .failure(let error):
+            XCTFail("\(error)")
+        }
     }
     
     func testEffectDefinition_fromData() {
         let data: ByteArray = [0x00, 0x46, 0x14, 0x1A, 0x00, 0x00]
-        let effectDefinition = EffectDefinition(data: data)
-        XCTAssertEqual(effectDefinition.kind, .hall1)
+        
+        switch EffectDefinition.parse(from: data) {
+        case .success(let effect):
+            XCTAssertEqual(effect.kind, .hall1)
+        case .failure(let error):
+            XCTFail("\(error)")
+        }
     }
     
     func testEffectSettings_ABankINT_001() {
@@ -36,10 +44,14 @@ final class EffectTests: XCTestCase {
             0x1a, 0x17, 0x23, 0x28, 0x0e, 0x21,
             0x0b, 0x00, 0x00, 0x00, 0x00, 0x00,
         ]
-        let effectSettings = EffectSettings(data: data)
-        XCTAssertEqual(effectSettings.algorithm, 1)  // original byte is 0x00, algorithm values are 1~4
-        XCTAssertEqual(effectSettings.reverb.kind, .plate3)
-        print(effectSettings)
+        
+        switch EffectSettings.parse(from: data) {
+        case .success(let effectSettings):
+            XCTAssertEqual(effectSettings.algorithm, 1)  // original byte is 0x00, algorithm values are 1~4
+            XCTAssertEqual(effectSettings.reverb.kind, .plate3)
+        case .failure(let error):
+            XCTFail("\(error)")
+        }
     }
     
     func testEffectSettings_ABankINT_017() {
@@ -54,19 +66,23 @@ final class EffectTests: XCTestCase {
             // 00 = drum_mark
             //"50 79 70 65 72 20 20 20" = "Pyper   "
         ]
-        let effectSettings = EffectSettings(data: data)
-        XCTAssertEqual(effectSettings.algorithm, 1)  // original byte is 0x00, algorithm values are 1~4
-        print(effectSettings)
+        switch EffectSettings.parse(from: data) {
+        case .success(let effectSettings):
+            XCTAssertEqual(effectSettings.algorithm, 1)  // original byte is 0x00, algorithm values are 1~4
+        case .failure(let error):
+            XCTFail("\(error)")
+        }
     }
     
     func testReverb() {
         let data: ByteArray = [
             0x00, 0x00, 0x1C, 0x1A, 0x10, 0x3C, // Reverb
         ]
-        let reverb = EffectDefinition(data: data)
-        XCTAssertEqual(reverb.kind, EffectDefinition.Kind.hall1)
-        
+        switch EffectDefinition.parse(from: data) {
+        case .success(let reverb):
+            XCTAssertEqual(reverb.kind, EffectDefinition.Kind.hall1)
+        case .failure(let error):
+            XCTFail("\(error)")
+        }
     }
-    
 }
-

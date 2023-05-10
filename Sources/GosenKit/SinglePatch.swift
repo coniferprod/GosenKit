@@ -152,11 +152,16 @@ public struct SinglePatch: Codable {
             b = data.next(&offset)
             temp.amplitudeModulation = AmplitudeModulation(index: Int(b))!
 
-            temp.effectControl = EffectControl(data: data.slice(from: offset, length: EffectControl.dataSize))
+            switch EffectControl.parse(from: data.slice(from: offset, length: EffectControl.dataSize)) {
+            case .success(let control):
+                temp.effectControl = control
+            case .failure(let error):
+                return .failure(error)
+            }
             offset += EffectControl.dataSize
 
             b = data.next(&offset)
-            temp.isPortamentoActive = (b == 1) ? true : false
+            temp.isPortamentoActive = (b == 1)
             
             b = data.next(&offset)
             temp.portamentoSpeed = Int(b)

@@ -30,47 +30,6 @@ public struct MultiPatch: Codable {
             effectControl2 = EffectControl()
         }
         
-        /// Initializes the common part of a multi patch from MIDI System Exclusive data.
-        /// - Parameter d: A byte array with the System Exclusive data.
-        public init(data d: ByteArray) {
-            var offset: Int = 0
-            var b: Byte = 0
-            
-            let effectData = d.slice(from: offset, length: EffectSettings.dataSize)
-            effects = EffectSettings(data: effectData)
-            offset += EffectSettings.dataSize
-            
-            geq = [Int]()
-            for _ in 0..<SinglePatch.Common.geqBandCount {
-                b = d.next(&offset)
-                let v: Int = Int(b) - 64  // 58(-6) ~ 70(+6), so 64 is zero
-                //print("GEQ band \(i + 1): \(b) --> \(v)")
-                geq.append(Int(v))
-            }
-            offset += Common.geqBandCount
-            
-            name = PatchName(data: d.slice(from: offset, length: PatchName.length))
-            offset += PatchName.length
-
-            b = d.next(&offset)
-            volume = UInt(b)
-
-            b = d.next(&offset)
-            // Unpack the section mutes into a Bool array. Spec says "0:mute".
-            sectionMutes = [Bool]()
-            sectionMutes.append(b.isBitSet(0) ? false : true)
-            sectionMutes.append(b.isBitSet(1) ? false : true)
-            sectionMutes.append(b.isBitSet(2) ? false : true)
-            sectionMutes.append(b.isBitSet(3) ? false : true)
-
-            let effectControl1Data = d.slice(from: offset, length: EffectControl.dataSize)
-            effectControl1 = EffectControl(data: effectControl1Data)
-            offset += EffectControl.dataSize
-            
-            let effectControl2Data = d.slice(from: offset, length: EffectControl.dataSize)
-            effectControl2 = EffectControl(data: effectControl2Data)
-        }
-        
         public static func parse(from data: ByteArray) -> Result<Common, ParseError> {
             var offset: Int = 0
             var b: Byte = 0
@@ -113,7 +72,7 @@ public struct MultiPatch: Codable {
             let effectControl1Data = data.slice(from: offset, length: EffectControl.dataSize)
             switch EffectControl.parse(from: effectControl1Data) {
             case .success(let control):
-                temp.effectControl1 = EffectControl(data: effectControl1Data)
+                temp.effectControl1 = control
             case .failure(let error):
                 return .failure(error)
             }
@@ -122,7 +81,7 @@ public struct MultiPatch: Codable {
             let effectControl2Data = data.slice(from: offset, length: EffectControl.dataSize)
             switch EffectControl.parse(from: effectControl2Data) {
             case .success(let control):
-                temp.effectControl2 = EffectControl(data: effectControl2Data)
+                temp.effectControl2 = control
             case .failure(let error):
                 return .failure(error)
             }
