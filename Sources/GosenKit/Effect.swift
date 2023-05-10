@@ -212,6 +212,33 @@ public struct EffectDefinition: Codable {
         b = d.next(&offset)
         parameter4 = Int(b)
     }
+    
+    public static func parse(from data: ByteArray) -> Result<EffectDefinition, ParseError> {
+        var offset: Int = 0
+        var b: Byte = 0
+
+        var temp = EffectDefinition()  // initialize with defaults, then fill in
+        
+        b = data.next(&offset)
+        temp.kind = Kind(index: Int(b))!
+
+        b = data.next(&offset)
+        temp.depth = Int(b)
+
+        b = data.next(&offset)
+        temp.parameter1 = Int(b)
+
+        b = data.next(&offset)
+        temp.parameter2 = Int(b)
+
+        b = data.next(&offset)
+        temp.parameter3 = Int(b)
+
+        b = data.next(&offset)
+        temp.parameter4 = Int(b)
+        
+        return .success(temp)
+    }
 }
 
 /// Represents the effect settings for a patch.
@@ -254,6 +281,57 @@ public struct EffectSettings: Codable {
         offset += EffectDefinition.dataSize
         
         effect4 = EffectDefinition(data: d.slice(from: offset, length: EffectDefinition.dataSize))
+    }
+
+    public static func parse(from data: ByteArray) -> Result<EffectSettings, ParseError> {
+        var offset: Int = 0
+        var b: Byte = 0
+        
+        var temp = EffectSettings()  // initialize with defaults, then fill in
+        
+        b = data.next(&offset)
+        temp.algorithm = Int(b + 1)  // adjust 0~3 to 1~4
+        
+        switch EffectDefinition.parse(from: data.slice(from: offset, length: EffectDefinition.dataSize)) {
+        case .success(let effect):
+            temp.reverb = effect
+        case .failure(let error):
+            return .failure(error)
+        }
+        offset += EffectDefinition.dataSize
+        
+        switch EffectDefinition.parse(from: data.slice(from: offset, length: EffectDefinition.dataSize)) {
+        case .success(let effect):
+            temp.effect1 = effect
+        case .failure(let error):
+            return .failure(error)
+        }
+        offset += EffectDefinition.dataSize
+        
+        switch EffectDefinition.parse(from: data.slice(from: offset, length: EffectDefinition.dataSize)) {
+        case .success(let effect):
+            temp.effect2 = effect
+        case .failure(let error):
+            return .failure(error)
+        }
+        offset += EffectDefinition.dataSize
+        
+        switch EffectDefinition.parse(from: data.slice(from: offset, length: EffectDefinition.dataSize)) {
+        case .success(let effect):
+            temp.effect3 = effect
+        case .failure(let error):
+            return .failure(error)
+        }
+        offset += EffectDefinition.dataSize
+        
+        switch EffectDefinition.parse(from: data.slice(from: offset, length: EffectDefinition.dataSize)) {
+        case .success(let effect):
+            temp.effect4 = effect
+        case .failure(let error):
+            return .failure(error)
+        }
+        
+        return .success(temp)
     }
 }
 

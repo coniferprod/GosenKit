@@ -57,50 +57,52 @@ public struct LFO: Codable {
         tremolo = Control(depth: 0, keyScaling: 0)
     }
     
-    public init(data d: ByteArray) {
-        //print("LFO data (\(d.count) bytes): \(d.hexDump)")
-
+    public static func parse(from data: ByteArray) -> Result<LFO, ParseError> {
         var offset: Int = 0
         var b: Byte = 0
         
-        b = d.next(&offset)
-        waveform = Waveform(index: Int(b))!
+        var temp = LFO()
         
-        b = d.next(&offset)
-        speed = Int(b)
+        b = data.next(&offset)
+        temp.waveform = Waveform(index: Int(b))!
         
-        b = d.next(&offset)
-        delayOnset = Int(b)
+        b = data.next(&offset)
+        temp.speed = Int(b)
+        
+        b = data.next(&offset)
+        temp.delayOnset = Int(b)
 
-        b = d.next(&offset)
-        fadeInTime = Int(b)
+        b = data.next(&offset)
+        temp.fadeInTime = Int(b)
 
-        b = d.next(&offset)
-        fadeInToSpeed = Int(b)
+        b = data.next(&offset)
+        temp.fadeInToSpeed = Int(b)
 
-        b = d.next(&offset)
+        b = data.next(&offset)
         let vibratoDepth = Int(b)
 
-        b = d.next(&offset)
+        b = data.next(&offset)
         let vibratoKeyScaling = Int(b) - 64
 
-        vibrato = Control(depth: vibratoDepth, keyScaling: vibratoKeyScaling)
+        temp.vibrato = Control(depth: vibratoDepth, keyScaling: vibratoKeyScaling)
         
-        b = d.next(&offset)
+        b = data.next(&offset)
         let growlDepth = Int(b)
 
-        b = d.next(&offset)
+        b = data.next(&offset)
         let growlKeyScaling = Int(b) - 64
 
-        growl = Control(depth: growlDepth, keyScaling: growlKeyScaling)
+        temp.growl = Control(depth: growlDepth, keyScaling: growlKeyScaling)
         
-        b = d.next(&offset)
+        b = data.next(&offset)
         let tremoloDepth = Int(b)
 
-        b = d.next(&offset)
+        b = data.next(&offset)
         let tremoloKeyScaling = Int(b) - 64
         
-        tremolo = Control(depth: tremoloDepth, keyScaling: tremoloKeyScaling)
+        temp.tremolo = Control(depth: tremoloDepth, keyScaling: tremoloKeyScaling)
+
+        return .success(temp)
     }
 }
 

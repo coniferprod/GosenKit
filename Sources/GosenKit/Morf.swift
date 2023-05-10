@@ -21,6 +21,21 @@ public struct Morf: Codable {
             b = d.next(&offset)
             sourceNumber = Int(b)
         }
+        
+        public static func parse(from data: ByteArray) -> Result<CopyParameters, ParseError> {
+            var offset: Int = 0
+            var b: Byte = 0
+        
+            var temp = CopyParameters()
+            
+            b = data.next(&offset)
+            temp.patchNumber = Int(b)
+            
+            b = data.next(&offset)
+            temp.sourceNumber = Int(b)
+            
+            return .success(temp)
+        }
     }
 
     public struct Envelope: Codable {
@@ -56,6 +71,30 @@ public struct Morf: Codable {
 
             b = d.next(&offset)
             loopKind = HarmonicEnvelope.LoopKind(index: Int(b))!
+        }
+        
+        public static func parse(from data: ByteArray) -> Result<Envelope, ParseError> {
+            var offset: Int = 0
+            var b: Byte = 0
+
+            var temp = Envelope()
+            
+            b = data.next(&offset)
+            temp.time1 = Int(b)
+            
+            b = data.next(&offset)
+            temp.time2 = Int(b)
+
+            b = data.next(&offset)
+            temp.time3 = Int(b)
+            
+            b = data.next(&offset)
+            temp.time4 = Int(b)
+
+            b = data.next(&offset)
+            temp.loopKind = HarmonicEnvelope.LoopKind(index: Int(b))!
+
+            return .success(temp)
         }
     }
 
@@ -98,7 +137,7 @@ public struct Morf: Codable {
 
 extension Morf.CopyParameters: SystemExclusiveData {
     public func asData() -> ByteArray {
-        return ByteArray(arrayLiteral: Byte(patchNumber), Byte(sourceNumber))
+        return [Byte(patchNumber), Byte(sourceNumber)]
     }
     
     public var dataLength: Int { return Morf.CopyParameters.dataSize }
@@ -110,12 +149,12 @@ extension Morf: SystemExclusiveData {
     public func asData() -> ByteArray {
         var data = ByteArray()
         
-        data.append(contentsOf: copy1.asData())
-        data.append(contentsOf: copy2.asData())
-        data.append(contentsOf: copy3.asData())
-        data.append(contentsOf: copy4.asData())
+        [ copy1, copy2, copy3, copy4 ].forEach {
+            data.append(contentsOf: $0.asData())
+        }
+        
         data.append(contentsOf: envelope.asData())
-
+        
         return data
     }
 

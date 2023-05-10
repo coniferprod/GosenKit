@@ -96,110 +96,107 @@ public struct SinglePatch: Codable {
             effectControl = EffectControl()
         }
         
-        /// Initializes the common part of a single patch from MIDI System Exclusive data.
-        /// - Parameter d: A byte array with the System Exclusive data.
-        public init(data d: ByteArray) {
+        public static func parse(from data: ByteArray) -> Result<Common, ParseError> {
             var offset: Int = 0
             var b: Byte = 0
             
-            let effectData = d.slice(from: offset, length: EffectSettings.dataSize)
-            print("Effect data = \(effectData.count) bytes")
-            self.effects = EffectSettings(data: effectData)
+            var temp = Common()  // initialize with defaults, then fill in
+            
+            let effectData = data.slice(from: offset, length: EffectSettings.dataSize)
+            switch EffectSettings.parse(from: effectData) {
+            case .success(let effects):
+                temp.effects = effects
+            case .failure(let error):
+                return .failure(error)
+            }
             offset += EffectSettings.dataSize
 
-            self.geq = [Int]()
+            temp.geq = [Int]()
             for _ in 0..<SinglePatch.Common.geqBandCount {
-                b = d.next(&offset)
+                b = data.next(&offset)
                 let v: Int = Int(b) - 64  // 58(-6) ~ 70(+6), so 64 is zero
                 //print("GEQ band \(i + 1): \(b) --> \(v)")
-                self.geq.append(Int(v))
+                temp.geq.append(Int(v))
             }
-            var bands = "GEQ: "
-            for band in self.geq {
-                bands += "\(band) "
-            }
-            print(bands)
             
             // Eat the drum mark (39)
             offset += 1
             
-            name = PatchName(data: d.slice(from: offset, length: PatchName.length))
+            temp.name = PatchName(data: data.slice(from: offset, length: PatchName.length))
             offset += PatchName.length
             
-            b = d.next(&offset)
-            volume = Int(b)
+            b = data.next(&offset)
+            temp.volume = Int(b)
             
-            b = d.next(&offset)
-            polyphony = Polyphony(index: Int(b))!
+            b = data.next(&offset)
+            temp.polyphony = Polyphony(index: Int(b))!
 
             // Eat the "no use" byte (50)
             offset += 1
             
-            b = d.next(&offset)
-            sourceCount = Int(b)
+            b = data.next(&offset)
+            temp.sourceCount = Int(b)
             
-            //print("Start source mutes, offset = \(offset)")
-
-            b = d.next(&offset)
+            b = data.next(&offset)
+            
             // Unpack the source mutes into a Bool array. Spec says "0:mute, bit 0~5 = source 1~6".
-            sourceMutes = [Bool]()
-            sourceMutes.append(b.isBitSet(0) ? false : true)
-            sourceMutes.append(b.isBitSet(1) ? false : true)
-            sourceMutes.append(b.isBitSet(2) ? false : true)
-            sourceMutes.append(b.isBitSet(3) ? false : true)
-            sourceMutes.append(b.isBitSet(4) ? false : true)
-            sourceMutes.append(b.isBitSet(5) ? false : true)
+            temp.sourceMutes = [
+                !(b.isBitSet(0)),
+                !(b.isBitSet(1)),
+                !(b.isBitSet(2)),
+                !(b.isBitSet(3)),
+                !(b.isBitSet(4)),
+                !(b.isBitSet(5)),
+            ]
 
-            b = d.next(&offset)
-            amplitudeModulation = AmplitudeModulation(index: Int(b))!
+            b = data.next(&offset)
+            temp.amplitudeModulation = AmplitudeModulation(index: Int(b))!
 
-            effectControl = EffectControl(data: d.slice(from: offset, length: EffectControl.dataSize))
+            temp.effectControl = EffectControl(data: data.slice(from: offset, length: EffectControl.dataSize))
             offset += EffectControl.dataSize
 
-            b = d.next(&offset)
-            isPortamentoActive = (b == 1) ? true : false
+            b = data.next(&offset)
+            temp.isPortamentoActive = (b == 1) ? true : false
             
-            b = d.next(&offset)
-            portamentoSpeed = Int(b)
+            b = data.next(&offset)
+            temp.portamentoSpeed = Int(b)
 
-            //print("Start macros, offset = \(offset)")
-            
             var macroDestinations = [Int]()
             for _ in 0..<8 {
-                b = d.next(&offset)
+                b = data.next(&offset)
                 macroDestinations.append(Int(b))
             }
             
             var macroDepths = [Int]()
             for _ in 0..<8 {
-                b = d.next(&offset)
+                b = data.next(&offset)
                 macroDepths.append(Int(b) - 64)
             }
 
-            macros = [MacroController]()
+            temp.macros = [MacroController]()
             for i in stride(from: 0, to: 8, by: 2) {
-                macros.append(MacroController(
+                temp.macros.append(MacroController(
                     destination1: ControlDestination(index: macroDestinations[i])!,
                     depth1: macroDepths[i + 1],
                     destination2: ControlDestination(index: macroDestinations[i])!,
                     depth2: macroDepths[i + 1]))
             }
             
-            //print("Start switches, offset = \(offset)")
-            
-            b = d.next(&offset)
+            b = data.next(&offset)
             let sw1t = SwitchControl.Kind(index: Int(b))!
 
-            b = d.next(&offset)
+            b = data.next(&offset)
             let sw2t = SwitchControl.Kind(index: Int(b))!
             
-            b = d.next(&offset)
+            b = data.next(&offset)
             let fsw1t = SwitchControl.Kind(index: Int(b))!
             
-            b = d.next(&offset)
+            b = data.next(&offset)
             let fsw2t = SwitchControl.Kind(index: Int(b))!
 
-            switches = SwitchControl(switch1: sw1t, switch2: sw2t, footSwitch1: fsw1t, footSwitch2: fsw2t)
+            temp.switches = SwitchControl(switch1: sw1t, switch2: sw2t, footSwitch1: fsw1t, footSwitch2: fsw2t)
+
+            return .success(temp)
         }
     }
 
@@ -213,46 +210,58 @@ public struct SinglePatch: Codable {
     public init() {
         common = Common()
         sources = [Source]()
+        
+        // Single patches always have at least two sources
         sources.append(Source())
         sources.append(Source())
         
         // The default sources are PCM, so the additive kit dictionary is empty
         additiveKits = AdditiveKitDictionary()
     }
-    
-    /// Initializes a single patch from MIDI System Exclusive data.
-    /// - Parameter d: A byte array with the System Exclusive data.
-    public init(data d: ByteArray) {
+        
+    public static func parse(from data: ByteArray) -> Result<SinglePatch, ParseError> {
         var offset: Int = 0
         
-        //print("\(#file):\(#line) Single patch data = \(d.count) bytes")
+        _ = data.next(&offset)  // checksum is the first byte
 
-        _ = d.next(&offset)  // checksum is the first byte
-
-        common = Common(data: d.slice(from: offset, length: Common.dataSize))
+        var temp = SinglePatch()  // initialize with defaults, then fill in
+        
+        switch Common.parse(from: data.slice(from: offset, length: Common.dataSize)) {
+        case .success(let common):
+            temp.common = common
+        case .failure(let error):
+            return .failure(error)
+        }
         offset += Common.dataSize
         
-        sources = [Source]()
-        for _ in 0..<common.sourceCount {
-            let source = Source(data: d.slice(from: offset, length: Source.dataSize))
-            sources.append(source)
+        temp.sources.removeAll()  // empty the source list first!
+        for _ in 0..<temp.common.sourceCount {
+            switch Source.parse(from: data.slice(from: offset, length: Source.dataSize)) {
+            case .success(let source):
+                temp.sources.append(source)
+            case .failure(let error):
+                return .failure(error)
+            }
             offset += Source.dataSize
         }
         
-        additiveKits = AdditiveKitDictionary()
+        temp.additiveKits = AdditiveKitDictionary()
         
         // How many additive kits should we expect then?
-        let additiveKitCount = sources.filter{ $0.oscillator.wave.isAdditive }.count
+        let additiveKitCount = temp.sources.filter{ $0.oscillator.wave.isAdditive }.count
         var kitIndex = 0
         while kitIndex < additiveKitCount {
-            let kit = AdditiveKit(data: d.slice(from: offset, length: AdditiveKit.dataSize))
-            offset += AdditiveKit.dataSize
-
-            additiveKits["s\(kitIndex + 1)"] = kit
-            kitIndex += 1
+            switch AdditiveKit.parse(from: data.slice(from: offset, length: AdditiveKit.dataSize)) {
+            case .success(let kit):
+                temp.additiveKits["s\(kitIndex + 1)"] = kit
+                kitIndex += 1
+                offset += AdditiveKit.dataSize
+            case .failure(let error):
+                return .failure(error)
+            }
         }
         
-        //print("Got \(additiveKits.count) ADD kits")
+        return .success(temp)
     }
     
     /// Generates a MIDI System Exclusive message from this patch.

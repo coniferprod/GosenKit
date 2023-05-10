@@ -24,24 +24,52 @@ public struct Source: Codable {
                 assignable2 = AssignableController()
             }
             
-            /// Initializes modulation settings from MIDI System Exclusive data.
-            public init(data d: ByteArray) {
+            public static func parse(from data: ByteArray) -> Result<Modulation, ParseError> {
                 var offset: Int = 0
 
-                pressure = MacroController(data: d.slice(from: offset, length: MacroController.dataSize))
+                var temp = Modulation()  // initialize with defaults, then fill in
+                
+                switch MacroController.parse(from: data.slice(from: offset, length: MacroController.dataSize)) {
+                case .success(let mc):
+                    temp.pressure = mc
+                case .failure(let error):
+                    return .failure(error)
+                }
                 offset += MacroController.dataSize
 
-                wheel = MacroController(data: d.slice(from: offset, length: MacroController.dataSize))
+                switch MacroController.parse(from: data.slice(from: offset, length: MacroController.dataSize)) {
+                case .success(let mc):
+                    temp.wheel = mc
+                case .failure(let error):
+                    return .failure(error)
+                }
                 offset += MacroController.dataSize
                 
-                expression = MacroController(data: d.slice(from: offset, length: MacroController.dataSize))
+                switch MacroController.parse(from: data.slice(from: offset, length: MacroController.dataSize)) {
+                case .success(let mc):
+                    temp.expression = mc
+                case .failure(let error):
+                    return .failure(error)
+                }
                 offset += MacroController.dataSize
             
-                assignable1 = AssignableController(data: d.slice(from: offset, length: AssignableController.dataSize))
+                switch AssignableController.parse(from: data.slice(from: offset, length: AssignableController.dataSize)) {
+                case .success(let ac):
+                    temp.assignable1 = ac
+                case .failure(let error):
+                    return .failure(error)
+                }
                 offset += AssignableController.dataSize
                 
-                assignable2 = AssignableController(data: d.slice(from: offset, length: AssignableController.dataSize))
+                switch AssignableController.parse(from: data.slice(from: offset, length: AssignableController.dataSize)) {
+                case .success(let ac):
+                    temp.assignable2 = ac
+                case .failure(let error):
+                    return .failure(error)
+                }
                 offset += AssignableController.dataSize
+
+                return .success(temp)
             }
         }
 
@@ -92,6 +120,21 @@ public struct Source: Codable {
                 b = d.next(&offset)
                 value = Int(b) - 64
             }
+            
+            public static func parse(from data: ByteArray) -> Result<Pan, ParseError> {
+                var offset: Int = 0
+                var b: Byte = 0
+
+                var temp = Pan()
+                
+                b = data.next(&offset)
+                temp.kind = Kind(index: Int(b))!
+                
+                b = data.next(&offset)
+                temp.value = Int(b) - 64
+                
+                return .success(temp)
+            }
         }
 
         public var zone: Zone
@@ -118,41 +161,57 @@ public struct Source: Codable {
             pan = Pan(kind: .normal, value: 0)
         }
         
-        /// Initializes control settings from MIDI System Exclusive data bytes.
-        public init(data d: ByteArray) {
+        public static func parse(from data: ByteArray) -> Result<Control, ParseError> {
             var offset: Int = 0
             var b: Byte = 0
             
-            //print("Source SysEx data = \(d.hexDump)")
+            var temp = Control()
             
-            b = d.next(&offset)
+            b = data.next(&offset)
             let zoneLow = Key(note: Int(b))
-            b = d.next(&offset)
+            b = data.next(&offset)
             let zoneHigh = Key(note: Int(b))
-            zone = Zone(high: zoneHigh, low: zoneLow)
+            temp.zone = Zone(high: zoneHigh, low: zoneLow)
             
-            b = d.next(&offset)
-            velocitySwitch = VelocitySwitch(data: [b])
+            b = data.next(&offset)
+            switch VelocitySwitch.parse(from: [b]) {
+            case .success(let vs):
+                temp.velocitySwitch = vs
+            case .failure(let error):
+                return .failure(error)
+            }
             
-            b = d.next(&offset)
-            effectPath = Int(b)
+            b = data.next(&offset)
+            temp.effectPath = Int(b)
             
-            b = d.next(&offset)
-            volume = Int(b)
+            b = data.next(&offset)
+            temp.volume = Int(b)
             
-            b = d.next(&offset)
-            benderPitch = Int(b)
+            b = data.next(&offset)
+            temp.benderPitch = Int(b)
             
-            b = d.next(&offset)
-            benderCutoff = Int(b)
+            b = data.next(&offset)
+            temp.benderCutoff = Int(b)
             
-            modulation = Modulation(data: d.slice(from: offset, length: Modulation.dataSize))
+            switch Modulation.parse(from: data.slice(from: offset, length: Modulation.dataSize)) {
+            case .success(let modulation):
+                temp.modulation = modulation
+            case .failure(let error):
+                return .failure(error)
+            }
             offset += Modulation.dataSize
             
-            b = d.next(&offset)
-            keyOnDelay = Int(b)
+            b = data.next(&offset)
+            temp.keyOnDelay = Int(b)
             
-            pan = Pan(data: d.slice(from: offset, length: Pan.dataSize))
+            switch Pan.parse(from: data.slice(from: offset, length: Pan.dataSize)) {
+            case .success(let pan):
+                temp.pan = pan
+            case .failure(let error):
+                return .failure(error)
+            }
+            
+            return .success(temp)
         }
     }
 
@@ -171,28 +230,51 @@ public struct Source: Codable {
         control = Control()
     }
     
-    /// Initializes a source from MIDI System Exclusive data bytes.
-    public init(data d: ByteArray) {
+    public static func parse(from data: ByteArray) -> Result<Source, ParseError> {
         var offset: Int = 0
+
+        var temp = Source()
         
-        //print("SOURCE: Start Control, offset = \(offset)")
-        control = Control(data: d.slice(from: offset, length: Control.dataSize))
+        switch Control.parse(from: data.slice(from: offset, length: Control.dataSize)) {
+        case .success(let control):
+            temp.control = control
+        case .failure(let error):
+            return .failure(error)
+        }
         offset += Control.dataSize
         
-        //print("SOURCE: Start DCO, offset = \(offset)")
-        oscillator = Oscillator(data: d.slice(from: offset, length: Oscillator.dataSize))
+        switch Oscillator.parse(from: data.slice(from: offset, length: Oscillator.dataSize)) {
+        case .success(let osc):
+            temp.oscillator = osc
+        case .failure(let error):
+            return .failure(error)
+        }
         offset += Oscillator.dataSize
         
-        //print("SOURCE: Start DCF, offset = \(offset)")
-        filter = Filter(data: d.slice(from: offset, length: Filter.dataSize))
+        switch Filter.parse(from: data.slice(from: offset, length: Filter.dataSize)) {
+        case .success(let filter):
+            temp.filter = filter
+        case .failure(let error):
+            return .failure(error)
+        }
         offset += Filter.dataSize
 
-        //print("SOURCE: Start DCA, offset = \(offset)")
-        amplifier = Amplifier(data: d.slice(from: offset, length: Amplifier.dataSize))
+        switch Amplifier.parse(from: data.slice(from: offset, length: Amplifier.dataSize)) {
+        case .success(let amp):
+            temp.amplifier = amp
+        case .failure(let error):
+            return .failure(error)
+        }
         offset += Amplifier.dataSize
+ 
+        switch LFO.parse(from: data.slice(from: offset, length: LFO.dataSize)) {
+        case .success(let lfo):
+            temp.lfo = lfo
+        case .failure(let error):
+            return .failure(error)
+        }
         
-        //print("SOURCE: Start LFO, offset = \(offset)")
-        lfo = LFO(data: d.slice(from: offset, length: LFO.dataSize))
+        return .success(temp)
     }
 }
 

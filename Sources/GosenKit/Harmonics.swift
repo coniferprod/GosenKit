@@ -35,28 +35,31 @@ public struct HarmonicCommon: Codable {
         velocityDepth = 0
     }
     
-    /// Initializes harmonic common settings from MIDI System Exclusive data bytes.
-    public init(data d: ByteArray) {
+    public static func parse(from data: ByteArray) -> Result<HarmonicCommon, ParseError> {
         var offset: Int = 0
         var b: Byte = 0
-        
-        b = d.next(&offset)
-        isMorfEnabled = (b == 1)
-        
-        b = d.next(&offset)
-        totalGain = Int(b)
 
-        b = d.next(&offset)
-        group = Group(index: Int(b))!
+        var temp = HarmonicCommon()
         
-        b = d.next(&offset)
-        keyScalingToGain = Int(b) - 64
+        b = data.next(&offset)
+        temp.isMorfEnabled = (b == 1)
         
-        b = d.next(&offset)
-        velocityCurve = Int(b) + 1 // 0~11 to 1~12
+        b = data.next(&offset)
+        temp.totalGain = Int(b)
+
+        b = data.next(&offset)
+        temp.group = Group(index: Int(b))!
         
-        b = d.next(&offset)
-        velocityDepth = Int(b)
+        b = data.next(&offset)
+        temp.keyScalingToGain = Int(b) - 64
+        
+        b = data.next(&offset)
+        temp.velocityCurve = Int(b) + 1 // 0~11 to 1~12
+        
+        b = data.next(&offset)
+        temp.velocityDepth = Int(b)
+
+        return .success(temp)
     }
 }
 
@@ -67,22 +70,30 @@ public struct HarmonicEnvelope: Codable {
         public var rate: Int  // 0~127
         public var level: Int // 0~63
         
+        public init() {
+            self.rate = 0
+            self.level = 0
+        }
+        
         /// Initializes the segment with rate and level.
         public init(rate: Int, level: Int) {
             self.rate = rate
             self.level = level
         }
         
-        /// Initializes the segment from MIDI System Exclusive data bytes.
-        public init(data d: ByteArray) {
+        public static func parse(from data: ByteArray) -> Result<Segment, ParseError> {
             var offset: Int = 0
             var b: Byte = 0
+
+            var temp = Segment()
             
-            b = d.next(&offset)
-            rate = Int(b)
+            b = data.next(&offset)
+            temp.rate = Int(b)
             
-            b = d.next(&offset)
-            level = Int(b)
+            b = data.next(&offset)
+            temp.level = Int(b)
+            
+            return .success(temp)
         }
     }
 
@@ -109,11 +120,12 @@ public struct HarmonicEnvelope: Codable {
     
     /// Initializes the harmonic envelope with default settings.
     public init() {
-        self.segments = [Segment]()
-        self.segments.append(Segment(rate: 127, level: 63))
-        self.segments.append(Segment(rate: 127, level: 63))
-        self.segments.append(Segment(rate: 127, level: 63))
-        self.segments.append(Segment(rate: 0, level: 0))
+        self.segments = [
+            Segment(rate: 127, level: 63),
+            Segment(rate: 127, level: 63),
+            Segment(rate: 127, level: 63),
+            Segment(rate: 0, level: 0),
+        ]
 
         self.loopKind = .off
     }
@@ -124,67 +136,62 @@ public struct HarmonicEnvelope: Codable {
         self.loopKind = loopKind
     }
     
-    /// Initializes the harmonic envelope from MIDI System Exclusive data bytes.
-    public init(data d: ByteArray) {
+    public static func parse(from data: ByteArray) -> Result<HarmonicEnvelope, ParseError> {
         var offset: Int = 0
         var b: Byte = 0
 
-        b = d.next(&offset)
+        var temp = HarmonicEnvelope()
+        
+        b = data.next(&offset)
         let segment0Rate = Int(b)
 
-        b = d.next(&offset)
+        b = data.next(&offset)
         let segment0Level = Int(b)
         
-        //print("segment0 rate = 0x\(String(segment0Rate, radix: 16)) level = 0x\(String(segment0Level, radix: 16))")
-        
-        b = d.next(&offset)
+        b = data.next(&offset)
         let segment1Rate = Int(b)
         
-        b = d.next(&offset)
+        b = data.next(&offset)
         let segment1LevelBit6 = b.isBitSet(6)
-        //print("segment1 rate = 0x\(String(segment1Rate, radix: 16)) level = 0x\(String(b, radix: 16)) = 0b\(String(b, radix: 2))")
-        //print("bit 6 of segment 1 level set? \(segment1LevelBit6 ? "YES" : "NO")")
         
         b.clearBit(6)
         let segment1Level = Int(b)
 
-        b = d.next(&offset)
+        b = data.next(&offset)
         let segment2Rate = Int(b)
         
-        b = d.next(&offset)
+        b = data.next(&offset)
         let segment2LevelBit6 = b.isBitSet(6)
-        //print("segment2 rate = 0x\(String(segment2Rate, radix: 16)) level = 0x\(String(b, radix: 16)) = 0b\(String(b, radix: 2))")
-        //print("bit 6 of segment 1 level set? \(segment2LevelBit6 ? "YES" : "NO")")
         b.clearBit(6)
         let segment2Level = Int(b)
         
-        b = d.next(&offset)
+        b = data.next(&offset)
         let segment3Rate = Int(b)
 
-        b = d.next(&offset)
+        b = data.next(&offset)
         let segment3Level = Int(b)
         
-        //print("segment3 rate = 0x\(String(segment3Rate, radix: 16)) level = 0x\(String(segment3Level, radix: 16))")
-
-        segments = [Segment]()
-        segments.append(Segment(rate: segment0Rate, level: segment0Level))
-        segments.append(Segment(rate: segment1Rate, level: segment1Level))
-        segments.append(Segment(rate: segment2Rate, level: segment2Level))
-        segments.append(Segment(rate: segment3Rate, level: segment3Level))
+        temp.segments = [
+            Segment(rate: segment0Rate, level: segment0Level),
+            Segment(rate: segment1Rate, level: segment1Level),
+            Segment(rate: segment2Rate, level: segment2Level),
+            Segment(rate: segment3Rate, level: segment3Level),
+        ]
         
         // Need to post-process segments 1 and 2 to get the loop type
         
         switch (segment1LevelBit6, segment2LevelBit6) {
         case (true, true):
-            loopKind = .loop1
+            temp.loopKind = .loop1
         case (true, false):
-            //sprint("warning: impossible loop type value '0b10', setting loop type to OFF", to: &standardError)
-            loopKind = .off
+            temp.loopKind = .off
         case (false, true):
-            loopKind = .loop2
+            temp.loopKind = .loop2
         default:
-            loopKind = .off
+            temp.loopKind = .off
         }
+
+        return .success(temp)
     }
 }
 

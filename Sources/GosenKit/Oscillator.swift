@@ -82,30 +82,33 @@ public struct Oscillator: Codable {
         pitchEnvelope = PitchEnvelope()
     }
     
-    /// Initializes an oscillator from MIDI System Exclusive data bytes.
-    public init(data d: ByteArray) {
+    public static func parse(from data: ByteArray) -> Result<Oscillator, ParseError> {
         var offset: Int = 0
         var b: Byte = 0
         
-        b = d.next(&offset)
-        let waveMSB = b
-        b = d.next(&offset)
-        let waveLSB = b
-        wave = Wave(msb: waveMSB, lsb: waveLSB)
+        var temp = Oscillator()
         
-        b = d.next(&offset)
-        coarse = Int(b) - 24
+        b = data.next(&offset)
+        let waveMSB = b
+        b = data.next(&offset)
+        let waveLSB = b
+        temp.wave = Wave(msb: waveMSB, lsb: waveLSB)
+        
+        b = data.next(&offset)
+        temp.coarse = Int(b) - 24
 
-        b = d.next(&offset)
-        fine = Int(b) - 64
+        b = data.next(&offset)
+        temp.fine = Int(b) - 64
 
-        b = d.next(&offset)
-        fixedKey = Int(b)
+        b = data.next(&offset)
+        temp.fixedKey = Int(b)
 
-        b = d.next(&offset)
-        keyScalingToPitch = KeyScaling(index: Int(b))!
+        b = data.next(&offset)
+        temp.keyScalingToPitch = KeyScaling(index: Int(b))!
 
-        pitchEnvelope = PitchEnvelope(data: d.slice(from: offset, length: PitchEnvelope.dataSize))
+        temp.pitchEnvelope = PitchEnvelope(data: data.slice(from: offset, length: PitchEnvelope.dataSize))
+
+        return .success(temp)
     }
 }
 

@@ -32,30 +32,31 @@ public struct Amplifier: Codable {
             self.releaseTime = releaseTime
         }
         
-        /// Initialize amplifier envelope from MIDI System Exclusive data bytes.
-        public init(data d: ByteArray) {
-            //print("Amplifier envelope data (\(d.count) bytes): \(d.hexDump)")
-
+        public static func parse(from data: ByteArray) -> Result<Envelope, ParseError> {
             var offset: Int = 0
             var b: Byte = 0
+
+            var temp = Envelope()
             
-            b = d.next(&offset)
-            attackTime = Int(b)
+            b = data.next(&offset)
+            temp.attackTime = Int(b)
             
-            b = d.next(&offset)
-            decay1Time = Int(b)
+            b = data.next(&offset)
+            temp.decay1Time = Int(b)
             
-            b = d.next(&offset)
-            decay1Level = Int(b)
+            b = data.next(&offset)
+            temp.decay1Level = Int(b)
             
-            b = d.next(&offset)
-            decay2Time = Int(b)
+            b = data.next(&offset)
+            temp.decay2Time = Int(b)
             
-            b = d.next(&offset)
-            decay2Level = Int(b)
+            b = data.next(&offset)
+            temp.decay2Level = Int(b)
             
-            b = d.next(&offset)
-            releaseTime = Int(b)
+            b = data.next(&offset)
+            temp.releaseTime = Int(b)
+            
+            return .success(temp)
         }
     }
 
@@ -83,23 +84,25 @@ public struct Amplifier: Codable {
                 self.release = release
             }
             
-            public init(data d: ByteArray) {
-                //print("Amplifier key scaling control data (\(d.count) bytes): \(d.hexDump)")
-                
+            public static func parse(from data: ByteArray) -> Result<KeyScalingControl, ParseError> {
                 var offset: Int = 0
                 var b: Byte = 0
                 
-                b = d.next(&offset)
-                level = Int(b) - 64
+                var temp = KeyScalingControl()
                 
-                b = d.next(&offset)
-                attackTime = Int(b) - 64
+                b = data.next(&offset)
+                temp.level = Int(b) - 64
+                
+                b = data.next(&offset)
+                temp.attackTime = Int(b) - 64
             
-                b = d.next(&offset)
-                decay1Time = Int(b) - 64
+                b = data.next(&offset)
+                temp.decay1Time = Int(b) - 64
                 
-                b = d.next(&offset)
-                release = Int(b) - 64
+                b = data.next(&offset)
+                temp.release = Int(b) - 64
+                
+                return .success(temp)
             }
         }
 
@@ -126,23 +129,25 @@ public struct Amplifier: Codable {
                 self.release = release
             }
             
-            public init(data d: ByteArray) {
-                //print("Amplifier velocity control data (\(d.count) bytes): \(d.hexDump)")
-                
+            public static func parse(from data: ByteArray) -> Result<VelocityControl, ParseError> {
                 var offset: Int = 0
                 var b: Byte = 0
                 
-                b = d.next(&offset)
-                level = Int(b)
+                var temp = VelocityControl()
                 
-                b = d.next(&offset)
-                attackTime = Int(b) - 64
+                b = data.next(&offset)
+                temp.level = Int(b)
                 
-                b = d.next(&offset)
-                decay1Time = Int(b) - 64
+                b = data.next(&offset)
+                temp.attackTime = Int(b) - 64
                 
-                b = d.next(&offset)
-                release = Int(b) - 64
+                b = data.next(&offset)
+                temp.decay1Time = Int(b) - 64
+                
+                b = data.next(&offset)
+                temp.release = Int(b) - 64
+                
+                return .success(temp)
             }
         }
 
@@ -154,15 +159,28 @@ public struct Amplifier: Codable {
             velocityToEnvelope = VelocityControl()
         }
         
-        public init(data d: ByteArray) {
-            //print("Amplifier modulation data (\(d.count) bytes): \(d.hexDump)")
-            
+        public static func parse(from data: ByteArray) -> Result<Modulation, ParseError> {
             var offset: Int = 0
             
-            keyScalingToEnvelope = KeyScalingControl(data: d.slice(from: offset, length: KeyScalingControl.dataSize))
+            var temp = Modulation()
+            
+            switch KeyScalingControl.parse(from: data.slice(from: offset, length: KeyScalingControl.dataSize)) {
+            case .success(let control):
+                temp.keyScalingToEnvelope = control
+            case .failure(let error):
+                return .failure(error)
+            }
+            
             offset += KeyScalingControl.dataSize
             
-            velocityToEnvelope = VelocityControl(data: d.slice(from: offset, length: VelocityControl.dataSize))
+            switch VelocityControl.parse(from: data.slice(from: offset, length: VelocityControl.dataSize)) {
+            case .success(let control):
+                temp.velocityToEnvelope = control
+            case .failure(let error):
+                return .failure(error)
+            }
+            
+            return .success(temp)
         }
     }
 
@@ -176,21 +194,31 @@ public struct Amplifier: Codable {
         modulation = Modulation()
     }
 
-    public init(data d: ByteArray) {
-        //print("Amplifier data (\(d.count) bytes): \(d.hexDump)")
-        
+    public static func parse(from data: ByteArray) -> Result<Amplifier, ParseError> {
         var offset: Int = 0
         var b: Byte = 0
         
-        b = d.next(&offset)
-        velocityCurve = Int(b) + 1  // 0~11 to 1~12
+        var temp = Amplifier()
         
-        //print("Start amplifier envelope, offset = \(offset)")
-        envelope = Envelope(data: d.slice(from: offset, length: Envelope.dataSize))
+        b = data.next(&offset)
+        temp.velocityCurve = Int(b) + 1  // 0~11 to 1~12
+
+        switch Envelope.parse(from: data.slice(from: offset, length: Envelope.dataSize)) {
+        case .success(let env):
+            temp.envelope = env
+        case .failure(let error):
+            return .failure(error)
+        }
         offset += Envelope.dataSize
+
+        switch Modulation.parse(from: data.slice(from: offset, length: Modulation.dataSize)) {
+        case .success(let mod):
+            temp.modulation = mod
+        case .failure(let error):
+            return .failure(error)
+        }
         
-        //print("Start amplifier envelope modulation, offset = \(offset)")
-        modulation = Modulation(data: d.slice(from: offset, length: Modulation.dataSize))
+        return .success(temp)
     }
 }
 

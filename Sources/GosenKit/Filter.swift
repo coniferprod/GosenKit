@@ -45,42 +45,46 @@ public struct Filter: Codable {
             velocityToDecay1 = 0
         }
         
-        public init(data d: ByteArray) {
+        public static func parse(from data: ByteArray) -> Result<Envelope, ParseError> {
             var offset: Int = 0
             var b: Byte = 0
         
-            b = d.next(&offset)
-            attackTime = Int(b)
+            var temp = Envelope()
+            
+            b = data.next(&offset)
+            temp.attackTime = Int(b)
 
-            b = d.next(&offset)
-            decay1Time = Int(b)
+            b = data.next(&offset)
+            temp.decay1Time = Int(b)
             
-            b = d.next(&offset)
-            decay1Level = Int(b) - 64
+            b = data.next(&offset)
+            temp.decay1Level = Int(b) - 64
             
-            b = d.next(&offset)
-            decay2Time = Int(b)
+            b = data.next(&offset)
+            temp.decay2Time = Int(b)
             
-            b = d.next(&offset)
-            decay2Level = Int(b) - 64
+            b = data.next(&offset)
+            temp.decay2Level = Int(b) - 64
             
-            b = d.next(&offset)
-            releaseTime = Int(b)
+            b = data.next(&offset)
+            temp.releaseTime = Int(b)
             
-            b = d.next(&offset)
-            keyScalingToAttack = Int(b) - 64
+            b = data.next(&offset)
+            temp.keyScalingToAttack = Int(b) - 64
             
-            b = d.next(&offset)
-            keyScalingToDecay1 = Int(b) - 64
+            b = data.next(&offset)
+            temp.keyScalingToDecay1 = Int(b) - 64
             
-            b = d.next(&offset)
-            velocityToEnvelope = Int(b) - 64
+            b = data.next(&offset)
+            temp.velocityToEnvelope = Int(b) - 64
 
-            b = d.next(&offset)
-            velocityToAttack = Int(b) - 64
+            b = data.next(&offset)
+            temp.velocityToAttack = Int(b) - 64
 
-            b = d.next(&offset)
-            velocityToDecay1 = Int(b) - 64
+            b = data.next(&offset)
+            temp.velocityToDecay1 = Int(b) - 64
+
+            return .success(temp)
         }
     }
 
@@ -108,38 +112,47 @@ public struct Filter: Codable {
         envelope = Envelope()
     }
     
-    public init(data d: ByteArray) {
+    public static func parse(from data: ByteArray) -> Result<Filter, ParseError> {
         var offset: Int = 0
         var b: Byte = 0
     
-        b = d.next(&offset)
-        isActive = b == 1 ? false : true  // value of 1 means filter is bypassed
+        var temp = Filter()
         
-        b = d.next(&offset)
-        mode = Mode(index: Int(b))!
+        b = data.next(&offset)
+        temp.isActive = b == 1 ? false : true  // value of 1 means filter is bypassed
         
-        b = d.next(&offset)
-        velocityCurve = Int(b + 1)  // from 0 ~ 11 to  1 ~ 12
+        b = data.next(&offset)
+        temp.mode = Mode(index: Int(b))!
+        
+        b = data.next(&offset)
+        temp.velocityCurve = Int(b + 1)  // from 0 ~ 11 to  1 ~ 12
 
-        b = d.next(&offset)
-        resonance = Int(b)
+        b = data.next(&offset)
+        temp.resonance = Int(b)
 
-        b = d.next(&offset)
-        level = Int(b)
+        b = data.next(&offset)
+        temp.level = Int(b)
         
-        b = d.next(&offset)
-        cutoff = Int(b)
+        b = data.next(&offset)
+        temp.cutoff = Int(b)
 
-        b = d.next(&offset)
-        keyScalingToCutoff = Int(b) - 64
+        b = data.next(&offset)
+        temp.keyScalingToCutoff = Int(b) - 64
         
-        b = d.next(&offset)
-        velocityToCutoff = Int(b) - 64
+        b = data.next(&offset)
+        temp.velocityToCutoff = Int(b) - 64
         
-        b = d.next(&offset)
-        envelopeDepth = Int(b) - 64
+        b = data.next(&offset)
+        temp.envelopeDepth = Int(b) - 64
         
-        envelope = Envelope(data: d.slice(from: offset, length: Envelope.dataSize))
+        switch Envelope.parse(from: data.slice(from: offset, length: Envelope.dataSize)) {
+        case .success(let env):
+            temp.envelope = env
+        case .failure(let error):
+            return .failure(error)
+        }
+
+        return .success(temp)
     }
 }
 

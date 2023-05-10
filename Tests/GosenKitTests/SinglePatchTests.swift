@@ -16,8 +16,12 @@ final class SinglePatchTests: XCTestCase {
     func testSinglePatch_fromData() {
         if let patchURL = Bundle.module.url(forResource: "PowerK5K", withExtension: "syx") {
             if let patchData = try? Data(contentsOf: patchURL) {
-                let patch = SinglePatch(data: patchData.bytes)
-                XCTAssert(patch.common.name.value == "PowerK5K")
+                switch SinglePatch.parse(from: patchData.bytes) {
+                case .success(let patch):
+                    XCTAssert(patch.common.name.value == "PowerK5K")
+                case .failure(let error):
+                    XCTFail("\(error)")
+                }
             }
         }
     }

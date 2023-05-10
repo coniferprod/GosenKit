@@ -70,6 +70,65 @@ public struct MultiPatch: Codable {
             let effectControl2Data = d.slice(from: offset, length: EffectControl.dataSize)
             effectControl2 = EffectControl(data: effectControl2Data)
         }
+        
+        public static func parse(from data: ByteArray) -> Result<Common, ParseError> {
+            var offset: Int = 0
+            var b: Byte = 0
+            
+            var temp = Common()  // initialize with defaults, then fill in
+            
+            let effectData = data.slice(from: offset, length: EffectSettings.dataSize)
+            switch EffectSettings.parse(from: effectData) {
+            case .success(let effects):
+                temp.effects = effects
+            case .failure(let error):
+                return .failure(error)
+            }
+            offset += EffectSettings.dataSize
+            
+            temp.geq = [Int]()
+            for _ in 0..<SinglePatch.Common.geqBandCount {
+                b = data.next(&offset)
+                let v: Int = Int(b) - 64  // 58(-6) ~ 70(+6), so 64 is zero
+                //print("GEQ band \(i + 1): \(b) --> \(v)")
+                temp.geq.append(Int(v))
+            }
+            offset += Common.geqBandCount
+            
+            temp.name = PatchName(data: data.slice(from: offset, length: PatchName.length))
+            offset += PatchName.length
+
+            b = data.next(&offset)
+            temp.volume = UInt(b)
+
+            b = data.next(&offset)
+            // Unpack the section mutes into a Bool array. Spec says "0:mute".
+            temp.sectionMutes = [
+                !(b.isBitSet(0)),
+                !(b.isBitSet(1)),
+                !(b.isBitSet(2)),
+                !(b.isBitSet(3))
+            ]
+
+            let effectControl1Data = data.slice(from: offset, length: EffectControl.dataSize)
+            switch EffectControl.parse(from: effectControl1Data) {
+            case .success(let control):
+                temp.effectControl1 = EffectControl(data: effectControl1Data)
+            case .failure(let error):
+                return .failure(error)
+            }
+            offset += EffectControl.dataSize
+            
+            let effectControl2Data = data.slice(from: offset, length: EffectControl.dataSize)
+            switch EffectControl.parse(from: effectControl2Data) {
+            case .success(let control):
+                temp.effectControl2 = EffectControl(data: effectControl2Data)
+            case .failure(let error):
+                return .failure(error)
+            }
+            
+            return .success(temp)
+        }
     }
     
     /// One section of a multi patch.
@@ -97,51 +156,58 @@ public struct MultiPatch: Codable {
             receiveChannel = 1
         }
         
-        /// Initializes a multi section from MIDI System Exclusive data.
-        /// - Parameter d: A byte array with the System Exclusive data.
-        public init(data d: ByteArray) {
+        public static func parse(from data: ByteArray) -> Result<Section, ParseError> {
             var offset: Int = 0
             var b: Byte = 0
             
-            b = d.next(&offset)
+            var temp = Section()
+            
+            b = data.next(&offset)
             let instrumentMSB = b
-            b = d.next(&offset)
+            b = data.next(&offset)
             let instrumentLSB = b
             
-            single = InstrumentNumber(msb: instrumentMSB, lsb: instrumentLSB)
+            temp.single = InstrumentNumber(msb: instrumentMSB, lsb: instrumentLSB)
             
-            b = d.next(&offset)
-            volume = UInt(b)
+            b = data.next(&offset)
+            temp.volume = UInt(b)
             
-            b = d.next(&offset)
-            pan = Int(b)
+            b = data.next(&offset)
+            temp.pan = Int(b)
 
-            b = d.next(&offset)
-            effectPath = UInt(b)
+            b = data.next(&offset)
+            temp.effectPath = UInt(b)
             
-            b = d.next(&offset)
-            transpose = Int(b) - 64  // SysEx 40~88 to -24~+24
+            b = data.next(&offset)
+            temp.transpose = Int(b) - 64  // SysEx 40~88 to -24~+24
 
-            b = d.next(&offset)
-            tune = Int(b) - 64  // SysEx 1~127 to -63...+63
+            b = data.next(&offset)
+            temp.tune = Int(b) - 64  // SysEx 1~127 to -63...+63
             
-            b = d.next(&offset)
+            b = data.next(&offset)
             let zoneLow = b
-            b = d.next(&offset)
+            b = data.next(&offset)
             let zoneHigh = b
-            zone = Zone(high: Key(note: Int(zoneHigh)), low: Key(note: Int(zoneLow)))
+            temp.zone = Zone(high: Key(note: Int(zoneHigh)), low: Key(note: Int(zoneLow)))
 
             var velocitySwitchBytes = ByteArray()
-            b = d.next(&offset)
+            b = data.next(&offset)
             velocitySwitchBytes.append(b)
-            b = d.next(&offset)
+            b = data.next(&offset)
             velocitySwitchBytes.append(b)
             
-            velocitySwitch = VelocitySwitch(data: velocitySwitchBytes)
+            switch VelocitySwitch.parse(from: velocitySwitchBytes) {
+            case .success(let vs):
+                temp.velocitySwitch = vs
+            case .failure(let error):
+                return .failure(error)
+            }
             
-            b = d.next(&offset)
-            receiveChannel = b
-        }        
+            b = data.next(&offset)
+            temp.receiveChannel = b
+            
+            return .success(temp)
+        }
     }
     
     /// Multi patch common settings.
@@ -158,18 +224,31 @@ public struct MultiPatch: Codable {
     
     /// Initializes a multi patch from MIDI System Exclusive data.
     /// - Parameter d: A byte array with the System Exclusive data.
-    public init(data d: ByteArray) {
+    public static func parse(from data: ByteArray) -> Result<MultiPatch, ParseError> {
         var offset: Int = 0
+
+        var temp = MultiPatch()
         
-        common = Common(data: d)
+        switch Common.parse(from: data.slice(from: offset, length: Common.dataSize)) {
+        case .success(let common):
+            temp.common = common
+        case .failure(let error):
+            return .failure(error)
+        }
         offset += Common.dataSize
         
-        sections = [Section]()
+        temp.sections = [Section]()
         for _ in 0..<MultiPatch.sectionCount {
-            let section = Section(data: d.slice(from: offset, length: Section.dataSize))
-            sections.append(section)
+            switch Section.parse(from: data.slice(from: offset, length: Section.dataSize)) {
+            case .success(let section):
+                temp.sections.append(section)
+            case .failure(let error):
+                return .failure(error)
+            }
             offset += Section.dataSize
         }
+        
+        return .success(temp)
     }
     
     /// Multi patch checksum.

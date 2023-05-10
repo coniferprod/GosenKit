@@ -9,20 +9,29 @@ public struct FormantFilter: Codable {
             public var rate: Int  // 0~127
             public var level: Int // -63(1)~+63(127)
             
+            public init() {
+                self.rate = 0
+                self.level = 0
+            }
+            
             public init(rate: Int, level: Int) {
                 self.rate = rate
                 self.level = level
             }
             
-            public init(data d: ByteArray) {
+            public static func parse(from data: ByteArray) -> Result<Segment, ParseError> {
                 var offset: Int = 0
                 var b: Byte = 0
                 
-                b = d.next(&offset)
-                rate = Int(b)
+                var temp = Segment()
                 
-                b = d.next(&offset)
-                level = Int(b) - 64
+                b = data.next(&offset)
+                temp.rate = Int(b)
+                
+                b = data.next(&offset)
+                temp.level = Int(b) - 64
+                
+                return .success(temp)
             }
         }
 
@@ -44,31 +53,56 @@ public struct FormantFilter: Codable {
             keyScalingDepth = 0
         }
         
-        public init(data d: ByteArray) {
+        public static func parse(from data: ByteArray) -> Result<Envelope, ParseError> {
             var offset: Int = 0
             var b: Byte = 0
 
-            let length = Segment.dataSize
-            attack = Segment(data: d.slice(from: offset, length: length))
-            offset += length
-
-            decay1 = Segment(data: d.slice(from: offset, length: length))
-            offset += length
-
-            decay2 = Segment(data: d.slice(from: offset, length: length))
-            offset += length
-
-            release = Segment(data: d.slice(from: offset, length: length))
-            offset += length
-
-            b = d.next(&offset)
-            decayLoop = HarmonicEnvelope.LoopKind(index: Int(b))!
+            var temp = Envelope()
             
-            b = d.next(&offset)
-            velocityDepth = Int(b) - 64
+            let length = Segment.dataSize
+            
+            switch Segment.parse(from: data.slice(from: offset, length: length)) {
+            case .success(let seg):
+                temp.attack = seg
+            case .failure(let error):
+                return .failure(error)
+            }
+            offset += length
 
-            b = d.next(&offset)
-            keyScalingDepth = Int(b) - 64
+            switch Segment.parse(from: data.slice(from: offset, length: length)) {
+            case .success(let seg):
+                temp.decay1 = seg
+            case .failure(let error):
+                return .failure(error)
+            }
+            offset += length
+
+            switch Segment.parse(from: data.slice(from: offset, length: length)) {
+            case .success(let seg):
+                temp.decay2 = seg
+            case .failure(let error):
+                return .failure(error)
+            }
+            offset += length
+
+            switch Segment.parse(from: data.slice(from: offset, length: length)) {
+            case .success(let seg):
+                temp.release = seg
+            case .failure(let error):
+                return .failure(error)
+            }
+            offset += length
+
+            b = data.next(&offset)
+            temp.decayLoop = HarmonicEnvelope.LoopKind(index: Int(b))!
+            
+            b = data.next(&offset)
+            temp.velocityDepth = Int(b) - 64
+
+            b = data.next(&offset)
+            temp.keyScalingDepth = Int(b) - 64
+
+            return .success(temp)
         }
     }
     
@@ -99,18 +133,22 @@ public struct FormantFilter: Codable {
             depth = 0
         }
         
-        public init(data d: ByteArray) {
+        public static func parse(from data: ByteArray) -> Result<LFO, ParseError> {
             var offset: Int = 0
             var b: Byte = 0
             
-            b = d.next(&offset)
-            speed = Int(b)
-
-            b = d.next(&offset)
-            shape = Shape(index: Int(b))!
+            var temp = LFO()
             
-            b = d.next(&offset)
-            depth = Int(b)
+            b = data.next(&offset)
+            temp.speed = Int(b)
+
+            b = data.next(&offset)
+            temp.shape = Shape(index: Int(b))!
+            
+            b = data.next(&offset)
+            temp.depth = Int(b)
+
+            return .success(temp)
         }
     }
 
@@ -164,24 +202,37 @@ public struct FormantFilter: Codable {
         lfo = LFO()
     }
     
-    public init(data d: ByteArray) {
+    public static func parse(from data: ByteArray) -> Result<FormantFilter, ParseError> {
         var offset: Int = 0
         var b: Byte = 0
-    
-        b = d.next(&offset)
-        bias = Int(b) - 64
+
+        var temp = FormantFilter()
         
-        b = d.next(&offset)
-        mode = Mode(index: Int(b))!
+        b = data.next(&offset)
+        temp.bias = Int(b) - 64
         
-        b = d.next(&offset)
-        envelopeDepth = Int(b) - 64
+        b = data.next(&offset)
+        temp.mode = Mode(index: Int(b))!
         
-        envelope = Envelope(data: d.slice(from: offset, length: Envelope.dataSize))
+        b = data.next(&offset)
+        temp.envelopeDepth = Int(b) - 64
+        
+        switch Envelope.parse(from: data.slice(from: offset, length: Envelope.dataSize)) {
+        case .success(let env):
+            temp.envelope = env
+        case .failure(let error):
+            return .failure(error)
+        }
         offset += Envelope.dataSize
         
-        lfo = LFO(data: d.slice(from: offset, length: LFO.dataSize))
-        offset += LFO.dataSize
+        switch LFO.parse(from: data.slice(from: offset, length: LFO.dataSize)) {
+        case .success(let lfo):
+            temp.lfo = lfo
+        case .failure(let error):
+            return .failure(error)
+        }
+        
+        return .success(temp)
     }
 }
 

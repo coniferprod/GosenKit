@@ -37,17 +37,26 @@ public struct VelocitySwitch: Codable {
         100, 104, 108, 112, 116, 120, 124, 127
     ]
     
+    public init() {
+        self.kind = .off
+        self.threshold = VelocitySwitch.conversionTable[0]
+    }
+    
     public init(kind: Kind, threshold: Int) {
         self.kind = kind
         self.threshold = VelocitySwitch.conversionTable[threshold]
     }
     
-    public init(data d: ByteArray) {
-        let b = d[0]
+    public static func parse(from data: ByteArray) -> Result<VelocitySwitch, ParseError> {
+        var temp = VelocitySwitch()
+        
+        let b = data[0]
         let vs = Int(b >> 5)   // bits 5-6
-        kind = Kind(index: vs)!
+        temp.kind = Kind(index: vs)!
         let n = Int(b & 0b00011111)   // bits 0-4
-        threshold = VelocitySwitch.conversionTable[n]
+        temp.threshold = VelocitySwitch.conversionTable[n]
+        
+        return .success(temp)
     }
 }
 
@@ -141,6 +150,27 @@ public struct MacroController: Codable {
         b = d.next(&offset)
         depth2 = Int(b) - 64
         //print("depth2 byte = \(String(b, radix: 16))h, converted to \(depth2)")
+    }
+    
+    public static func parse(from data: ByteArray) -> Result<MacroController, ParseError> {
+        var offset: Int = 0
+        var b: Byte = 0
+        
+        var temp = MacroController()  // initialize with defaults, then fill in
+        
+        b = data.next(&offset)
+        temp.destination1 = ControlDestination(index: Int(b))!
+
+        b = data.next(&offset)
+        temp.depth1 = Int(b) - 64
+        
+        b = data.next(&offset)
+        temp.destination2 = ControlDestination(index: Int(b))!
+
+        b = data.next(&offset)
+        temp.depth2 = Int(b) - 64
+        
+        return .success(temp)
     }
 }
 
@@ -299,6 +329,24 @@ public struct EffectControl: Codable {
             b = d.next(&offset)
             depth = Int(b) - 64
         }
+        
+        public static func parse(from data: ByteArray) -> Result<Source, ParseError> {
+            var offset: Int = 0
+            var b: Byte = 0
+
+            var temp = Source()  // initialize with defaults, then fill in
+            
+            b = data.next(&offset)
+            temp.source = ControlSource(index: Int(b))!
+            
+            b = data.next(&offset)
+            temp.destination = EffectDestination(index: Int(b))!
+            
+            b = data.next(&offset)
+            temp.depth = Int(b) - 64
+            
+            return .success(temp)
+        }
     }
 
     public var source1: Source
@@ -316,6 +364,30 @@ public struct EffectControl: Codable {
         source1 = Source(data: d.slice(from: offset, length: length))
         offset += length
         source2 = Source(data: d.slice(from: offset, length: length))
+    }
+    
+    public static func parse(from data: ByteArray) -> Result<EffectControl, ParseError> {
+        var temp = EffectControl()  // initialize with defaults, then fill in
+        
+        var offset: Int = 0
+        let length = Source.dataSize
+        
+        switch Source.parse(from: data.slice(from: offset, length: length)) {
+        case .success(let source):
+            temp.source1 = source
+        case .failure(let error):
+            return .failure(error)
+        }
+        offset += length
+        
+        switch Source.parse(from: data.slice(from: offset, length: length)) {
+        case .success(let source):
+            temp.source2 = source
+        case .failure(let error):
+            return .failure(error)
+        }
+        
+        return .success(temp)
     }
 }
 
@@ -342,6 +414,24 @@ public struct AssignableController: Codable {
         
         b = d.next(&offset)
         depth = Int(b)
+    }
+    
+    public static func parse(from data: ByteArray) -> Result<AssignableController, ParseError> {
+        var offset: Int = 0
+        var b: Byte = 0
+
+        var temp = AssignableController()  // initialize with defaults, then fill in
+        
+        b = data.next(&offset)
+        temp.source = ControlSource(index: Int(b))!
+        
+        b = data.next(&offset)
+        temp.destination = ControlDestination(index: Int(b))!
+        
+        b = data.next(&offset)
+        temp.depth = Int(b)
+
+        return .success(temp)
     }
 }
 

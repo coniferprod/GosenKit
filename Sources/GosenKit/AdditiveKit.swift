@@ -35,39 +35,53 @@ public struct AdditiveKit: Codable {
         }
     }
     
-    /// Initializes an additive kit from MIDI System Exclusive data bytes.
-    public init(data d: ByteArray) {
+    public static func parse(from data: ByteArray) -> Result<AdditiveKit, ParseError> {
         var offset: Int = 0
 
-        let _ = d.next(&offset)
-        //print("From SysEx, ADD kit checksum = \(String(originalChecksum, radix: 16))")
+        var temp = AdditiveKit()
         
-        common = HarmonicCommon(data: d.slice(from: offset, length: HarmonicCommon.dataSize))
+        let _ = data.next(&offset)
+        
+        switch HarmonicCommon.parse(from: data.slice(from: offset, length: HarmonicCommon.dataSize)) {
+        case .success(let common):
+            temp.common = common
+        case .failure(let error):
+            return .failure(error)
+        }
         offset += HarmonicCommon.dataSize
         
-        morf = Morf(data: d.slice(from: offset, length: Morf.dataSize))
+        temp.morf = Morf(data: data.slice(from: offset, length: Morf.dataSize))
         offset += Morf.dataSize
 
-        formantFilter = FormantFilter(data: d.slice(from: offset, length: FormantFilter.dataSize))
+        switch FormantFilter.parse(from: data.slice(from: offset, length: FormantFilter.dataSize)) {
+        case .success(let ff):
+            temp.formantFilter = ff
+        case .failure(let error):
+            return .failure(error)
+        }
         offset += FormantFilter.dataSize
         
-        levels = HarmonicLevels(data: d.slice(from: offset, length: HarmonicLevels.dataSize))
+        temp.levels = HarmonicLevels(data: data.slice(from: offset, length: HarmonicLevels.dataSize))
         offset += HarmonicLevels.dataSize
         
-        bands = FormantFilter.Bands(data: d.slice(from: offset, length: FormantFilter.Bands.dataSize))
+        temp.bands = FormantFilter.Bands(data: data.slice(from: offset, length: FormantFilter.Bands.dataSize))
         offset += FormantFilter.Bands.dataSize
         
-        envelopes = [HarmonicEnvelope]()
-        var envelopeBytes = ByteArray()
+        temp.envelopes = [HarmonicEnvelope]()
         for _ in 0 ..< AdditiveKit.harmonicCount {
-            let envelopeData = d.slice(from: offset, length: HarmonicEnvelope.dataSize)
+            let envelopeData = data.slice(from: offset, length: HarmonicEnvelope.dataSize)
+
+            switch HarmonicEnvelope.parse(from: envelopeData) {
+            case .success(let envelope):
+                temp.envelopes.append(envelope)
+            case .failure(let error):
+                return .failure(error)
+            }
+
             offset += HarmonicEnvelope.dataSize
-
-            let envelope = HarmonicEnvelope(data: envelopeData)
-            envelopeBytes.append(contentsOf: envelopeData)
-
-            envelopes.append(envelope)
         }
+
+        return .success(temp)
     }
 
     /// The checksum of the additive kit.
