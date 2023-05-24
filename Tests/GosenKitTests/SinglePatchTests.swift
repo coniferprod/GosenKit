@@ -1,4 +1,5 @@
 import XCTest
+import SyxPack
 @testable import GosenKit
 
 final class SinglePatchTests: XCTestCase {
@@ -14,15 +15,24 @@ final class SinglePatchTests: XCTestCase {
     
     // This test depends on a System Exclusive file found in the Resources directory of the test module.
     func testSinglePatch_fromData() {
-        if let patchURL = Bundle.module.url(forResource: "PowerK5K", withExtension: "syx") {
-            if let patchData = try? Data(contentsOf: patchURL) {
-                switch SinglePatch.parse(from: patchData.bytes) {
-                case .success(let patch):
-                    XCTAssert(patch.common.name.value == "PowerK5K")
-                case .failure(let error):
-                    XCTFail("\(error)")
+        if let url = Bundle.module.url(forResource: "PowerK5K", withExtension: "syx") {
+            if let data = try? Data(contentsOf: url) {
+                if case let .manufacturerSpecific(_, payload) = Message(data: data.bytes) {
+                    if let dumpCommand = DumpCommand(data: payload) {
+                        let patchData = ByteArray(payload[dumpCommand.dataLength...])
+                        
+                        switch SinglePatch.parse(from: patchData) {
+                        case .success(let patch):
+                            XCTAssert(patch.common.name.value == "PowerK5K")
+                        case .failure(let error):
+                            XCTFail("\(error)")
+                        }
+                    }
                 }
             }
+        }
+        else {
+            XCTFail("Unable to read patch data from resources")
         }
     }
         

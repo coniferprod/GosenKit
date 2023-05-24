@@ -14,10 +14,13 @@ final class ToneMapTests: XCTestCase {
         var data = ByteArray(repeating: 0x00, count: ToneMap.dataSize)
         data[0].setBit(0)  // set Tone No. A001 to be included
 
-        let toneMap = ToneMap(data: data)
-        
-        // Should have one tone included, and it is the first one
-        XCTAssertTrue(toneMap.includedCount == 1 && toneMap[0])
+        if let toneMap = ToneMap(data: data) {
+            // Should have one tone included, and it is the first one
+            XCTAssertTrue(toneMap.includedCount == 1 && toneMap[0])
+        }
+        else {
+            XCTFail("Unable to initialize tone map from data")
+        }
     }
     
     func testToneMap_includes() {
@@ -46,9 +49,12 @@ final class ToneMapTests: XCTestCase {
         var data = ByteArray(repeating: 0x00, count: ToneMap.dataSize)
         data[17].setBit(0)
 
-        let toneMap = ToneMap(data: data)
-
-        XCTAssertTrue(toneMap[119])  // tones numbered here from zero
+        if let toneMap = ToneMap(data: data) {
+            XCTAssertTrue(toneMap[119])  // tones numbered here from zero
+        }
+        else {
+            XCTFail("Unable to create tone map")
+        }
     }
 }
 

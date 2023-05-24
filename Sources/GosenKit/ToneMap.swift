@@ -11,8 +11,11 @@ public class ToneMap {
     }
     
     /// Initializes a tone map from System Exclusive data.
-    /// Assumes that `data` contains `maxCount` bytes,
-    public init(data: ByteArray) {
+    public init?(data: ByteArray) {
+        guard data.count == ToneMap.dataSize else {
+            return nil
+        }
+        
         self.included = [Bool]()
         for (_, byte) in data.enumerated() {
             // Take the bottom seven bits of each byte
@@ -38,6 +41,19 @@ public class ToneMap {
     /// The number of patches included.
     public var includedCount: Int {
         self.included.filter { $0 }.count
+    }
+    
+    /// The set of all included tones.
+    public var allIncludedTones: Set<Int> {
+        var set = Set<Int>()
+        
+        for t in 1...maxCount {
+            if self.includes(tone: t) {
+                set.insert(t)
+            }
+        }
+        
+        return set
     }
     
     /// Checks if the tone map includes `tone`.

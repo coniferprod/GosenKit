@@ -6,10 +6,13 @@ import SyxPack
 // Kawai K5000 banks contain either single patches (up to 128 of them)
 // or exactly 64 multi patches (called combi on K5000W).
 
+/// Bank of single patches.
 public struct SingleBank {
-    public var patches: [SinglePatch]
+    /// Patches in a bank of singles keyed by tone number.
+    public var patches: [Int: SinglePatch]
 }
 
+/// Bank identifier.
 public enum BankIdentifier: Byte, CustomStringConvertible {
     case a = 0x00
     case b = 0x01
@@ -37,7 +40,7 @@ public enum BankIdentifier: Byte, CustomStringConvertible {
     }
 }
 
-
+/// Bank of combi/multi patches.
 public struct MultiBank {
     public var patches: [MultiPatch]
 }

@@ -39,9 +39,22 @@ public enum SystemExclusive {
         case identityAcknowledge = 0x61
         case unknown = 0x99
         
+        // Identify the System Exclusive function from the data bytes.
+        // The data must be the raw payload (not including SysEx initiator
+        // or manufacturer byte).
         public static func identify(data: ByteArray) -> SystemExclusive.Function {
-            if data[3] == 0x20 && data[4] == 0x00 && data[5] == 0x0A && data[6] == 0x00 {
+            // data[0] is the MIDI channel
+            
+            if data[1] == SystemExclusive.Function.allBlockDump.rawValue && data[2] == 0x00 && data[3] == 0x0A && data[4] == 0x00 {
+                return .allBlockDump
+            }
+            
+            if data[1] == SystemExclusive.Function.oneBlockDump.rawValue && data[2] == 0x00 && data[3] == 0x0A && data[4] == 0x00 {
                 return .oneBlockDump
+            }
+
+            if data[1] == SystemExclusive.Function.parameterSend.rawValue && data[2] == 0x00 && data[3] == 0x0A {
+                return .parameterSend
             }
             
             if data[3] == SystemExclusive.Function.identityRequest.rawValue && data[4] == 0x00 && data[5] == 0x0A {
@@ -212,6 +225,24 @@ extension DumpCommand: CustomStringConvertible {
 
 extension DumpCommand: Equatable { }
 
+public struct ParameterChange {
+    /// MIDI channel (1...16)
+    public var channel: Byte
+    
+    // Function is always 0x10
+    // Group is always 0x00
+    // Machine is always 0x0A
+    
+    public var sub1: Byte
+    public var sub2: Byte
+    public var sub3: Byte
+    public var sub4: Byte
+    public var sub5: Byte
+    public var dataHigh: Byte
+    public var dataLow: Byte
+}
+
+extension ParameterChange: Equatable { }
 
 extension SystemExclusive.Header: SystemExclusiveData {
     public func asData() -> ByteArray {
@@ -261,6 +292,20 @@ extension DumpCommand: SystemExclusiveData {
         let data = self.collectData()
         return data.count
     }
+}
+
+extension ParameterChange: SystemExclusiveData {
+    public func asData() -> ByteArray {
+        return [
+            self.channel - 1,   // adjust 1~16 to 0~15
+            SystemExclusive.Function.parameterSend.rawValue,
+            0x00,
+            0x0A,
+            sub1, sub2, sub3, sub4, sub5, dataHigh, dataLow,
+        ]
+    }
+    
+    public var dataLength: Int { 11 }
 }
 
 // MARK: - CustomStringConvertible

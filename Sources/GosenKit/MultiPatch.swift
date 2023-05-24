@@ -186,6 +186,8 @@ public struct MultiPatch: Codable {
     public static func parse(from data: ByteArray) -> Result<MultiPatch, ParseError> {
         var offset: Int = 0
 
+        _ = data.next(&offset)  // checksum is the first byte
+        
         var temp = MultiPatch()
         
         switch Common.parse(from: data.slice(from: offset, length: Common.dataSize)) {
