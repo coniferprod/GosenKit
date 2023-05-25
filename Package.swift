@@ -14,7 +14,7 @@ let package = Package(
             targets: ["GosenKit"]),
     ],
     dependencies: [
-        .package(url: "https://github.com/coniferprod/SyxPack", from: "0.7.0"),
+        .package(url: "https://github.com/coniferprod/SyxPack", from: "0.9.0"),
     ],
     targets: [
         .target(
@@ -22,9 +22,6 @@ let package = Package(
             dependencies: ["SyxPack"]),
         .testTarget(
             name: "GosenKitTests",
-            dependencies: ["GosenKit", "SyxPack"],
-            resources: [
-                .copy("Resources")
-            ]),
+            dependencies: ["GosenKit", "SyxPack"]),
     ]
 )

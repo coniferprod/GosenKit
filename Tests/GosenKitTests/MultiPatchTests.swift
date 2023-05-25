@@ -3,6 +3,29 @@ import XCTest
 import SyxPack
 
 final class MultiPatchTests: XCTestCase {
+    // Data for Combi C01 "Evening3" from K5000W.
+    let patchData: ByteArray = [
+        0xf0, 0x40, 0x00, 0x20, 0x00, 0x0a, 0x20, 0x00,  // SysEx header and dump info
+        
+        // Actual multi patch data starts here (103 bytes).
+        0x55, 0x00,
+        0x00, 0x21, 0x15, 0x15, 0x41, 0x31, 0x1d, 0x42,
+        0x3d, 0x37, 0x37, 0x01, 0x19, 0x3e, 0x06, 0x3b,
+        0x3f, 0x00, 0x15, 0x1a, 0x0f, 0x16, 0x00, 0x01,
+        0x12, 0x06, 0x69, 0x2e, 0x3f, 0x40, 0x42, 0x40,
+        0x40, 0x40, 0x40, 0x40, 0x42, 0x45, 0x76, 0x65,
+        0x6e, 0x69, 0x6e, 0x67, 0x33, 0x76, 0x0f, 0x00,
+        0x00, 0x40, 0x00, 0x00, 0x40, 0x01, 0x00, 0x7f,
+        0x40, 0x00, 0x40, 0x40, 0x00, 0x7f, 0x00, 0x00,
+        0x00, 0x01, 0x12, 0x4d, 0x40, 0x02, 0x40, 0x40,
+        0x00, 0x7f, 0x00, 0x00, 0x00, 0x01, 0x39, 0x7f,
+        0x2c, 0x02, 0x40, 0x40, 0x44, 0x7f, 0x00, 0x00,
+        0x00, 0x04, 0x2f, 0x6e, 0x58, 0x00, 0x40, 0x40,
+        0x44, 0x7f, 0x00, 0x00, 0x00,
+        
+        0xf7  // SysEx terminator byte
+    ]
+    
     func testName() {
         let multi = MultiPatch()
         XCTAssertEqual(multi.common.name.value, "NewMulti")
@@ -13,26 +36,20 @@ final class MultiPatchTests: XCTestCase {
         XCTAssertEqual(multi.sections.count, MultiPatch.sectionCount)
     }
     
-    // This test depends on a System Exclusive file found in the Resources directory of the test module.
     func testMultiPatch_fromData() {
-        if let url = Bundle.module.url(forResource: "Evening3", withExtension: "syx") {
-            if let data = try? Data(contentsOf: url) {
-                if case let .manufacturerSpecific(_, payload) = Message(data: data.bytes) {
-                    if let dumpCommand = DumpCommand(data: payload) {
-                        let patchData = ByteArray(payload[dumpCommand.dataLength...])
-                        
-                        switch MultiPatch.parse(from: patchData) {
-                        case .success(let patch):
-                            XCTAssert(patch.common.name.value == "Evening3")
-                        case .failure(let error):
-                            XCTFail("\(error)")
-                        }
-                    }
+        if case let .manufacturerSpecific(_, payload) = Message(data: self.patchData) {
+            if let dumpCommand = DumpCommand(data: payload) {
+                let data = ByteArray(payload[dumpCommand.dataLength...])
+                switch MultiPatch.parse(from: data) {
+                case .success(let patch):
+                    XCTAssert(patch.common.name.value == "Evening3")
+                case .failure(let error):
+                    XCTFail("\(error)")
                 }
             }
         }
         else {
-            XCTFail("Unable to read patch data from resources")
+            XCTFail("Unable to parse patch data as System Exclusive message")
         }
-    }
+    }    
 }

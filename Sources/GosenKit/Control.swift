@@ -483,9 +483,9 @@ extension EffectControl.Source: CustomStringConvertible {
 
 extension EffectControl: CustomStringConvertible {
     public var description: String {
-        var s = "\nEffect Control:\n"
-        s += "    Source1: \(source1)\n"
-        s += "    Source2: \(source2)\n"
+        var s = ""
+        s += "Source1: \(source1)\n"
+        s += "Source2: \(source2)\n"
         return s
     }
 }

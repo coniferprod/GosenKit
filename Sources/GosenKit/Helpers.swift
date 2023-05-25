@@ -224,6 +224,20 @@ public struct InstrumentNumber: Codable {
     }
 }
 
+// MARK: - CustomStringConvertible
+
+extension InstrumentNumber: CustomStringConvertible {
+    public var description: String {
+        return String(format: "%d", self.value)
+    }
+}
+
+extension Zone: CustomStringConvertible {
+    public var description: String {
+        return "Low: \(self.low.name)  High: \(self.high.name)"
+    }
+}
+
 // MARK: - SystemExclusiveData
 
 extension PatchName: SystemExclusiveData {

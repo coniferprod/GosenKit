@@ -16,8 +16,7 @@ public struct MultiPatch: Codable {
         public var name: PatchName
         public var volume: UInt
         public var sectionMutes: [Bool]
-        public var effectControl1: EffectControl
-        public var effectControl2: EffectControl
+        public var effectControl: EffectControl
 
         /// Initialize common settings with defaults.
         public init() {
@@ -26,13 +25,14 @@ public struct MultiPatch: Codable {
             name = PatchName("NewMulti")
             volume = 127
             sectionMutes = [Bool](repeating: false, count: MultiPatch.sectionCount)
-            effectControl1 = EffectControl()
-            effectControl2 = EffectControl()
+            effectControl = EffectControl()
         }
         
         public static func parse(from data: ByteArray) -> Result<Common, ParseError> {
             var offset: Int = 0
             var b: Byte = 0
+            
+            //print("Starting to parse multi/combi patch common data from \(data.count) bytes")
             
             var temp = Common()  // initialize with defaults, then fill in
             
@@ -44,7 +44,9 @@ public struct MultiPatch: Codable {
                 return .failure(error)
             }
             offset += EffectSettings.dataSize
-            
+
+            //print("After effects parsed, offset = \(String(format: "%d", offset)) (data length = \(data.count))")
+
             temp.geq = [Int]()
             for _ in 0..<SinglePatch.Common.geqBandCount {
                 b = data.next(&offset)
@@ -52,13 +54,19 @@ public struct MultiPatch: Codable {
                 //print("GEQ band \(i + 1): \(b) --> \(v)")
                 temp.geq.append(Int(v))
             }
-            offset += Common.geqBandCount
-            
+            // Don't adjust offset, it has already been adjusted in the loop above.
+
+            //print("After GEQ parsed, offset = \(String(format: "%d", offset)) (data length = \(data.count))")
+
             temp.name = PatchName(data: data.slice(from: offset, length: PatchName.length))
             offset += PatchName.length
 
+            //print("After name parsed, offset = \(String(format: "%d", offset)) (data length = \(data.count))")
+
             b = data.next(&offset)
             temp.volume = UInt(b)
+            
+            //print("After volume parsed, offset = \(String(format: "%d", offset)) (data length = \(data.count))")
 
             b = data.next(&offset)
             // Unpack the section mutes into a Bool array. Spec says "0:mute".
@@ -69,23 +77,17 @@ public struct MultiPatch: Codable {
                 !(b.isBitSet(3))
             ]
 
-            let effectControl1Data = data.slice(from: offset, length: EffectControl.dataSize)
-            switch EffectControl.parse(from: effectControl1Data) {
+            let effectControlData = data.slice(from: offset, length: EffectControl.dataSize)
+            switch EffectControl.parse(from: effectControlData) {
             case .success(let control):
-                temp.effectControl1 = control
+                temp.effectControl = control
             case .failure(let error):
                 return .failure(error)
             }
             offset += EffectControl.dataSize
-            
-            let effectControl2Data = data.slice(from: offset, length: EffectControl.dataSize)
-            switch EffectControl.parse(from: effectControl2Data) {
-            case .success(let control):
-                temp.effectControl2 = control
-            case .failure(let error):
-                return .failure(error)
-            }
-            
+
+            //print("After Effect Control parsed, offset = \(String(format: "%d", offset)) (data length = \(data.count))")
+
             return .success(temp)
         }
     }
@@ -100,7 +102,7 @@ public struct MultiPatch: Codable {
         public var tune: Int
         public var zone: Zone
         public var velocitySwitch: VelocitySwitch
-        public var receiveChannel: UInt8
+        public var receiveChannel: UInt8  // use 1~16 here
         
         /// Initializes a multi section with defaults.
         public init() {
@@ -163,7 +165,7 @@ public struct MultiPatch: Codable {
             }
             
             b = data.next(&offset)
-            temp.receiveChannel = b
+            temp.receiveChannel = b + 1  // adjust channel to 1~16
             
             return .success(temp)
         }
@@ -257,6 +259,67 @@ public struct MultiPatch: Codable {
     }
 }
 
+// MARK: - CustomStringConvertible
+
+extension MultiPatch: CustomStringConvertible {
+    public var description: String {
+        var result = ""
+        
+        result += "\(self.common)\n"
+        
+        for (index, section) in self.sections.enumerated() {
+            result += "Section \(index + 1):\n"
+            result += "\(section)\n\n"
+        }
+        
+        return result
+    }
+}
+
+extension MultiPatch.Common: CustomStringConvertible {
+    public var description: String {
+        var result = ""
+        
+        result += "Name: \(self.name)\n"
+        result += "Volume: \(self.volume)\n"
+        result += "\(self.effects)\n"
+        
+        result += "GEQ: "
+        for band in geq {
+            result += "\(band) "
+        }
+        result += "\n"
+        
+        result += "Effect Control: \(self.effectControl)\n"
+
+        var muteValues = ["-", "-", "-", "-"]
+        for (index, mute) in self.sectionMutes.enumerated() {
+            muteValues[index] = mute ? "-" : String(format: "%d", index)
+        }
+        result += "Sections: \(muteValues.joined(separator: ""))\n"
+        
+        return result
+    }
+}
+
+extension MultiPatch.Section: CustomStringConvertible {
+    public var description: String {
+        var result = ""
+        
+        result += "Instrument: \(self.single)\n"
+        result += "Volume: \(self.volume)\n"
+        result += "Pan: \(self.pan)\n"
+        result += "Effect path: \(self.effectPath)\n"
+        result += "Transpose: \(self.transpose)\n"
+        result += "Tune: \(self.tune)\n"
+        result += "Zone: \(self.zone)\n"
+        result += "Vel SW: \(self.velocitySwitch)\n"
+        result += "Receive Ch: \(self.receiveChannel)"
+        
+        return result
+    }
+}
+
 // MARK: - SystemExclusiveData
 
 extension MultiPatch: SystemExclusiveData {
@@ -320,7 +383,7 @@ extension MultiPatch.Section: SystemExclusiveData {
         data.append(Byte(zone.low.note))
         data.append(Byte(zone.high.note))
         data.append(contentsOf: velocitySwitch.asData())
-        data.append(receiveChannel)
+        data.append(receiveChannel - 1)  // adjust to 0~15
         
         return data
     }
