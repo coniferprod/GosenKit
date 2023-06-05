@@ -14,7 +14,7 @@ public struct MultiPatch: Codable {
         public var effects: EffectSettings
         public var geq: [Int]  // all 0...127
         public var name: PatchName
-        public var volume: UInt
+        public var volume: UInt  // 0...127
         public var sectionMutes: [Bool]
         public var effectControl: EffectControl
 
@@ -70,6 +70,7 @@ public struct MultiPatch: Codable {
 
             b = data.next(&offset)
             // Unpack the section mutes into a Bool array. Spec says "0:mute".
+            // bits 0~3 = section 1~4
             temp.sectionMutes = [
                 !(b.isBitSet(0)),
                 !(b.isBitSet(1)),
@@ -95,14 +96,14 @@ public struct MultiPatch: Codable {
     /// One section of a multi patch.
     public struct Section: Codable {
         public var single: InstrumentNumber
-        public var volume: UInt
-        public var pan: Int
-        public var effectPath: UInt
-        public var transpose: Int
-        public var tune: Int
+        public var volume: UInt  // 0~127
+        public var pan: Int  // 0~127
+        public var effectPath: UInt  // 0~3
+        public var transpose: Int  // SysEx 40~88 = -24~+24
+        public var tune: Int  // SysEx 1~127 = -63~+63
         public var zone: Zone
         public var velocitySwitch: VelocitySwitch
-        public var receiveChannel: UInt8  // use 1~16 here
+        public var receiveChannel: UInt8  // SysEx 0~15 = 1~16
         
         /// Initializes a multi section with defaults.
         public init() {
@@ -280,7 +281,7 @@ extension MultiPatch.Common: CustomStringConvertible {
     public var description: String {
         var result = ""
         
-        result += "Name: \(self.name)\n"
+        result += "Name: \(self.name.value)\n"
         result += "Volume: \(self.volume)\n"
         result += "\(self.effects)\n"
         
@@ -294,7 +295,7 @@ extension MultiPatch.Common: CustomStringConvertible {
 
         var muteValues = ["-", "-", "-", "-"]
         for (index, mute) in self.sectionMutes.enumerated() {
-            muteValues[index] = mute ? "-" : String(format: "%d", index)
+            muteValues[index] = mute ? "-" : String(format: "%d", index + 1)
         }
         result += "Sections: \(muteValues.joined(separator: ""))\n"
         
