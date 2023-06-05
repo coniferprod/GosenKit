@@ -28,6 +28,9 @@ public struct MultiPatch: Codable {
             effectControl = EffectControl()
         }
         
+        /// Parses the common part of a multi patch from System Exclusive data.
+        /// - Parameter data: The System Exclusive data bytes.
+        /// - Returns: A `Result` type with either the parsed `Common`, or a `ParseError` with more details.
         public static func parse(from data: ByteArray) -> Result<Common, ParseError> {
             var offset: Int = 0
             var b: Byte = 0
@@ -117,6 +120,9 @@ public struct MultiPatch: Codable {
             receiveChannel = 1
         }
         
+        /// Parses one section of a multi patch from System Exclusive data.
+        /// - Parameter data: The System Exclusive data bytes.
+        /// - Returns: A `Result` type with either the parsed `Section`, or a `ParseError` with more details.
         public static func parse(from data: ByteArray) -> Result<Section, ParseError> {
             var offset: Int = 0
             var b: Byte = 0
@@ -183,8 +189,9 @@ public struct MultiPatch: Codable {
         sections = [Section](repeating: Section(), count: MultiPatch.sectionCount)
     }
     
-    /// Initializes a multi patch from MIDI System Exclusive data.
-    /// - Parameter d: A byte array with the System Exclusive data.
+    /// Parses a multi patch from MIDI System Exclusive data.
+    /// - Parameter data: The System Exclusive data bytes.
+    /// - Returns: A `Result` type with either the parsed `MultiPatch`, or a `ParseError` with more details.
     public static func parse(from data: ByteArray) -> Result<MultiPatch, ParseError> {
         var offset: Int = 0
 
@@ -262,6 +269,7 @@ public struct MultiPatch: Codable {
 // MARK: - CustomStringConvertible
 
 extension MultiPatch: CustomStringConvertible {
+    /// String representation of this multi patch.
     public var description: String {
         var result = ""
         
@@ -277,6 +285,7 @@ extension MultiPatch: CustomStringConvertible {
 }
 
 extension MultiPatch.Common: CustomStringConvertible {
+    /// String representation of this common part of a multi patch.
     public var description: String {
         var result = ""
         
@@ -303,6 +312,7 @@ extension MultiPatch.Common: CustomStringConvertible {
 }
 
 extension MultiPatch.Section: CustomStringConvertible {
+    /// String representation of this section of a multi patch.
     public var description: String {
         var result = ""
         
@@ -340,6 +350,7 @@ extension MultiPatch: SystemExclusiveData {
         return data
     }
     
+    /// The length of multi patch System Exclusive data.
     public var dataLength: Int {
         return 1 + Common.dataSize + 4 * Section.dataSize
     }
@@ -362,6 +373,7 @@ extension MultiPatch.Common: SystemExclusiveData {
         return data
     }
     
+    /// The length of multi patch common part System Exclusive data.
     public var dataLength: Int { return MultiPatch.Common.dataSize }
     
     public static let dataSize = 54
@@ -388,6 +400,7 @@ extension MultiPatch.Section: SystemExclusiveData {
         return data
     }
     
+    /// The length of multi patch section data.
     public var dataLength: Int { return MultiPatch.Section.dataSize }
     
     public static let dataSize = 12
