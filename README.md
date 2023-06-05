@@ -9,9 +9,12 @@ The word "gosen" 五千 is Japanese for 5,000.
 
 ## Test resources
 
-This package contains some System Exclusive files to use in unit tests. They are packaged as described in [Bundling Resources
+This package was supposed to contain some original System Exclusive files to use in unit tests. 
+The packaging requires Swift 5.3 or later, and is described in [Bundling Resources
 with a Swift Package](https://developer.apple.com/documentation/swift_packages/bundling_resources_with_a_swift_package).
-This feature requires Swift 5.3.
+
+However, I have never gotten it to work reliably, so to save myself some trouble I just made 
+Swift source code of those SysEx files and included them in the test classes.
 
 ## Dissection of the PowerK5K patch
 
