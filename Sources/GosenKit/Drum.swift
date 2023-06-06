@@ -51,7 +51,7 @@ public struct DrumWave {
     }
     
     static let names = [
-        "N/A",  // to align with one-based numbering
+        "MUTE",
         
         // BD group
         /*  1 */ "Std1 BD1",
@@ -324,16 +324,34 @@ public struct DrumWave {
 
 /// Drum source data.
 public struct DrumSource {
-    public var volume: Int  // 0~127
-    public var pan: Int  // (63L)1 ~ (63R)127
-    public var wave: DrumWave  // 0~224
-    public var coarse: Int  // (-24)40~(+24)88
-    public var fine: Int  // (-63)1~(+63)127
-    
+    /// Pitch envelope for a drum source.
     public struct PitchEnvelope {
-        var startLevel: Int
-        var attackTime: Int
-        var levelVelocitySensitivity: Int
+        var startLevel: Int // (-63)1~(+63)127
+        var attackTime: Int // 0~127
+        var levelVelocitySensitivity: Int // (-63)1~(+63)127
+        
+        /// Initialize a drum source pitch envelope with default values.
+        public init() {
+            self.startLevel = 0
+            self.attackTime = 0
+            self.levelVelocitySensitivity = 0
+        }
+        
+        /// Parse a drum source pitch envelope from MIDI System Exclusive data.
+        public static func parse(from data: ByteArray) -> Result<PitchEnvelope, ParseError> {
+            var offset: Int = 0
+            var b: Byte = 0
+            
+            var temp = PitchEnvelope()
+            b = data.next(&offset)
+            temp.startLevel = Int(b) - 64
+            b = data.next(&offset)
+            temp.attackTime = Int(b)
+            b = data.next(&offset)
+            temp.levelVelocitySensitivity = Int(b) - 64
+            
+            return .success(temp)
+        }
     }
     
     /// Velocity control for drum source DCA.
@@ -342,18 +360,21 @@ public struct DrumSource {
         public var attackTime: Int  // (-63)1~(+63)127
         public var decay1Time: Int  // (-63)1~(+63)127
         
+        /// Initalize velocity control settings with default values.
         public init() {
-            level = 0
-            attackTime = 0
-            decay1Time = 0
+            self.level = 0
+            self.attackTime = 0
+            self.decay1Time = 0
         }
         
+        /// Initialize velocity control settings.
         public init(level: Int, attackTime: Int, decay1Time: Int) {
             self.level = level
             self.attackTime = attackTime
             self.decay1Time = decay1Time
         }
         
+        /// Parse velocity control settings from MIDI System Exclusive data.
         public static func parse(from data: ByteArray) -> Result<VelocityControl, ParseError> {
             var offset: Int = 0
             var b: Byte = 0
@@ -373,18 +394,124 @@ public struct DrumSource {
         }
     }
     
+    /// Amplifier envelope for drum source.
     public struct AmplifierEnvelope {
         var attackTime: Int   // 0~127
-        var deacy1Time: Int   // 0~127
+        var decay1Time: Int   // 0~127
         var decay1Level: Int  // 0~127
         var releaseTime: Int  // 0~127
+        
+        /// Initialize drum source amplifier envelope with default values.
+        public init() {
+            self.attackTime = 0
+            self.decay1Time = 0
+            self.decay1Level = 0
+            self.releaseTime = 0
+        }
+        
+        /// Parse drum source amplifier envelope from MIDI System Exclusive data.
+        public static func parse(from data: ByteArray) -> Result<AmplifierEnvelope, ParseError> {
+            var offset: Int = 0
+            var b: Byte = 0
+            
+            var temp = AmplifierEnvelope()
+            
+            b = data.next(&offset)
+            temp.attackTime = Int(b)
+            b = data.next(&offset)
+            temp.decay1Time = Int(b)
+            b = data.next(&offset)
+            temp.decay1Level = Int(b)
+            b = data.next(&offset)
+            temp.releaseTime = Int(b)
+
+            return .success(temp)
+        }
     }
     
+    public var volume: Int  // 0~127
+    public var pan: Int  // (63L)1 ~ (63R)127
+    public var wave: DrumWave  // 0~224
+    public var coarse: Int  // (-24)40~(+24)88
+    public var fine: Int  // (-63)1~(+63)127
     public var pitchEnvelope: PitchEnvelope
     public var filterCutoff: Int  // 0~127
     public var filterCutoffVelocityDepth: Int  // (-63)1~(+63)127
     public var amplifierEnvelope: AmplifierEnvelope
     public var amplifierVelocitySensitivity: VelocityControl
+    
+    /// Initialize drum source with default values.
+    public init() {
+        self.volume = 100
+        self.pan = 0
+        self.wave = DrumWave(number: 1)
+        self.coarse = 0
+        self.fine = 0
+        self.pitchEnvelope = PitchEnvelope()
+        self.filterCutoff = 0
+        self.filterCutoffVelocityDepth = 0
+        self.amplifierEnvelope = AmplifierEnvelope()
+        self.amplifierVelocitySensitivity = VelocityControl()
+    }
+    
+    /// Parse drum source from MIDI System Exclusive data bytes.
+    public static func parse(from data: ByteArray) -> Result<DrumSource, ParseError> {
+        var offset: Int = 0
+        var b: Byte = 0
+        
+        var temp = DrumSource()
+        
+        b = data.next(&offset)
+        temp.volume = Int(b)
+        
+        b = data.next(&offset)
+        temp.pan = Int(b) - 64
+
+        b = data.next(&offset)
+        let waveMSB = b
+        b = data.next(&offset)
+        let waveLSB = b
+        temp.wave = DrumWave(msb: waveMSB, lsb: waveLSB)
+
+        b = data.next(&offset)
+        temp.coarse = Int(b) - 64
+        
+        b = data.next(&offset)
+        temp.fine = Int(b) - 64
+        
+        let pitchEnvData = data.slice(from: offset, length: PitchEnvelope.dataSize)
+        switch PitchEnvelope.parse(from: pitchEnvData) {
+        case .success(let pitchEnv):
+            temp.pitchEnvelope = pitchEnv
+        case .failure(let error):
+            return .failure(error)
+        }
+        offset += PitchEnvelope.dataSize
+        
+        b = data.next(&offset)
+        temp.filterCutoff = Int(b)
+        b = data.next(&offset)
+        temp.filterCutoffVelocityDepth = Int(b) - 64
+
+        let ampEnvData = data.slice(from: offset, length: AmplifierEnvelope.dataSize)
+        switch AmplifierEnvelope.parse(from: ampEnvData) {
+        case .success(let ampEnv):
+            temp.amplifierEnvelope = ampEnv
+        case .failure(let error):
+            return .failure(error)
+        }
+        offset += AmplifierEnvelope.dataSize
+        
+        let controlData = data.slice(from: offset, length: VelocityControl.dataSize)
+        switch VelocityControl.parse(from: controlData) {
+        case .success(let control):
+            temp.amplifierVelocitySensitivity = control
+        case .failure(let error):
+            return .failure(error)
+        }
+
+        return .success(temp).self
+    }
 }
 
 /// Represents a K5000W drum instrument.
@@ -405,7 +532,50 @@ public struct DrumInstrument {
         public var gate: Gate
         public var exclusionGroup: ExclusionGroup
         public var effectPath: Int  // 1~4 (in SysEx 0~3)
-        public var sourceMutes: [Bool]  // "=01(fix)" WAT
+        
+        /// Initialize drum instrument common data with default values.
+        public init() {
+            self.volume = 100
+            self.gate = .off
+            self.exclusionGroup = .off
+            self.effectPath = 1
+        }
+        
+        /// Parse drum instrument common data from MIDI System Exclusive data bytes.
+        public static func parse(from data: ByteArray) -> Result<Common, ParseError> {
+            var offset: Int = 0
+            var b: Byte = 0
+            
+            b = data.next(&offset)  // dummy byte
+            
+            var temp = Common()
+            
+            b = data.next(&offset)
+            temp.volume = Int(b)
+            
+            b = data.next(&offset)
+            if b == 0x00 {
+                temp.gate = .off
+            }
+            else {
+                temp.gate = .on(Int(b))  // TODO: Check that gate is in range 1~32
+            }
+            
+            b = data.next(&offset)
+            if b == 0x00 {
+                temp.exclusionGroup = .off
+            }
+            else {
+                temp.exclusionGroup = .on(Int(b))
+            }
+            
+            b = data.next(&offset)
+            temp.effectPath = Int(b + 1)  // adjust to 1...4
+            
+            b = data.next(&offset)  // src_mute is fixed to 0x01, so don't care
+            
+            return .success(temp)
+        }
     }
         
     public var common: Common
@@ -432,6 +602,195 @@ public struct DrumInstrument {
 
         return Byte(totalSum & 0x7F)
     }
+    
+    public init() {
+        self.common = Common()
+        self.source = DrumSource()
+    }
+    
+    public static func parse(from data: ByteArray) -> Result<DrumInstrument, ParseError> {
+        var offset: Int = 0
+        
+        let _ = data.next(&offset)  // checksum
+        
+        var temp = DrumInstrument()
+
+        let commonData = data.slice(from: offset, length: Common.dataSize)
+        switch Common.parse(from: commonData) {
+        case .success(let common):
+            temp.common = common
+        case .failure(let error):
+            return .failure(error)
+        }
+        offset += Common.dataSize
+
+        let sourceData = data.slice(from: offset, length: DrumSource.dataSize)
+        switch DrumSource.parse(from: sourceData) {
+        case .success(let source):
+            temp.source = source
+        case .failure(let error):
+            return .failure(error)
+        }
+        offset += Source.dataSize
+        
+        return .success(temp)
+    }
+}
+
+/// Represents a drum note in a drum kit.
+public enum DrumNote {
+    case muted  // 0
+    case instrument(Int) // 1~253, 254~285 = USR1~32
+    
+    public init(instrumentNumber: Int) {
+        if instrumentNumber == 0 {
+            self = .muted
+        }
+        else {
+            self = .instrument(instrumentNumber)
+        }
+    }
+    
+    private func asBytes() -> (msb: Byte, lsb: Byte) {
+        switch self {
+        case .muted:
+            return (0x00, 0x00)
+        case .instrument(let number):
+            // Convert instrument number to binary string with 9 digits
+            // using a String extension (see Helpers.swift).
+            let waveBitString = String(number, radix: 2).padded(with: "0", to: 9, from: .left)
+            
+            // Take the first two bits and convert them to a number
+            let msbBitString = waveBitString.prefix(2)
+            let msb = Byte(msbBitString, radix: 2)!
+            
+            // Take the last seven bits and convert them to a number
+            let lsbBitString = waveBitString.suffix(7)
+            let lsb = Byte(lsbBitString, radix: 2)!
+
+            return (msb, lsb)
+        }
+    }
+}
+
+/// Represents a K5000W drum kit.
+public struct DrumKit {
+    /// Drum kit common settings.
+    public struct Common {
+        public var effects: EffectSettings
+        public var geq: [Int]  // 58(-6) ~ 70(+6), so 64 is zero
+        public var name: PatchName
+        public var volume: Int
+        public var effectControl: EffectControl
+        
+        /// Initialize drum kit common settings from default values.
+        public init() {
+            self.effects = EffectSettings()
+            self.geq = [ 2, 1, 0, 0, -1, -2, 1 ]
+            self.name = PatchName("DrumKit")
+            self.volume = 100
+            self.effectControl = EffectControl()
+        }
+        
+        public static func parse(from data: ByteArray) -> Result<Common, ParseError> {
+            var offset: Int = 0
+            var b: Byte = 0x00
+            
+            print("Parsing drum kit common data, \(data.count) bytes")
+
+            var temp = Common()  // initialize with defaults, then fill in
+            
+            print("Next: Drum Kit Common, EffectSettings, offset = \(offset)")
+            let effectData = data.slice(from: offset, length: EffectSettings.dataSize)
+            switch EffectSettings.parse(from: effectData) {
+            case .success(let effects):
+                temp.effects = effects
+            case .failure(let error):
+                return .failure(error)
+            }
+            offset += EffectSettings.dataSize
+
+            print("Next: Drum Kit Common, GEQ, offset = \(offset)")
+            temp.geq = [Int]()
+            for _ in 0..<SinglePatch.Common.geqBandCount {
+                b = data.next(&offset)
+                let v: Int = Int(b) - 64  // 58(-6) ~ 70(+6), so 64 is zero
+                //print("GEQ band \(i + 1): \(b) --> \(v)")
+                temp.geq.append(Int(v))
+            }
+            
+            print("Next: Drum Kit Common, Drum mark, offset = \(offset)")
+            // Eat the drum mark (39)
+            offset += 1
+            
+            print("Next: Drum Kit Common, Name, offset = \(offset)")
+            temp.name = PatchName(data: data.slice(from: offset, length: PatchName.length))
+            offset += PatchName.length
+            
+            print("Next: Drum Kit Common, Volume, offset = \(offset)")
+            b = data.next(&offset)
+            temp.volume = Int(b)
+            
+            print("Next: Drum Kit Common, EffectControl, offset = \(offset)")
+            switch EffectControl.parse(from: data.slice(from: offset, length: EffectControl.dataSize)) {
+            case .success(let control):
+                temp.effectControl = control
+            case .failure(let error):
+                return .failure(error)
+            }
+            offset += EffectControl.dataSize
+
+            return .success(temp)
+        }
+    }
+    
+    /// Drum kit note count.
+    public static let noteCount = 64
+    
+    public var common: Common
+    public var notes: [DrumNote]
+    
+    /// Initialize a drum kit with default values.
+    public init() {
+        self.common = Common()
+        self.notes = Array(repeating: DrumNote(instrumentNumber: 10), count: DrumKit.noteCount)
+    }
+    
+    public static func parse(from data: ByteArray) -> Result<DrumKit, ParseError> {
+        var offset: Int = 0
+        
+        let _ = data.next(&offset)  // checksum
+
+        var temp = DrumKit()
+        
+        let commonData = data.slice(from: offset, length: DrumKit.Common.dataSize)
+        switch Common.parse(from: commonData) {
+        case .success(let common):
+            temp.common = common
+        case .failure(let error):
+            return .failure(error)
+        }
+        
+        return .success(temp)
+    }
+    
+    /// Drum kit checksum.
+    public var checksum: Byte {
+        var totalSum: Int = 0
+        
+        let commonData = common.asData()
+        var commonSum: Int = 0
+        for d in commonData {
+            commonSum += Int(d) & 0xFF
+        }
+        totalSum += commonSum
+
+        
+        totalSum += 0xA5
+
+        return Byte(totalSum & 0x7F)
+    }
+
 }
 
 // MARK: - SystemExclusiveData
@@ -507,6 +866,8 @@ extension DrumSource {
         data.append(contentsOf: self.pitchEnvelope.asData())
         data.append(Byte(self.filterCutoff))
         data.append(Byte(self.filterCutoffVelocityDepth + 64))
+        data.append(contentsOf: self.amplifierEnvelope.asData())
+        data.append(contentsOf: self.amplifierVelocitySensitivity.asData())
         
         return data
     }
@@ -516,6 +877,38 @@ extension DrumSource {
     public static let dataSize = 18
 }
 
+extension DrumSource.AmplifierEnvelope: SystemExclusiveData {
+    public func asData() -> ByteArray {
+        var data = ByteArray()
+        
+        data.append(Byte(self.attackTime))
+        data.append(Byte(self.decay1Time))
+        data.append(Byte(self.decay1Level))
+        data.append(Byte(self.releaseTime))
+
+        return data
+    }
+    
+    public var dataLength: Int { return DrumSource.AmplifierEnvelope.dataSize }
+    
+    public static let dataSize = 4
+}
+
+extension DrumSource.VelocityControl: SystemExclusiveData {
+    public func asData() -> ByteArray {
+        var data = ByteArray()
+        
+        data.append(Byte(self.level))
+        data.append(Byte(self.attackTime + 64))
+        data.append(Byte(self.decay1Time + 64))
+        
+        return data
+    }
+    
+    public var dataLength: Int { return DrumSource.PitchEnvelope.dataSize }
+    
+    public static let dataSize = 3
+}
 
 extension DrumInstrument: SystemExclusiveData {
     public func asData() -> ByteArray {
@@ -531,4 +924,57 @@ extension DrumInstrument: SystemExclusiveData {
     public var dataLength: Int { return DrumInstrument.Common.dataSize }
     
     public static let dataSize = 1 + 6 + 18
+}
+
+extension DrumNote: SystemExclusiveData {
+    public func asData() -> ByteArray {
+        var data = ByteArray()
+        
+        let (msb, lsb) = self.asBytes()
+        data.append(msb)
+        data.append(lsb)
+
+        return data
+    }
+    
+    public var dataLength: Int { return DrumNote.dataSize }
+    
+    public static let dataSize = 2
+}
+
+extension DrumKit: SystemExclusiveData {
+    public func asData() -> ByteArray {
+        var data = ByteArray()
+        
+        data.append(self.checksum)
+        data.append(contentsOf: self.common.asData())
+        
+        for note in self.notes {
+            data.append(contentsOf: note.asData())
+        }
+        
+        return data
+    }
+    
+    public var dataLength: Int { return DrumKit.dataSize }
+    
+    public static let dataSize = DrumKit.Common.dataSize + DrumKit.noteCount * DrumNote.dataSize
+}
+
+extension DrumKit.Common: SystemExclusiveData {
+    public func asData() -> ByteArray {
+        var data = ByteArray()
+        
+        data.append(contentsOf: self.effects.asData())
+        self.geq.forEach { data.append(Byte($0 + 64)) } // 58(-6)~70(+6)
+        data.append(1)  // drum_mark
+        data.append(contentsOf: self.name.asData())
+        data.append(contentsOf: self.effectControl.asData())
+        
+        return data
+    }
+    
+    public var dataLength: Int { return DrumKit.Common.dataSize }
+    
+    public static let dataSize = 54
 }
