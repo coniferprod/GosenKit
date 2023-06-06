@@ -163,7 +163,7 @@ public struct Zone: Codable {
     }
 }
 
-public struct PatchName: Codable {
+public struct PatchName: Equatable, Codable {
     /// Length of patch name in characters.
     public static let length = 8
     
