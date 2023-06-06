@@ -352,9 +352,9 @@ extension MultiPatch: SystemExclusiveData {
     }
     
     /// The length of multi patch System Exclusive data.
-    public var dataLength: Int {
-        return 1 + Common.dataSize + 4 * Section.dataSize
-    }
+    public var dataLength: Int { MultiPatch.dataSize }
+    
+    public static let dataSize = 1 + Common.dataSize + 4 * Section.dataSize
 }
 
 extension MultiPatch.Common: SystemExclusiveData {
@@ -364,11 +364,8 @@ extension MultiPatch.Common: SystemExclusiveData {
         var data = ByteArray()
         
         data.append(contentsOf: effects.asData())
-        
         geq.forEach { data.append(Byte($0 + 64)) } // 58(-6)~70(+6)
-        
         data.append(contentsOf: name.asData())
-
         data.append(Byte(volume))
                 
         return data

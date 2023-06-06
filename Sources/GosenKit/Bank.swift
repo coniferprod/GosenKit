@@ -42,5 +42,37 @@ public enum BankIdentifier: Byte, CustomStringConvertible {
 
 /// Bank of combi/multi patches.
 public struct MultiBank {
+    public static let patchCount = 64
+    
     public var patches: [MultiPatch]
+
+    /// Initialize the multi bank with default multis.
+    public init() {
+        self.patches = Array(repeating: MultiPatch(), count: MultiBank.patchCount)
+    }
+    
+    /// Parse a bank of multi patches from MIDI System Exclusive data.
+    public static func parse(from data: ByteArray) -> Result<MultiBank, ParseError> {
+        //print("Parsing multi bank, \(data.count) bytes")
+        var offset = 0
+        
+        var temp = MultiBank()
+        
+        var patches = [MultiPatch]()
+        for _ in 0..<MultiBank.patchCount {
+            let patchData = data.slice(from: offset, length: MultiPatch.dataSize)
+            //print("patchData: from: \(offset) length: \(patchData.count)")
+            switch MultiPatch.parse(from: patchData) {
+            case .success(let multiPatch):
+                patches.append(multiPatch)
+                print(multiPatch.common.name.value)
+            case .failure(let error):
+                return .failure(error)
+            }
+            offset += MultiPatch.dataSize
+        }
+        
+        temp.patches = patches
+        return .success(temp)
+    }
 }
