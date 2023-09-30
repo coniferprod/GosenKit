@@ -24,7 +24,7 @@ final class AmplifierTests: XCTestCase {
     
     func test_asData() {
         var amp = Amplifier()
-        amp.velocityCurve = 5
+        amp.velocityCurve = VelocityCurve(5)
         XCTAssertEqual(amp.asData()[0], 4)
     }
 }

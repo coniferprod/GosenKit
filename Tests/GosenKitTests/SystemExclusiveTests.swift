@@ -36,7 +36,7 @@ import SyxPack
 final class SystemExclusiveTests: XCTestCase {
     func testSystemExclusive_header() {
         let header = SystemExclusive.Header(
-            channel: 0,
+            channel: MIDIChannel(1),
             function: SystemExclusive.Function.oneBlockDump,
             group: 0x00,
             machineIdentifier: 0x0a,
@@ -48,7 +48,7 @@ final class SystemExclusiveTests: XCTestCase {
     
     func testSinglePatch_asSystemExclusiveMessage() {
         let single = SinglePatch()
-        let data = single.asSystemExclusiveMessage(channel: 0, bank: .a)
+        let data = single.asSystemExclusiveMessage(channel: MIDIChannel(1), bank: .a)
         
         XCTAssertEqual(data.count, 254 + 6)
     }
@@ -205,105 +205,105 @@ final class SystemExclusiveTests: XCTestCase {
     func testDumpCommand_oneADDBankA() {
         let actual = DumpCommand(data: oneADDBankA)
         XCTAssertTrue(actual != nil)
-        let expected = DumpCommand(channel: 1, cardinality: .one, bank: .a, kind: .single, subBytes: [0x00])
+        let expected = DumpCommand(channel: MIDIChannel(1), cardinality: .one, bank: .a, kind: .single, subBytes: [0x00])
         XCTAssertEqual(actual, expected)
     }
     
     func testDumpCommand_onePCMBankB() {
         let actual = DumpCommand(data: onePCMBankB)
         XCTAssertTrue(actual != nil)
-        let expected = DumpCommand(channel: 1, cardinality: .one, bank: .b, kind: .single, subBytes: [0x00])
+        let expected = DumpCommand(channel: MIDIChannel(1), cardinality: .one, bank: .b, kind: .single, subBytes: [0x00])
         XCTAssertEqual(actual, expected)
     }
     
     func testDumpCommand_oneExpBankE() {
         let actual = DumpCommand(data: oneExpBankE)
         XCTAssertTrue(actual != nil)
-        let expected = DumpCommand(channel: 1, cardinality: .one, bank: .e, kind: .single, subBytes: [0x00])
+        let expected = DumpCommand(channel: MIDIChannel(1), cardinality: .one, bank: .e, kind: .single, subBytes: [0x00])
         XCTAssertEqual(actual, expected)
     }
     
     func testDumpCommand_oneExpBankF() {
         let actual = DumpCommand(data: oneExpBankF)
         XCTAssertTrue(actual != nil)
-        let expected = DumpCommand(channel: 1, cardinality: .one, bank: .f, kind: .single, subBytes: [0x00])
+        let expected = DumpCommand(channel: MIDIChannel(1), cardinality: .one, bank: .f, kind: .single, subBytes: [0x00])
         XCTAssertEqual(actual, expected)
     }
 
     func testDumpCommand_oneDrumKit() {
         let actual = DumpCommand(data: oneDrumKit)
         XCTAssertTrue(actual != nil)
-        let expected = DumpCommand(channel: 1, cardinality: .one, bank: .none, kind: .drumKit, subBytes: [])
+        let expected = DumpCommand(channel: MIDIChannel(1), cardinality: .one, bank: .none, kind: .drumKit, subBytes: [])
         XCTAssertEqual(actual, expected)
     }
     
     func testDumpCommand_oneDrumInstrument() {
         let actual = DumpCommand(data: oneDrumInstrument)
         XCTAssertTrue(actual != nil)
-        let expected = DumpCommand(channel: 1, cardinality: .one, bank: .none, kind: .drumInstrument, subBytes: [])
+        let expected = DumpCommand(channel: MIDIChannel(1), cardinality: .one, bank: .none, kind: .drumInstrument, subBytes: [])
         XCTAssertEqual(actual, expected)
     }
         
     func testDumpCommand_oneCombi() {
         let actual = DumpCommand(data: oneCombi)
         XCTAssertTrue(actual != nil)
-        let expected = DumpCommand(channel: 1, cardinality: .one, bank: .none, kind: .multi, subBytes: [0x00])
+        let expected = DumpCommand(channel: MIDIChannel(1), cardinality: .one, bank: .none, kind: .multi, subBytes: [0x00])
         XCTAssertEqual(actual, expected)
     }
     
     func testDumpCommand_blockADDBankA() {
         let actual = DumpCommand(data: blockADDBankA)
         XCTAssertTrue(actual != nil)
-        let expected = DumpCommand(channel: 1, cardinality: .block, bank: .a, kind: .single, subBytes: ByteArray(repeating: 0x00, count: ToneMap.dataSize))
+        let expected = DumpCommand(channel: MIDIChannel(1), cardinality: .block, bank: .a, kind: .single, subBytes: ByteArray(repeating: 0x00, count: ToneMap.dataSize))
         XCTAssertEqual(actual, expected)
     }
     
     func testDumpCommand_blockPCMBankB() {
         let actual = DumpCommand(data: blockPCMBankB)
         XCTAssertTrue(actual != nil)
-        let expected = DumpCommand(channel: 1, cardinality: .block, bank: .b, kind: .single, subBytes: [])
+        let expected = DumpCommand(channel: MIDIChannel(1), cardinality: .block, bank: .b, kind: .single, subBytes: [])
         XCTAssertEqual(actual, expected)
     }
     
     func testDumpCommand_blockExpBankE() {
         let actual = DumpCommand(data: blockExpBankE)
         XCTAssertTrue(actual != nil)
-        let expected = DumpCommand(channel: 1, cardinality: .block, bank: .e, kind: .single, subBytes: ByteArray(repeating: 0x00, count: ToneMap.dataSize))
+        let expected = DumpCommand(channel: MIDIChannel(1), cardinality: .block, bank: .e, kind: .single, subBytes: ByteArray(repeating: 0x00, count: ToneMap.dataSize))
         XCTAssertEqual(actual, expected)
     }
     
     func testDumpCommand_blockExpBankF() {
         let actual = DumpCommand(data: blockExpBankF)
         XCTAssertTrue(actual != nil)
-        let expected = DumpCommand(channel: 1, cardinality: .block, bank: .f, kind: .single, subBytes: ByteArray(repeating: 0x00, count: ToneMap.dataSize))
+        let expected = DumpCommand(channel: MIDIChannel(1), cardinality: .block, bank: .f, kind: .single, subBytes: ByteArray(repeating: 0x00, count: ToneMap.dataSize))
         XCTAssertEqual(actual, expected)
     }
     
     func testDumpCommand_blockDrumInstrument() {
         let actual = DumpCommand(data: blockDrumInstrument)
         XCTAssertTrue(actual != nil)
-        let expected = DumpCommand(channel: 1, cardinality: .block, bank: .none, kind: .drumInstrument, subBytes: [])
+        let expected = DumpCommand(channel: MIDIChannel(1), cardinality: .block, bank: .none, kind: .drumInstrument, subBytes: [])
         XCTAssertEqual(actual, expected)
     }
 
     func testDumpCommand_blockCombi() {
         let actual = DumpCommand(data: blockCombi)
         XCTAssertTrue(actual != nil)
-        let expected = DumpCommand(channel: 1, cardinality: .block, bank: .none, kind: .multi, subBytes: [])
+        let expected = DumpCommand(channel: MIDIChannel(1), cardinality: .block, bank: .none, kind: .multi, subBytes: [])
         XCTAssertEqual(actual, expected)
     }
 
     func testDumpCommand_oneADDBankD() {
         let actual = DumpCommand(data: oneADDBankD)
         XCTAssertTrue(actual != nil)
-        let expected = DumpCommand(channel: 1, cardinality: .one, bank: .d, kind: .single, subBytes: [0x00])
+        let expected = DumpCommand(channel: MIDIChannel(1), cardinality: .one, bank: .d, kind: .single, subBytes: [0x00])
         XCTAssertEqual(actual, expected)
     }
     
     func testDumpCommand_blockADDBankD() {
         let actual = DumpCommand(data: blockADDBankD)
         XCTAssertTrue(actual != nil)
-        let expected = DumpCommand(channel: 1, cardinality: .block, bank: .d, kind: .single, subBytes: [0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00])
+        let expected = DumpCommand(channel: MIDIChannel(1), cardinality: .block, bank: .d, kind: .single, subBytes: [0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00])
         XCTAssertEqual(actual, expected)
     }
     

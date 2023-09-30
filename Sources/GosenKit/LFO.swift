@@ -1,7 +1,7 @@
 import SyxPack
 
-public struct LFO: Codable {
-    public enum Waveform: Int, Codable, CaseIterable {
+public struct LFO {
+    public enum Waveform: Int, CaseIterable {
         case triangle
         case square
         case sawtooth
@@ -20,26 +20,26 @@ public struct LFO: Codable {
         }
     }
 
-    public struct Control: Codable {
-        public var depth: Int
-        public var keyScaling: Int
+    public struct Control {
+        public var depth: Depth
+        public var keyScaling: Depth
         
         public init() {
-            self.depth = 0
-            self.keyScaling = 0
+            self.depth = Depth(0)
+            self.keyScaling = Depth(0)
         }
         
-        public init(depth: Int, keyScaling: Int) {
+        public init(depth: Depth, keyScaling: Depth) {
             self.depth = depth
             self.keyScaling = keyScaling
         }
     }
-
+    
     public var waveform: Waveform
-    public var speed: Int
-    public var fadeInTime: Int
-    public var fadeInToSpeed: Int
-    public var delayOnset: Int
+    public var speed: Level
+    public var fadeInTime: Level
+    public var fadeInToSpeed: Depth
+    public var delayOnset: Level
     
     public var vibrato: Control
     public var growl: Control
@@ -47,14 +47,14 @@ public struct LFO: Codable {
     
     public init() {
         waveform = .square
-        speed = 0
-        fadeInTime = 0
-        fadeInToSpeed = 0
-        delayOnset = 0
+        speed = Level(0)
+        fadeInTime = Level(0)
+        fadeInToSpeed = Depth(0)
+        delayOnset = Level(0)
         
-        vibrato = Control(depth: 0, keyScaling: 0)
-        growl = Control(depth: 0, keyScaling: 0)
-        tremolo = Control(depth: 0, keyScaling: 0)
+        vibrato = Control(depth: Depth(0), keyScaling: Depth(0))
+        growl = Control(depth: Depth(0), keyScaling: Depth(0))
+        tremolo = Control(depth: Depth(0), keyScaling: Depth(0))
     }
     
     public static func parse(from data: ByteArray) -> Result<LFO, ParseError> {
@@ -67,38 +67,38 @@ public struct LFO: Codable {
         temp.waveform = Waveform(index: Int(b))!
         
         b = data.next(&offset)
-        temp.speed = Int(b)
+        temp.speed = Level(Int(b))
         
         b = data.next(&offset)
-        temp.delayOnset = Int(b)
+        temp.delayOnset = Level(Int(b))
 
         b = data.next(&offset)
-        temp.fadeInTime = Int(b)
+        temp.fadeInTime = Level(Int(b))
 
         b = data.next(&offset)
-        temp.fadeInToSpeed = Int(b)
+        temp.fadeInToSpeed = Depth(Int(b))
 
         b = data.next(&offset)
-        let vibratoDepth = Int(b)
+        let vibratoDepth = Depth(Int(b))
 
         b = data.next(&offset)
-        let vibratoKeyScaling = Int(b) - 64
+        let vibratoKeyScaling = Depth(Int(b) - 64)
 
         temp.vibrato = Control(depth: vibratoDepth, keyScaling: vibratoKeyScaling)
         
         b = data.next(&offset)
-        let growlDepth = Int(b)
+        let growlDepth = Depth(Int(b))
 
         b = data.next(&offset)
-        let growlKeyScaling = Int(b) - 64
+        let growlKeyScaling = Depth(Int(b) - 64)
 
         temp.growl = Control(depth: growlDepth, keyScaling: growlKeyScaling)
         
         b = data.next(&offset)
-        let tremoloDepth = Int(b)
+        let tremoloDepth = Depth(Int(b))
 
         b = data.next(&offset)
-        let tremoloKeyScaling = Int(b) - 64
+        let tremoloKeyScaling = Depth(Int(b) - 64)
         
         temp.tremolo = Control(depth: tremoloDepth, keyScaling: tremoloKeyScaling)
 
@@ -112,7 +112,7 @@ extension LFO: SystemExclusiveData {
     public func asData() -> ByteArray {
         var data = ByteArray()
         
-        [waveform.index, speed, delayOnset, fadeInTime, fadeInToSpeed].forEach {
+        [waveform.index, speed.value, delayOnset.value, fadeInTime.value, fadeInToSpeed.value].forEach {
             data.append(Byte($0))
         }
 
@@ -130,7 +130,7 @@ extension LFO: SystemExclusiveData {
 
 extension LFO.Control: SystemExclusiveData {
     public func asData() -> ByteArray {
-        return ByteArray(arrayLiteral: Byte(depth), Byte(keyScaling + 64))
+        return ByteArray(arrayLiteral: Byte(depth.value), Byte(keyScaling.value + 64))
     }
 
     public var dataLength: Int { return LFO.Control.dataSize }

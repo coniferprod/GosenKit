@@ -1,9 +1,9 @@
 import SyxPack
 
 /// Filter (DCF).
-public struct Filter: Codable {
+public struct Filter {
     /// Filter mode.
-    public enum Mode: Int, Codable, CaseIterable {
+    public enum Mode: Int, CaseIterable {
         case lowPass
         case highPass
         
@@ -18,31 +18,39 @@ public struct Filter: Codable {
     }
 
     /// Filter envelope.
-    public struct Envelope: Codable {
-        public var attackTime: Int
-        public var decay1Time: Int
-        public var decay1Level: Int
-        public var decay2Time: Int
-        public var decay2Level: Int
-        public var releaseTime: Int
-        public var keyScalingToAttack: Int
-        public var keyScalingToDecay1: Int
-        public var velocityToEnvelope: Int
-        public var velocityToAttack: Int
-        public var velocityToDecay1: Int
+    public struct Envelope {
+        public struct Time {
+            private var _value: Int
+        }
+        
+        public struct Level {
+            private var _value: Int
+        }
+
+        public var attackTime: Time
+        public var decay1Time: Time
+        public var decay1Level: Level
+        public var decay2Time: Time
+        public var decay2Level: Level
+        public var releaseTime: Time
+        public var keyScalingToAttack: Level
+        public var keyScalingToDecay1: Level
+        public var velocityToEnvelope: Level
+        public var velocityToAttack: Level
+        public var velocityToDecay1: Level
         
         public init() {
-            attackTime = 0
-            decay1Time = 0
-            decay1Level = 0
-            decay2Time = 0
-            decay2Level = 0
-            releaseTime = 0
-            keyScalingToAttack = 0
-            keyScalingToDecay1 = 0
-            velocityToEnvelope = 0
-            velocityToAttack = 0
-            velocityToDecay1 = 0
+            attackTime = Time(0)
+            decay1Time = Time(0)
+            decay1Level = Level(0)
+            decay2Time = Time(0)
+            decay2Level = Level(0)
+            releaseTime = Time(0)
+            keyScalingToAttack = Level(0)
+            keyScalingToDecay1 = Level(0)
+            velocityToEnvelope = Level(0)
+            velocityToAttack = Level(0)
+            velocityToDecay1 = Level(0)
         }
         
         public static func parse(from data: ByteArray) -> Result<Envelope, ParseError> {
@@ -52,63 +60,63 @@ public struct Filter: Codable {
             var temp = Envelope()
             
             b = data.next(&offset)
-            temp.attackTime = Int(b)
+            temp.attackTime = Time(Int(b))
 
             b = data.next(&offset)
-            temp.decay1Time = Int(b)
+            temp.decay1Time = Time(Int(b))
             
             b = data.next(&offset)
-            temp.decay1Level = Int(b) - 64
+            temp.decay1Level = Level(Int(b) - 64)
             
             b = data.next(&offset)
-            temp.decay2Time = Int(b)
+            temp.decay2Time = Time(Int(b))
             
             b = data.next(&offset)
-            temp.decay2Level = Int(b) - 64
+            temp.decay2Level = Level(Int(b) - 64)
             
             b = data.next(&offset)
-            temp.releaseTime = Int(b)
+            temp.releaseTime = Time(Int(b))
             
             b = data.next(&offset)
-            temp.keyScalingToAttack = Int(b) - 64
+            temp.keyScalingToAttack = Level(Int(b) - 64)
             
             b = data.next(&offset)
-            temp.keyScalingToDecay1 = Int(b) - 64
+            temp.keyScalingToDecay1 = Level(Int(b) - 64)
             
             b = data.next(&offset)
-            temp.velocityToEnvelope = Int(b) - 64
+            temp.velocityToEnvelope = Level(Int(b) - 64)
 
             b = data.next(&offset)
-            temp.velocityToAttack = Int(b) - 64
+            temp.velocityToAttack = Level(Int(b) - 64)
 
             b = data.next(&offset)
-            temp.velocityToDecay1 = Int(b) - 64
+            temp.velocityToDecay1 = Level(Int(b) - 64)
 
             return .success(temp)
         }
     }
 
     public var isActive: Bool
-    public var cutoff: Int
-    public var resonance: Int
+    public var cutoff: Level
+    public var resonance: Resonance
     public var mode: Mode
-    public var velocityCurve: Int  // 1...12
-    public var level: Int
-    public var keyScalingToCutoff: Int
-    public var velocityToCutoff: Int
-    public var envelopeDepth: Int
+    public var velocityCurve: VelocityCurve  // 1...12
+    public var level: Level
+    public var keyScalingToCutoff: Depth
+    public var velocityToCutoff: Depth
+    public var envelopeDepth: Depth
     public var envelope: Envelope
     
     public init() {
         isActive = false
-        cutoff = 127
-        resonance = 0
+        cutoff = Level(127)
+        resonance = Resonance(0)
         mode = .lowPass
-        velocityCurve = 1
-        level = 7
-        keyScalingToCutoff = 0
-        velocityToCutoff = 0
-        envelopeDepth = 0
+        velocityCurve = VelocityCurve(1)
+        level = Level(7)
+        keyScalingToCutoff = Depth(0)
+        velocityToCutoff = Depth(0)
+        envelopeDepth = Depth(0)
         envelope = Envelope()
     }
     
@@ -125,25 +133,25 @@ public struct Filter: Codable {
         temp.mode = Mode(index: Int(b))!
         
         b = data.next(&offset)
-        temp.velocityCurve = Int(b + 1)  // from 0 ~ 11 to  1 ~ 12
+        temp.velocityCurve = VelocityCurve(Int(b + 1))  // from 0 ~ 11 to  1 ~ 12
 
         b = data.next(&offset)
-        temp.resonance = Int(b)
+        temp.resonance = Resonance(Int(b))
 
         b = data.next(&offset)
-        temp.level = Int(b)
+        temp.level = Level(Int(b))
         
         b = data.next(&offset)
-        temp.cutoff = Int(b)
+        temp.cutoff = Level(Int(b))
 
         b = data.next(&offset)
-        temp.keyScalingToCutoff = Int(b) - 64
+        temp.keyScalingToCutoff = Depth(Int(b) - 64)
         
         b = data.next(&offset)
-        temp.velocityToCutoff = Int(b) - 64
+        temp.velocityToCutoff = Depth(Int(b) - 64)
         
         b = data.next(&offset)
-        temp.envelopeDepth = Int(b) - 64
+        temp.envelopeDepth = Depth(Int(b) - 64)
         
         switch Envelope.parse(from: data.slice(from: offset, length: Envelope.dataSize)) {
         case .success(let env):
@@ -156,6 +164,43 @@ public struct Filter: Codable {
     }
 }
 
+extension Filter.Envelope.Time: RangedInt {
+    public static let range: ClosedRange<Int> = 0...127
+
+    public static let defaultValue = 0
+
+    public var value: Int {
+        return _value
+    }
+
+    public init() {
+        _value = Self.defaultValue
+    }
+
+    public init(_ value: Int) {
+        _value = Self.range.clamp(value)
+    }
+}
+
+extension Filter.Envelope.Level: RangedInt {
+    public static let range: ClosedRange<Int> = -63...63
+
+    public static let defaultValue = 0
+
+    public var value: Int {
+        return _value
+    }
+
+    public init() {
+        _value = Self.defaultValue
+    }
+
+    public init(_ value: Int) {
+        _value = Self.range.clamp(value)
+    }
+}
+
+
 // MARK: - SystemExclusiveData
 
 extension Filter: SystemExclusiveData {
@@ -165,13 +210,13 @@ extension Filter: SystemExclusiveData {
         [
             isActive ? 0 : 1,
             mode.index,
-            velocityCurve - 1,
-            resonance,
-            level,
-            cutoff,
-            keyScalingToCutoff + 64,
-            velocityToCutoff + 64,
-            envelopeDepth + 64
+            velocityCurve.value - 1,
+            resonance.value,
+            level.value,
+            cutoff.value,
+            keyScalingToCutoff.value + 64,
+            velocityToCutoff.value + 64,
+            envelopeDepth.value + 64
         ]
         .forEach {
             data.append(Byte($0))
@@ -191,8 +236,11 @@ extension Filter.Envelope: SystemExclusiveData {
     public func asData() -> ByteArray {
         var data = ByteArray()
         
-        [attackTime, decay1Time, decay1Level + 64, decay2Time, decay2Level + 64, releaseTime,
-         keyScalingToAttack + 64, keyScalingToDecay1 + 64, velocityToEnvelope + 64, velocityToAttack + 64, velocityToDecay1 + 64].forEach {
+        [attackTime.value, decay1Time.value, decay1Level.value + 64,
+         decay2Time.value, decay2Level.value + 64, releaseTime.value,
+         keyScalingToAttack.value + 64, keyScalingToDecay1.value + 64,
+         velocityToEnvelope.value + 64, velocityToAttack.value + 64,
+         velocityToDecay1.value + 64].forEach {
             data.append(Byte($0))
         }
 

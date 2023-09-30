@@ -4,11 +4,11 @@ import SyxPack
 
 
 /// Represents a source in a singe patch.
-public struct Source: Codable {
+public struct Source {
     /// Represents the control settings of a source.
-    public struct Control: Codable {
+    public struct Control {
         /// Macro and assignable controller settings.
-        public struct Modulation: Codable {
+        public struct Modulation {
             public var pressure: MacroController
             public var wheel: MacroController
             public var expression: MacroController

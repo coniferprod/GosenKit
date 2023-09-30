@@ -42,7 +42,7 @@ final class DrumTests: XCTestCase {
         
         switch DrumInstrument.parse(from: data) {
         case .success(let instrument):
-            XCTAssertEqual(instrument.common.volume, 127)
+            XCTAssertEqual(instrument.common.volume.value, 127)
         case .failure(let error):
             XCTFail("\(error)")
         }

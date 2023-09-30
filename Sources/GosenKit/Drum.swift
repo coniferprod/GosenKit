@@ -326,15 +326,23 @@ public struct DrumWave {
 public struct DrumSource {
     /// Pitch envelope for a drum source.
     public struct PitchEnvelope {
-        var startLevel: Int // (-63)1~(+63)127
-        var attackTime: Int // 0~127
-        var levelVelocitySensitivity: Int // (-63)1~(+63)127
+        public struct Level {
+            private var _value: Int
+        }
+        
+        public struct Time {
+            private var _value: Int
+        }
+        
+        var startLevel: Level // (-63)1~(+63)127
+        var attackTime: Time // 0~127
+        var levelVelocitySensitivity: Level // (-63)1~(+63)127
         
         /// Initialize a drum source pitch envelope with default values.
         public init() {
-            self.startLevel = 0
-            self.attackTime = 0
-            self.levelVelocitySensitivity = 0
+            self.startLevel = Level(0)
+            self.attackTime = Time(0)
+            self.levelVelocitySensitivity = Level(0)
         }
         
         /// Parse a drum source pitch envelope from MIDI System Exclusive data.
@@ -344,11 +352,11 @@ public struct DrumSource {
             
             var temp = PitchEnvelope()
             b = data.next(&offset)
-            temp.startLevel = Int(b) - 64
+            temp.startLevel = Level(Int(b) - 64)
             b = data.next(&offset)
-            temp.attackTime = Int(b)
+            temp.attackTime = Time(Int(b))
             b = data.next(&offset)
-            temp.levelVelocitySensitivity = Int(b) - 64
+            temp.levelVelocitySensitivity = Level(Int(b) - 64)
             
             return .success(temp)
         }
@@ -429,27 +437,27 @@ public struct DrumSource {
         }
     }
     
-    public var volume: Int  // 0~127
-    public var pan: Int  // (63L)1 ~ (63R)127
+    public var volume: Level  // 0~127
+    public var pan: Pan  // (63L)1 ~ (63R)127
     public var wave: DrumWave  // 0~224
-    public var coarse: Int  // (-24)40~(+24)88
-    public var fine: Int  // (-63)1~(+63)127
+    public var coarse: Coarse  // (-24)40~(+24)88
+    public var fine: Fine  // (-63)1~(+63)127
     public var pitchEnvelope: PitchEnvelope
-    public var filterCutoff: Int  // 0~127
-    public var filterCutoffVelocityDepth: Int  // (-63)1~(+63)127
+    public var filterCutoff: Level  // 0~127
+    public var filterCutoffVelocityDepth: Depth  // (-63)1~(+63)127
     public var amplifierEnvelope: AmplifierEnvelope
     public var amplifierVelocitySensitivity: VelocityControl
     
     /// Initialize drum source with default values.
     public init() {
-        self.volume = 100
-        self.pan = 0
+        self.volume = Level(100)
+        self.pan = Pan(0)
         self.wave = DrumWave(number: 1)
-        self.coarse = 0
-        self.fine = 0
+        self.coarse = Coarse(0)
+        self.fine = Fine(0)
         self.pitchEnvelope = PitchEnvelope()
-        self.filterCutoff = 0
-        self.filterCutoffVelocityDepth = 0
+        self.filterCutoff = Level(0)
+        self.filterCutoffVelocityDepth = Depth(0)
         self.amplifierEnvelope = AmplifierEnvelope()
         self.amplifierVelocitySensitivity = VelocityControl()
     }
@@ -462,10 +470,10 @@ public struct DrumSource {
         var temp = DrumSource()
         
         b = data.next(&offset)
-        temp.volume = Int(b)
+        temp.volume = Level(Int(b))
         
         b = data.next(&offset)
-        temp.pan = Int(b) - 64
+        temp.pan = Pan(Int(b) - 64)
 
         b = data.next(&offset)
         let waveMSB = b
@@ -474,10 +482,10 @@ public struct DrumSource {
         temp.wave = DrumWave(msb: waveMSB, lsb: waveLSB)
 
         b = data.next(&offset)
-        temp.coarse = Int(b) - 64
+        temp.coarse = Coarse(Int(b) - 64)
         
         b = data.next(&offset)
-        temp.fine = Int(b) - 64
+        temp.fine = Fine(Int(b) - 64)
         
         let pitchEnvData = data.slice(from: offset, length: PitchEnvelope.dataSize)
         switch PitchEnvelope.parse(from: pitchEnvData) {
@@ -489,9 +497,9 @@ public struct DrumSource {
         offset += PitchEnvelope.dataSize
         
         b = data.next(&offset)
-        temp.filterCutoff = Int(b)
+        temp.filterCutoff = Level(Int(b))
         b = data.next(&offset)
-        temp.filterCutoffVelocityDepth = Int(b) - 64
+        temp.filterCutoffVelocityDepth = Depth(Int(b) - 64)
 
         let ampEnvData = data.slice(from: offset, length: AmplifierEnvelope.dataSize)
         switch AmplifierEnvelope.parse(from: ampEnvData) {
@@ -514,6 +522,40 @@ public struct DrumSource {
     }
 }
 
+extension DrumSource.PitchEnvelope.Level: RangedInt {
+    public static let range: ClosedRange<Int> = -63...63
+    public static let defaultValue = 1
+    
+    public init() {
+        _value = Self.defaultValue
+    }
+    
+    public init(_ value: Int) {
+        _value = Self.range.clamp(value)
+    }
+
+    public var value: Int {
+        return _value
+    }
+}
+
+extension DrumSource.PitchEnvelope.Time: RangedInt {
+    public static let range: ClosedRange<Int> = 0...127
+    public static let defaultValue = 1
+    
+    public init() {
+        _value = Self.defaultValue
+    }
+    
+    public init(_ value: Int) {
+        _value = Self.range.clamp(value)
+    }
+
+    public var value: Int {
+        return _value
+    }
+}
+
 /// Represents a K5000W drum instrument.
 public struct DrumInstrument {
     public enum Gate {
@@ -528,14 +570,14 @@ public struct DrumInstrument {
     
     /// Drum instrument common data.
     public struct Common {
-        public var volume: Int  // 0~127
+        public var volume: Level  // 0~127
         public var gate: Gate
         public var exclusionGroup: ExclusionGroup
         public var effectPath: Int  // 1~4 (in SysEx 0~3)
         
         /// Initialize drum instrument common data with default values.
         public init() {
-            self.volume = 100
+            self.volume = Level(100)
             self.gate = .off
             self.exclusionGroup = .off
             self.effectPath = 1
@@ -551,7 +593,7 @@ public struct DrumInstrument {
             var temp = Common()
             
             b = data.next(&offset)
-            temp.volume = Int(b)
+            temp.volume = Level(Int(b))
             
             b = data.next(&offset)
             if b == 0x00 {
@@ -678,17 +720,17 @@ public struct DrumKit {
     /// Drum kit common settings.
     public struct Common {
         public var effects: EffectSettings
-        public var geq: [Int]  // 58(-6) ~ 70(+6), so 64 is zero
+        public var geq: GEQ
         public var name: PatchName
-        public var volume: Int
+        public var volume: Level
         public var effectControl: EffectControl
         
         /// Initialize drum kit common settings from default values.
         public init() {
             self.effects = EffectSettings()
-            self.geq = [ 2, 1, 0, 0, -1, -2, 1 ]
+            self.geq = GEQ(levels: [2, 1, 0, 0, -1, -2, 1])
             self.name = PatchName("DrumKit")
-            self.volume = 100
+            self.volume = Level(100)
             self.effectControl = EffectControl()
         }
         
@@ -711,14 +753,15 @@ public struct DrumKit {
             offset += EffectSettings.dataSize
 
             print("Next: Drum Kit Common, GEQ, offset = \(offset)")
-            temp.geq = [Int]()
-            for _ in 0..<SinglePatch.Common.geqBandCount {
+            var levels = [Int]()
+            for _ in 0..<GEQ.bandCount {
                 b = data.next(&offset)
                 let v: Int = Int(b) - 64  // 58(-6) ~ 70(+6), so 64 is zero
                 //print("GEQ band \(i + 1): \(b) --> \(v)")
-                temp.geq.append(Int(v))
+                levels.append(v)
             }
-            
+            temp.geq = GEQ(levels: levels)
+
             print("Next: Drum Kit Common, Drum mark, offset = \(offset)")
             // Eat the drum mark (39)
             offset += 1
@@ -729,7 +772,7 @@ public struct DrumKit {
             
             print("Next: Drum Kit Common, Volume, offset = \(offset)")
             b = data.next(&offset)
-            temp.volume = Int(b)
+            temp.volume = Level(Int(b))
             
             print("Next: Drum Kit Common, EffectControl, offset = \(offset)")
             switch EffectControl.parse(from: data.slice(from: offset, length: EffectControl.dataSize)) {
@@ -800,7 +843,7 @@ extension DrumInstrument.Common: SystemExclusiveData {
         var data = ByteArray()
         
         data.append(0)  // dummy
-        data.append(Byte(self.volume))
+        data.append(Byte(self.volume.value))
         
         switch self.gate {
         case .off:
@@ -828,9 +871,9 @@ extension DrumSource.PitchEnvelope {
     public func asData() -> ByteArray {
         var data = ByteArray()
         
-        data.append(Byte(self.startLevel + 64))
-        data.append(Byte(self.attackTime))
-        data.append(Byte(self.levelVelocitySensitivity + 64))
+        data.append(Byte(self.startLevel.value + 64))
+        data.append(Byte(self.attackTime.value))
+        data.append(Byte(self.levelVelocitySensitivity.value + 64))
         
         return data
     }
@@ -858,14 +901,14 @@ extension DrumSource {
     public func asData() -> ByteArray {
         var data = ByteArray()
 
-        data.append(Byte(self.volume))
-        data.append(Byte(self.pan))
+        data.append(Byte(self.volume.value))
+        data.append(Byte(self.pan.value))
         data.append(contentsOf: self.wave.asData())
-        data.append(Byte(self.coarse + 64))
-        data.append(Byte(self.fine + 64))
+        data.append(Byte(self.coarse.value + 64))
+        data.append(Byte(self.fine.value + 64))
         data.append(contentsOf: self.pitchEnvelope.asData())
-        data.append(Byte(self.filterCutoff))
-        data.append(Byte(self.filterCutoffVelocityDepth + 64))
+        data.append(Byte(self.filterCutoff.value))
+        data.append(Byte(self.filterCutoffVelocityDepth.value + 64))
         data.append(contentsOf: self.amplifierEnvelope.asData())
         data.append(contentsOf: self.amplifierVelocitySensitivity.asData())
         
@@ -966,7 +1009,7 @@ extension DrumKit.Common: SystemExclusiveData {
         var data = ByteArray()
         
         data.append(contentsOf: self.effects.asData())
-        self.geq.forEach { data.append(Byte($0 + 64)) } // 58(-6)~70(+6)
+        self.geq.levels.forEach { data.append(Byte($0.value + 64)) } // 58(-6)~70(+6)
         data.append(1)  // drum_mark
         data.append(contentsOf: self.name.asData())
         data.append(contentsOf: self.effectControl.asData())

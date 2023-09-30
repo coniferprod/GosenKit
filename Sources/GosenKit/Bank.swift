@@ -65,7 +65,7 @@ public struct MultiBank {
             switch MultiPatch.parse(from: patchData) {
             case .success(let multiPatch):
                 patches.append(multiPatch)
-                print(multiPatch.common.name.value)
+                //print(multiPatch.common.name.value)
             case .failure(let error):
                 return .failure(error)
             }

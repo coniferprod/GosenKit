@@ -1,35 +1,52 @@
 import SyxPack
 
 /// Amplifier (DCA)
-public struct Amplifier: Codable {
+public struct Amplifier {
     /// Amplifier envelope
-    public struct Envelope: Codable, Equatable {
+    public struct Envelope: Equatable {
+        public static func == (lhs: Amplifier.Envelope, rhs: Amplifier.Envelope) -> Bool {
+            return lhs.attackTime == rhs.attackTime &&
+            lhs.decay1Time == rhs.decay1Time
+            && lhs.decay1Level == rhs.decay1Level
+            && lhs.decay2Time == rhs.decay2Time
+            && lhs.decay2Level == rhs.decay2Level
+            && lhs.releaseTime == rhs.releaseTime
+        }
+        
+        public struct Time {
+            private var _value: Int
+        }
+        
+        public struct Level {
+            private var _value: Int
+        }
+
         // All values are 0...127
-        public var attackTime: Int
-        public var decay1Time: Int
-        public var decay1Level: Int
-        public var decay2Time: Int
-        public var decay2Level: Int
-        public var releaseTime: Int
+        public var attackTime: Time
+        public var decay1Time: Time
+        public var decay1Level: Level
+        public var decay2Time: Time
+        public var decay2Level: Level
+        public var releaseTime: Time
         
         /// Initialize amplifier envelope with default values.
         public init() {
-            attackTime = 0
-            decay1Time = 0
-            decay1Level = 127
-            decay2Time = 0
-            decay2Level = 127
-            releaseTime = 0
+            attackTime = Time(0)
+            decay1Time = Time(0)
+            decay1Level = Level(127)
+            decay2Time = Time(0)
+            decay2Level = Level(127)
+            releaseTime = Time(0)
         }
         
         /// Initialize amplifier envelope with explicit values.
         public init(attackTime: Int, decay1Time: Int, decay1Level: Int, decay2Time: Int, decay2Level: Int, releaseTime: Int) {
-            self.attackTime = attackTime
-            self.decay1Time = decay1Time
-            self.decay1Level = decay1Level
-            self.decay2Time = decay2Time
-            self.decay2Level = decay2Level
-            self.releaseTime = releaseTime
+            self.attackTime = Time(attackTime)
+            self.decay1Time = Time(decay1Time)
+            self.decay1Level = Level(decay1Level)
+            self.decay2Time = Time(decay2Time)
+            self.decay2Level = Level(decay2Level)
+            self.releaseTime = Time(releaseTime)
         }
         
         public static func parse(from data: ByteArray) -> Result<Envelope, ParseError> {
@@ -39,49 +56,57 @@ public struct Amplifier: Codable {
             var temp = Envelope()
             
             b = data.next(&offset)
-            temp.attackTime = Int(b)
+            temp.attackTime = Time(Int(b))
             
             b = data.next(&offset)
-            temp.decay1Time = Int(b)
+            temp.decay1Time = Time(Int(b))
             
             b = data.next(&offset)
-            temp.decay1Level = Int(b)
+            temp.decay1Level = Level(Int(b))
             
             b = data.next(&offset)
-            temp.decay2Time = Int(b)
+            temp.decay2Time = Time(Int(b))
             
             b = data.next(&offset)
-            temp.decay2Level = Int(b)
+            temp.decay2Level = Level(Int(b))
             
             b = data.next(&offset)
-            temp.releaseTime = Int(b)
+            temp.releaseTime = Time(Int(b))
             
             return .success(temp)
         }
     }
 
     /// Amplifier modulation settings.
-    public struct Modulation: Codable {
+    public struct Modulation {
         /// Key scaling control for amplifier modulation.
-        public struct KeyScalingControl: Codable {
+        public struct KeyScalingControl {
+            public struct Level {
+                private var _value: Int
+            }
+
+            public struct Time {
+                private var _value: Int
+            }
+
             // All values are -63...+63
-            public var level: Int
-            public var attackTime: Int
-            public var decay1Time: Int
-            public var release: Int
+            public var level: Level
+            public var attackTime: Time
+            public var decay1Time: Time
+            public var release: Time
             
             public init() {
-                level = 0
-                attackTime = 0
-                decay1Time = 0
-                release = 0
+                level = Level(0)
+                attackTime = Time(0)
+                decay1Time = Time(0)
+                release = Time(0)
             }
             
             public init(level: Int, attackTime: Int, decay1Time: Int, release: Int) {
-                self.level = level
-                self.attackTime = attackTime
-                self.decay1Time = decay1Time
-                self.release = release
+                self.level = Level(level)
+                self.attackTime = Time(attackTime)
+                self.decay1Time = Time(decay1Time)
+                self.release = Time(release)
             }
             
             public static func parse(from data: ByteArray) -> Result<KeyScalingControl, ParseError> {
@@ -91,42 +116,50 @@ public struct Amplifier: Codable {
                 var temp = KeyScalingControl()
                 
                 b = data.next(&offset)
-                temp.level = Int(b) - 64
+                temp.level = Level(Int(b) - 64)
                 
                 b = data.next(&offset)
-                temp.attackTime = Int(b) - 64
+                temp.attackTime = Time(Int(b) - 64)
             
                 b = data.next(&offset)
-                temp.decay1Time = Int(b) - 64
+                temp.decay1Time = Time(Int(b) - 64)
                 
                 b = data.next(&offset)
-                temp.release = Int(b) - 64
+                temp.release = Time(Int(b) - 64)
                 
                 return .success(temp)
             }
         }
 
         /// Velocity control for amplifier modulation.
-        public struct VelocityControl: Codable {
+        public struct VelocityControl {
+            public struct Level {
+                private var _value: Int
+            }
+
+            public struct Time {
+                private var _value: Int
+            }
+
             // Almost the same as KeyScalingControl, but level is positive only (0...63),
             // others are -63...+63.
-            public var level: Int
-            public var attackTime: Int
-            public var decay1Time: Int
-            public var release: Int
+            public var level: Level
+            public var attackTime: Time
+            public var decay1Time: Time
+            public var release: Time
             
             public init() {
-                level = 0
-                attackTime = 0
-                decay1Time = 0
-                release = 0
+                level = Level(0)
+                attackTime = Time(0)
+                decay1Time = Time(0)
+                release = Time(0)
             }
             
             public init(level: Int, attackTime: Int, decay1Time: Int, release: Int) {
-                self.level = level
-                self.attackTime = attackTime
-                self.decay1Time = decay1Time
-                self.release = release
+                self.level = Level(level)
+                self.attackTime = Time(attackTime)
+                self.decay1Time = Time(decay1Time)
+                self.release = Time(release)
             }
             
             public static func parse(from data: ByteArray) -> Result<VelocityControl, ParseError> {
@@ -136,16 +169,16 @@ public struct Amplifier: Codable {
                 var temp = VelocityControl()
                 
                 b = data.next(&offset)
-                temp.level = Int(b)
+                temp.level = Level(Int(b))
                 
                 b = data.next(&offset)
-                temp.attackTime = Int(b) - 64
+                temp.attackTime = Time(Int(b) - 64)
                 
                 b = data.next(&offset)
-                temp.decay1Time = Int(b) - 64
+                temp.decay1Time = Time(Int(b) - 64)
                 
                 b = data.next(&offset)
-                temp.release = Int(b) - 64
+                temp.release = Time(Int(b) - 64)
                 
                 return .success(temp)
             }
@@ -184,12 +217,12 @@ public struct Amplifier: Codable {
         }
     }
 
-    public var velocityCurve: Int  // store as 1~12
+    public var velocityCurve: VelocityCurve  // store as 1~12
     public var envelope: Envelope
     public var modulation: Modulation
     
     public init() {
-        velocityCurve = 1
+        velocityCurve = VelocityCurve(1)
         envelope = Envelope()
         modulation = Modulation()
     }
@@ -201,7 +234,7 @@ public struct Amplifier: Codable {
         var temp = Amplifier()
         
         b = data.next(&offset)
-        temp.velocityCurve = Int(b) + 1  // 0~11 to 1~12
+        temp.velocityCurve = VelocityCurve(Int(b) + 1)  // 0~11 to 1~12
 
         switch Envelope.parse(from: data.slice(from: offset, length: Envelope.dataSize)) {
         case .success(let env):
@@ -227,9 +260,14 @@ public struct Amplifier: Codable {
 extension Amplifier.Envelope: SystemExclusiveData {
     public func asData() -> ByteArray {
         var data = ByteArray()
-        [attackTime, decay1Time, decay1Level, decay2Time, decay2Level, releaseTime].forEach {
+        
+        [attackTime.value,
+         decay1Time.value, decay1Level.value,
+         decay2Time.value, decay2Level.value,
+         releaseTime.value].forEach {
             data.append(Byte($0))
         }
+        
         return data
     }
     
@@ -242,7 +280,7 @@ extension Amplifier: SystemExclusiveData {
     public func asData() -> ByteArray {
         var data = ByteArray()
         
-        data.append(Byte(velocityCurve - 1)) // 0~11
+        data.append(Byte(velocityCurve.value - 1)) // 0~11
         data.append(contentsOf: envelope.asData())
         data.append(contentsOf: modulation.asData())
         
@@ -274,7 +312,7 @@ extension Amplifier.Modulation: SystemExclusiveData {
 extension Amplifier.Modulation.KeyScalingControl: SystemExclusiveData {
     public func asData() -> ByteArray {
         var data = ByteArray()
-        [level, attackTime, decay1Time, release].forEach {
+        [level.value, attackTime.value, decay1Time.value, release.value].forEach {
             data.append(Byte($0 + 64))
         }
         return data
@@ -288,7 +326,7 @@ extension Amplifier.Modulation.KeyScalingControl: SystemExclusiveData {
 extension Amplifier.Modulation.VelocityControl: SystemExclusiveData {
     public func asData() -> ByteArray {
         var data = ByteArray()
-        [level, attackTime + 64, decay1Time + 64, release + 64].forEach {
+        [level.value, attackTime.value + 64, decay1Time.value + 64, release.value + 64].forEach {
             data.append(Byte($0))
         }
         return data
@@ -350,5 +388,113 @@ extension Amplifier.Modulation.VelocityControl: CustomStringConvertible {
         result += "Level=\(self.level) AttackTime=\(self.attackTime) Decay1Time=\(self.decay1Time) Release=\(self.release)"
         
         return result
+    }
+}
+
+extension Amplifier.Envelope.Time: RangedInt {
+    public static let range: ClosedRange<Int> = 0...127
+
+    public static let defaultValue = 0
+
+    public var value: Int {
+        return _value
+    }
+
+    public init() {
+        _value = Self.defaultValue
+    }
+
+    public init(_ value: Int) {
+        _value = Self.range.clamp(value)
+    }
+}
+
+extension Amplifier.Envelope.Level: RangedInt {
+    public static let range: ClosedRange<Int> = 0...127
+
+    public static let defaultValue = 0
+
+    public var value: Int {
+        return _value
+    }
+
+    public init() {
+        _value = Self.defaultValue
+    }
+
+    public init(_ value: Int) {
+        _value = Self.range.clamp(value)
+    }
+}
+
+extension Amplifier.Modulation.KeyScalingControl.Time: RangedInt {
+    public static let range: ClosedRange<Int> = -63...63
+
+    public static let defaultValue = 0
+
+    public var value: Int {
+        return _value
+    }
+
+    public init() {
+        _value = Self.defaultValue
+    }
+
+    public init(_ value: Int) {
+        _value = Self.range.clamp(value)
+    }
+}
+
+extension Amplifier.Modulation.KeyScalingControl.Level: RangedInt {
+    public static let range: ClosedRange<Int> = -63...63
+
+    public static let defaultValue = 0
+
+    public var value: Int {
+        return _value
+    }
+
+    public init() {
+        _value = Self.defaultValue
+    }
+
+    public init(_ value: Int) {
+        _value = Self.range.clamp(value)
+    }
+}
+
+extension Amplifier.Modulation.VelocityControl.Time: RangedInt {
+    public static let range: ClosedRange<Int> = -63...63
+
+    public static let defaultValue = 0
+
+    public var value: Int {
+        return _value
+    }
+
+    public init() {
+        _value = Self.defaultValue
+    }
+
+    public init(_ value: Int) {
+        _value = Self.range.clamp(value)
+    }
+}
+
+extension Amplifier.Modulation.VelocityControl.Level: RangedInt {
+    public static let range: ClosedRange<Int> = 0...63
+
+    public static let defaultValue = 0
+
+    public var value: Int {
+        return _value
+    }
+
+    public init() {
+        _value = Self.defaultValue
+    }
+
+    public init(_ value: Int) {
+        _value = Self.range.clamp(value)
     }
 }

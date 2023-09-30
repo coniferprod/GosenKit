@@ -1,8 +1,8 @@
 import SyxPack
 
 /// Common settings for harmonics.
-public struct HarmonicCommon: Codable {
-    public enum Group: String, Codable, CaseIterable {
+public struct HarmonicCommon {
+    public enum Group: String, CaseIterable {
         case low
         case high
         
@@ -18,21 +18,21 @@ public struct HarmonicCommon: Codable {
 
     public var isMorfEnabled: Bool
     
-    public var totalGain: Int // 1~63
+    public var totalGain: Gain // 1~63
     
     public var group: Group
-    public var keyScalingToGain: Int // -63(1)~+63(127)
-    public var velocityCurve: Int  // 1~12 (stored in SysEx as 0~11)
-    public var velocityDepth: Int  // 0~127
+    public var keyScalingToGain: Depth // -63(1)~+63(127)
+    public var velocityCurve: VelocityCurve  // 1~12 (stored in SysEx as 0~11)
+    public var velocityDepth: Level  // 0~127
     
     /// Initializes default harmonic common settings.
     public init() {
         isMorfEnabled = false
-        totalGain = 0x33
+        totalGain = Gain(0x33)
         group = .low
-        keyScalingToGain = 0
-        velocityCurve = 1
-        velocityDepth = 0
+        keyScalingToGain = Depth(0)
+        velocityCurve = VelocityCurve(1)
+        velocityDepth = Level(0)
     }
     
     public static func parse(from data: ByteArray) -> Result<HarmonicCommon, ParseError> {
@@ -45,38 +45,46 @@ public struct HarmonicCommon: Codable {
         temp.isMorfEnabled = (b == 1)
         
         b = data.next(&offset)
-        temp.totalGain = Int(b)
+        temp.totalGain = Gain(Int(b))
 
         b = data.next(&offset)
         temp.group = Group(index: Int(b))!
         
         b = data.next(&offset)
-        temp.keyScalingToGain = Int(b) - 64
+        temp.keyScalingToGain = Depth(Int(b) - 64)
         
         b = data.next(&offset)
-        temp.velocityCurve = Int(b) + 1 // 0~11 to 1~12
+        temp.velocityCurve = VelocityCurve(Int(b) + 1) // 0~11 to 1~12
         
         b = data.next(&offset)
-        temp.velocityDepth = Int(b)
+        temp.velocityDepth = Level(Int(b))
 
         return .success(temp)
     }
 }
 
 /// Harmonic envelope.
-public struct HarmonicEnvelope: Codable {
+public struct HarmonicEnvelope {
+    public struct Rate {
+        private var _value: Int
+    }
+    
+    public struct Level {
+        private var _value: Int
+    }
+    
     /// One segment of harmonic envelope.
-    public struct Segment: Codable {
-        public var rate: Int  // 0~127
-        public var level: Int // 0~63
+    public struct Segment {
+        public var rate: Rate  // 0~127
+        public var level: Level // 0~63
         
         public init() {
-            self.rate = 0
-            self.level = 0
+            self.rate = Rate(0)
+            self.level = Level(0)
         }
         
         /// Initializes the segment with rate and level.
-        public init(rate: Int, level: Int) {
+        public init(rate: Rate, level: Level) {
             self.rate = rate
             self.level = level
         }
@@ -88,10 +96,10 @@ public struct HarmonicEnvelope: Codable {
             var temp = Segment()
             
             b = data.next(&offset)
-            temp.rate = Int(b)
+            temp.rate = Rate(Int(b))
             
             b = data.next(&offset)
-            temp.level = Int(b)
+            temp.level = Level(Int(b))
             
             return .success(temp)
         }
@@ -121,10 +129,10 @@ public struct HarmonicEnvelope: Codable {
     /// Initializes the harmonic envelope with default settings.
     public init() {
         self.segments = [
-            Segment(rate: 127, level: 63),
-            Segment(rate: 127, level: 63),
-            Segment(rate: 127, level: 63),
-            Segment(rate: 0, level: 0),
+            Segment(rate: Rate(127), level: Level(63)),
+            Segment(rate: Rate(127), level: Level(63)),
+            Segment(rate: Rate(127), level: Level(63)),
+            Segment(rate: Rate(0), level: Level(0)),
         ]
 
         self.loopKind = .off
@@ -143,33 +151,33 @@ public struct HarmonicEnvelope: Codable {
         var temp = HarmonicEnvelope()
         
         b = data.next(&offset)
-        let segment0Rate = Int(b)
+        let segment0Rate = Rate(Int(b))
 
         b = data.next(&offset)
-        let segment0Level = Int(b)
+        let segment0Level = Level(Int(b))
         
         b = data.next(&offset)
-        let segment1Rate = Int(b)
+        let segment1Rate = Rate(Int(b))
         
         b = data.next(&offset)
         let segment1LevelBit6 = b.isBitSet(6)
         
         b.clearBit(6)
-        let segment1Level = Int(b)
+        let segment1Level = Level(Int(b))
 
         b = data.next(&offset)
-        let segment2Rate = Int(b)
+        let segment2Rate = Rate(Int(b))
         
         b = data.next(&offset)
         let segment2LevelBit6 = b.isBitSet(6)
         b.clearBit(6)
-        let segment2Level = Int(b)
+        let segment2Level = Level(Int(b))
         
         b = data.next(&offset)
-        let segment3Rate = Int(b)
+        let segment3Rate = Rate(Int(b))
 
         b = data.next(&offset)
-        let segment3Level = Int(b)
+        let segment3Level = Level(Int(b))
         
         temp.segments = [
             Segment(rate: segment0Rate, level: segment0Level),
@@ -195,10 +203,47 @@ public struct HarmonicEnvelope: Codable {
     }
 }
 
+extension HarmonicEnvelope.Rate: RangedInt {
+    public static let range: ClosedRange<Int> = 0...127
+
+    public static let defaultValue = 0
+
+    public var value: Int {
+        return _value
+    }
+
+    public init() {
+        _value = Self.defaultValue
+    }
+
+    public init(_ value: Int) {
+        _value = Self.range.clamp(value)
+    }
+}
+
+extension HarmonicEnvelope.Level: RangedInt {
+    public static let range: ClosedRange<Int> = 0...63
+
+    public static let defaultValue = 0
+
+    public var value: Int {
+        return _value
+    }
+
+    public init() {
+        _value = Self.defaultValue
+    }
+
+    public init(_ value: Int) {
+        _value = Self.range.clamp(value)
+    }
+}
+
+
 // Harmonic levels.
-public struct HarmonicLevels: Codable {
-    public var soft: [Int]  // 1~64
-    public var loud: [Int]  // 65~128
+public struct HarmonicLevels {
+    public var soft: [Level]  // 1~64
+    public var loud: [Level]  // 65~128
     // all values are 0~127
     
     public static let harmonicCount = 64
@@ -206,23 +251,30 @@ public struct HarmonicLevels: Codable {
     /// Initializes default harmonic levels. For both soft and loud,
     /// the first level is initialized to 127 and the rest to zero.
     public init() {
-        soft = [Int]()
-        soft.append(127)
+        soft = [Level]()
+        soft.append(Level(127))
         for _ in 1..<HarmonicLevels.harmonicCount {
-            soft.append(0)
+            soft.append(Level(0))
         }
         
-        loud = [Int]()
-        loud.append(127)
+        loud = [Level]()
+        loud.append(Level(127))
         for _ in 1..<HarmonicLevels.harmonicCount {
-            loud.append(0)
+            loud.append(Level(0))
         }
     }
     
     /// Initializes harmonic levels with soft and loud harmonics.
     public init(soft: [Int], loud: [Int]) {
-        self.soft = soft
-        self.loud = loud
+        self.soft = [Level]()
+        for level in soft {
+            self.soft.append(Level(level))
+        }
+        
+        self.loud = [Level]()
+        for level in loud {
+            self.loud.append(Level(level))
+        }
     }
 
     /// Initializes harmonic levels from MIDI System Exclusive data bytes.
@@ -231,18 +283,18 @@ public struct HarmonicLevels: Codable {
         var b: Byte = 0
 
         var i = 0
-        soft = [Int]()
+        soft = [Level]()
         while i < HarmonicLevels.harmonicCount {
             b = d.next(&offset)
-            soft.append(Int(b))
+            soft.append(Level(Int(b)))
             i += 1
         }
         
         i = 0
-        loud = [Int]()
+        loud = [Level]()
         while i < HarmonicLevels.harmonicCount {
             b = d.next(&offset)
-            loud.append(Int(b))
+            loud.append(Level(Int(b)))
             i += 1
         }
     }
@@ -260,8 +312,8 @@ extension HarmonicEnvelope: SystemExclusiveData {
         // When emitting segment1 and segment2 data,
         // we need to bake the loop type into the levels.
         
-        var segment1Level = Byte(segments[1].level)
-        var segment2Level = Byte(segments[2].level)
+        var segment1Level = Byte(segments[1].level.value)
+        var segment2Level = Byte(segments[2].level.value)
 
         if loopKind == .loop2 {  // bit pattern from bits 6 of L1 and L2 = "01"
             segment1Level.clearBit(6)
@@ -302,8 +354,8 @@ extension HarmonicLevels: SystemExclusiveData {
     /// Gets the MIDI System Exclusive data bytes for the harmonic levels.
     public func asData() -> ByteArray {
         var data = ByteArray()
-        soft.forEach { data.append(Byte($0)) }
-        loud.forEach { data.append(Byte($0)) }
+        soft.forEach { data.append(Byte($0.value)) }
+        loud.forEach { data.append(Byte($0.value)) }
         return data
     }
     
@@ -319,11 +371,11 @@ extension HarmonicCommon: SystemExclusiveData {
         var data = ByteArray()
         
         data.append(isMorfEnabled ? 1 : 0)
-        data.append(Byte(totalGain))
+        data.append(Byte(totalGain.value))
         data.append(Byte(group.index))
-        data.append(Byte(keyScalingToGain + 64))
-        data.append(Byte(velocityCurve - 1))
-        data.append(Byte(velocityDepth))
+        data.append(Byte(keyScalingToGain.value + 64))
+        data.append(Byte(velocityCurve.value - 1))
+        data.append(Byte(velocityDepth.value))
         
         return data
     }
@@ -337,7 +389,7 @@ extension HarmonicCommon: SystemExclusiveData {
 extension HarmonicEnvelope.Segment: SystemExclusiveData {
     /// Gets the MIDI System Exclusive data bytes for this harmonic envelope segment.
     public func asData() -> ByteArray {
-        return ByteArray(arrayLiteral: Byte(rate), Byte(level))
+        return ByteArray(arrayLiteral: Byte(rate.value), Byte(level.value))
     }
     
     /// The number of data bytes in this harmonic envelope segment.

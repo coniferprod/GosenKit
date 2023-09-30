@@ -2,9 +2,9 @@ import SyxPack
 
 
 /// Effect definition.
-public struct EffectDefinition: Codable {
+public struct EffectDefinition {
     /// Effect kind enumeration.
-    public enum Kind: Int, Codable, CaseIterable {
+    public enum Kind: Int, CaseIterable {
         case hall1
         case hall2
         case hall3
@@ -173,20 +173,20 @@ public struct EffectDefinition: Codable {
     ]
 
     public var kind: Kind  // reverb = 0...10, other effects = 11...47
-    public var depth: Int  // 0~100  // reverb dry/wet1 = depth
-    public var parameter1: Int  // all parameters are 0~127, except reverb param1 = 0~100
-    public var parameter2: Int
-    public var parameter3: Int
-    public var parameter4: Int
+    public var depth: EffectDepth  // 0~100  // reverb dry/wet1 = depth
+    public var parameter1: Level  // all parameters are 0~127, except reverb param1 = 0~100
+    public var parameter2: Level
+    public var parameter3: Level
+    public var parameter4: Level
     
     /// Initializes the effect definition with default values.
     public init() {
         kind = .room1
-        depth = 0
-        parameter1 = 0
-        parameter2 = 0
-        parameter3 = 0
-        parameter4 = 0
+        depth = EffectDepth(0)
+        parameter1 = Level(0)
+        parameter2 = Level(0)
+        parameter3 = Level(0)
+        parameter4 = Level(0)
     }
     
     public static func parse(from data: ByteArray) -> Result<EffectDefinition, ParseError> {
@@ -199,26 +199,26 @@ public struct EffectDefinition: Codable {
         temp.kind = Kind(index: Int(b))!
 
         b = data.next(&offset)
-        temp.depth = Int(b)
+        temp.depth = EffectDepth(Int(b))
 
         b = data.next(&offset)
-        temp.parameter1 = Int(b)
+        temp.parameter1 = Level(Int(b))
 
         b = data.next(&offset)
-        temp.parameter2 = Int(b)
+        temp.parameter2 = Level(Int(b))
 
         b = data.next(&offset)
-        temp.parameter3 = Int(b)
+        temp.parameter3 = Level(Int(b))
 
         b = data.next(&offset)
-        temp.parameter4 = Int(b)
+        temp.parameter4 = Level(Int(b))
         
         return .success(temp)
     }
 }
 
 /// Represents the effect settings for a patch.
-public struct EffectSettings: Codable {
+public struct EffectSettings {
     public var algorithm: Int  // 1...4
     public var reverb: EffectDefinition
     public var effect1: EffectDefinition
@@ -296,8 +296,8 @@ extension EffectDefinition: SystemExclusiveData {
         var data = ByteArray()
         
         [
-            kind.index, depth,
-            parameter1, parameter2, parameter3, parameter4
+            kind.index, depth.value,
+            parameter1.value, parameter2.value, parameter3.value, parameter4.value
         ]
         .forEach {
             data.append(Byte($0))

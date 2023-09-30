@@ -7,10 +7,10 @@ import SyxPack
 public typealias AdditiveKitDictionary = [String: AdditiveKit]
 
 /// A Kawai K5000 single patch.
-public struct SinglePatch: Codable {
+public struct SinglePatch {
     
     /// Polyphony mode.
-    public enum Polyphony: String, Codable, CaseIterable {
+    public enum Polyphony: String, CaseIterable {
         case poly
         case solo1
         case solo2
@@ -27,7 +27,7 @@ public struct SinglePatch: Codable {
     }
 
     /// Amplitude modulation.
-    public enum AmplitudeModulation: String, Codable, CaseIterable {
+    public enum AmplitudeModulation: String, CaseIterable {
         case off
         case source2
         case source3
@@ -52,47 +52,48 @@ public struct SinglePatch: Codable {
     /// Portamento setting.
     public enum Portamento {
         case off
-        case on(speed: UInt)
+        case on(speed: Level)
     }
     
     /// Single patch common settings.
-    public struct Common: Codable {
+    public struct Common {
         public var name: PatchName
-        public var volume: Int
+        public var volume: Volume
         public var polyphony: Polyphony
         public var sourceCount: Int
         public var sourceMutes: [Bool]
-        public var isPortamentoActive: Bool
-        public var portamentoSpeed: Int
+        public var portamento: Portamento
         public var amplitudeModulation: AmplitudeModulation
         public var macros: [MacroController]
         public var switches: SwitchControl
         public var effects: EffectSettings
-        public var geq: [Int]  // 58(-6) ~ 70(+6), so 64 is zero
+        public var geq: GEQ
         public var effectControl: EffectControl
         
         static let sourceCountOffset = 50
-        static let geqBandCount = 7
         static let macroCount = 4
         
         /// Initializes the common part with default values.
         public init() {
             name = PatchName("NewSound")
-            volume = 115
+            volume = Volume(115)
             polyphony = .poly
+            
             sourceCount = 2
             sourceMutes = [true, true, false, false, false, false]
-            isPortamentoActive = false
-            portamentoSpeed = 0
+            
+            portamento = .off
             amplitudeModulation = .off
+            
             macros = [MacroController]()
             macros.append(MacroController())
             macros.append(MacroController())
             macros.append(MacroController())
             macros.append(MacroController())
+            
             switches = SwitchControl(switch1: .off, switch2: .off, footSwitch1: .off, footSwitch2: .off)
             effects = EffectSettings()
-            geq = [ 2, 1, 0, 0, -1, -2, 1 ]
+            geq = GEQ(levels: [2, 1, 0, 0, -1, -2, 1])
             effectControl = EffectControl()
         }
         
@@ -111,13 +112,14 @@ public struct SinglePatch: Codable {
             }
             offset += EffectSettings.dataSize
 
-            temp.geq = [Int]()
-            for _ in 0..<SinglePatch.Common.geqBandCount {
+            var levels = [Int]()
+            for _ in 0..<GEQ.bandCount {
                 b = data.next(&offset)
                 let v: Int = Int(b) - 64  // 58(-6) ~ 70(+6), so 64 is zero
                 //print("GEQ band \(i + 1): \(b) --> \(v)")
-                temp.geq.append(Int(v))
+                levels.append(v)
             }
+            temp.geq = GEQ(levels: levels)
             
             // Eat the drum mark (39)
             offset += 1
@@ -126,7 +128,7 @@ public struct SinglePatch: Codable {
             offset += PatchName.length
             
             b = data.next(&offset)
-            temp.volume = Int(b)
+            temp.volume = Volume(Int(b))
             
             b = data.next(&offset)
             temp.polyphony = Polyphony(index: Int(b))!
@@ -161,11 +163,13 @@ public struct SinglePatch: Codable {
             offset += EffectControl.dataSize
 
             b = data.next(&offset)
-            temp.isPortamentoActive = (b == 1)
+            let isPortamentoActive = (b == 1)
             
             b = data.next(&offset)
-            temp.portamentoSpeed = Int(b)
+            let portamentoSpeed = Int(b)
 
+            temp.portamento = isPortamentoActive ? .on(speed: Level(portamentoSpeed)) : .off
+            
             var macroDestinations = [Int]()
             for _ in 0..<8 {
                 b = data.next(&offset)
@@ -272,7 +276,7 @@ public struct SinglePatch: Codable {
     /// Generates a MIDI System Exclusive message from this patch.
     /// - Parameter channel: the MIDI channel to use
     /// - Parameter bank: the K5000 bank identifier
-    public func asSystemExclusiveMessage(channel: Byte, bank: BankIdentifier) -> ByteArray {
+    public func asSystemExclusiveMessage(channel: MIDIChannel, bank: BankIdentifier) -> ByteArray {
         var data = ByteArray()
         
         let header = SystemExclusive.Header(
@@ -375,13 +379,13 @@ extension SinglePatch.Common: SystemExclusiveData {
         
         data.append(contentsOf: self.effects.asData())
         
-        geq.forEach { data.append(Byte($0 + 64)) } // 58(-6)~70(+6)
+        geq.levels.forEach { data.append(Byte($0.value + 64)) } // 58(-6)~70(+6)
         
         data.append(0)  // drum_mark
 
         data.append(contentsOf: name.asData())
 
-        [volume, polyphony.index, 0, sourceCount].forEach {
+        [volume.value, polyphony.index, 0, sourceCount].forEach {
             data.append(Byte($0))
         }
         
@@ -395,8 +399,15 @@ extension SinglePatch.Common: SystemExclusiveData {
         
         data.append(Byte(amplitudeModulation.index))
         data.append(contentsOf: effectControl.asData())
-        data.append(isPortamentoActive ? 1 : 0)
-        data.append(Byte(portamentoSpeed))
+        
+        switch portamento {
+        case .on(let speed):
+            data.append(1)
+            data.append(Byte(speed.value))
+        case .off:
+            data.append(0)
+            data.append(0)
+        }
         
         // Pick out the destinations and depths as the SysEx spec wants them.
         assert(macros.count == SinglePatch.Common.macroCount)
@@ -406,8 +417,8 @@ extension SinglePatch.Common: SystemExclusiveData {
         }
 
         for macro in macros {
-            data.append(Byte(macro.depth1 + 64))  // -31(33)~+31(95)
-            data.append(Byte(macro.depth2 + 64))  // -31(33)~+31(95)
+            data.append(Byte(macro.depth1.value + 64))  // -31(33)~+31(95)
+            data.append(Byte(macro.depth2.value + 64))  // -31(33)~+31(95)
         }
         
         data.append(contentsOf: switches.asData())
@@ -453,14 +464,21 @@ extension SinglePatch.Common: CustomStringConvertible {
     public var description: String {
         var s = ""
         s += "Name = '\(name.value)' Volume = \(volume) Polyphony = \(polyphony)\n"
-        let portamentoStatus = isPortamentoActive ? "ON" : "OFF"
-        s += "Portamento = \(portamentoStatus), speed = \(portamentoSpeed)\n"
+        
+        s += "Portamento: "
+        switch portamento {
+        case .on(let speed):
+            s += "on, speed \(speed.value)"
+        case .off:
+            s += "off"
+        }
+        
         s += "AM = \(amplitudeModulation)\n"
         s += "\(effects)\n"
         
         s += "GEQ: "
-        for band in geq {
-            s += "\(band) "
+        for band in geq.levels {
+            s += "\(band.value) "
         }
         s += "\n"
         
@@ -503,52 +521,6 @@ extension SinglePatch.AmplitudeModulation: CustomStringConvertible {
             return "4->5"
         case .source6:
             return "5->6"
-        }
-    }
-}
-
-// MARK: - Codable
-
-// Enums with associated values do not automatically conform to Codable
-// (apparently this is coming in Swift 5.5).
-// Thanks to: https://lostmoa.com/blog/CodableConformanceForSwiftEnumsWithMultipleAssociatedValuesOfDifferentTypes/
-extension SinglePatch.Portamento {
-    enum CodingKeys: CodingKey {
-        case off, on
-    }
-}
-
-extension SinglePatch.Portamento: Encodable {
-    public func encode(to encoder: Encoder) throws {
-        var container = encoder.container(keyedBy: CodingKeys.self)
-        
-        switch self {
-        case .off:
-            try container.encode(true, forKey: .off)
-        case .on(let speed):
-            try container.encode(speed, forKey: .on)
-        }
-    }
-}
-
-extension SinglePatch.Portamento: Decodable {
-    public init(from decoder: Decoder) throws {
-        let container = try decoder.container(keyedBy: CodingKeys.self)
-        let key = container.allKeys.first
-        
-        switch key {
-        case .off:
-            self = .off
-        case .on:
-            let speed = try container.decode(UInt.self, forKey: .on)
-            self = .on(speed: speed)
-        default:
-            throw DecodingError.dataCorrupted(
-                DecodingError.Context(
-                    codingPath: container.codingPath,
-                    debugDescription: "Unable to decode enumerated type"
-                )
-            )
         }
     }
 }

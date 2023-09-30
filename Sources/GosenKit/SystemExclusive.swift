@@ -2,7 +2,7 @@ import SyxPack
 
 public enum SystemExclusive {
     public struct Header {
-        public var channel: Byte
+        public var channel: MIDIChannel
         public var function: Function
         public var group: Byte
         public var machineIdentifier: Byte
@@ -116,7 +116,7 @@ public enum PatchKind: Byte, CaseIterable, CustomStringConvertible {
 /// Dump command header for various patch types.
 public struct DumpCommand {
     /// MIDI channel (1...16)
-    public var channel: Byte
+    public var channel: MIDIChannel
     
     /// Cardinality of the patch
     public var cardinality: Cardinality
@@ -132,11 +132,11 @@ public struct DumpCommand {
     
     /// Initialze a default dump command
     public init() {
-        self.init(channel: 1, cardinality: .one, bank: .a, kind: .single)
+        self.init(channel: MIDIChannel(1), cardinality: .one, bank: .a, kind: .single)
     }
     
     /// Initialize a dump command with all values. The sub-bytes array can be, and defaults to, empty.
-    public init(channel: Byte, cardinality: Cardinality, bank: BankIdentifier, kind: PatchKind, subBytes: ByteArray = []) {
+    public init(channel: MIDIChannel, cardinality: Cardinality, bank: BankIdentifier, kind: PatchKind, subBytes: ByteArray = []) {
         self.channel = channel
         self.cardinality = cardinality
         self.bank = bank
@@ -146,7 +146,7 @@ public struct DumpCommand {
     
     /// Initializes a dump command from MIDI System Exclusive data. Returns `nil` if the data is invalid.
     public init?(data: ByteArray) {
-        var maybeChannel: Byte = 1
+        var maybeChannel = MIDIChannel(1)
         var maybeCardinality: Cardinality = .one
         var maybeBank: BankIdentifier = .none
         var maybeKind: PatchKind = .single
@@ -157,7 +157,7 @@ public struct DumpCommand {
         for (index, b) in data.enumerated() {
             switch index {
             case 0: // channel byte
-                maybeChannel = b + 1  // adjust channel from 0~15 to 1~16
+                maybeChannel = MIDIChannel(Int(b) + 1)  // adjust channel from 0~15 to 1~16
             case 1:
                 maybeCardinality = Cardinality(rawValue: b)!
             case 2:  // // "5th" in spec, always 0x00
@@ -227,7 +227,7 @@ extension DumpCommand: Equatable { }
 
 public struct ParameterChange {
     /// MIDI channel (1...16)
-    public var channel: Byte
+    public var channel: MIDIChannel
     
     // Function is always 0x10
     // Group is always 0x00
@@ -247,7 +247,7 @@ extension ParameterChange: Equatable { }
 extension SystemExclusive.Header: SystemExclusiveData {
     public func asData() -> ByteArray {
         return [
-            channel,
+            Byte(channel.value - 1),
             function.rawValue,
             group,
             machineIdentifier,
@@ -264,7 +264,7 @@ extension SystemExclusive.Header: SystemExclusiveData {
 extension DumpCommand: SystemExclusiveData {
     private func collectData() -> ByteArray {
         var result: ByteArray = [
-            self.channel - 1,   // adjust 1~16 to 0~15
+            Byte(self.channel.value - 1),   // adjust 1~16 to 0~15
             self.cardinality.rawValue,  // either 0x20 or 0x21
             0x00,  // always
             0x0A,  // always
@@ -297,7 +297,7 @@ extension DumpCommand: SystemExclusiveData {
 extension ParameterChange: SystemExclusiveData {
     public func asData() -> ByteArray {
         return [
-            self.channel - 1,   // adjust 1~16 to 0~15
+            Byte(self.channel.value - 1),   // adjust 1~16 to 0~15
             SystemExclusive.Function.parameterSend.rawValue,
             0x00,
             0x0A,
@@ -314,7 +314,7 @@ extension SystemExclusive.Header: CustomStringConvertible {
     /// Provides a printable description for this header.
     public var description: String {
         var s = ""
-        s += "Channel = \(self.channel + 1), function = \(self.function) etc."
+        s += "Channel = \(self.channel.value), function = \(self.function) etc."
         return s
     }
 }

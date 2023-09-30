@@ -1,24 +1,32 @@
 import SyxPack
 
 /// Represents an oscillator in a source of a single patch.
-public struct Oscillator: Codable {
+public struct Oscillator {
     /// Pitch envelope of an oscillator.
-    public struct PitchEnvelope: Codable {
-        public var start: Int
-        public var attackTime: Int
-        public var attackLevel: Int
-        public var decayTime: Int
-        public var timeVelocitySensitivity: Int
-        public var levelVelocitySensitivity: Int
+    public struct PitchEnvelope {
+        public struct Level {
+            private var _value: Int
+        }
+        
+        public struct Time {
+            private var _value: Int
+        }
+        
+        public var start: Level
+        public var attackTime: Time
+        public var attackLevel: Level
+        public var decayTime: Time
+        public var timeVelocitySensitivity: Depth
+        public var levelVelocitySensitivity: Depth
         
         /// Initializes a default pitch envelope.
         public init() {
-            start = 0
-            attackTime = 0
-            attackLevel = 127
-            decayTime = 0
-            timeVelocitySensitivity = 0
-            levelVelocitySensitivity = 0
+            start = Level(0)
+            attackTime = Time(0)
+            attackLevel = Level(127)
+            decayTime = Time(0)
+            timeVelocitySensitivity = Depth(0)
+            levelVelocitySensitivity = Depth(0)
         }
         
         public static func parse(from data: ByteArray) -> Result<PitchEnvelope, ParseError> {
@@ -28,22 +36,22 @@ public struct Oscillator: Codable {
             var temp = PitchEnvelope()
             
             b = data.next(&offset)
-            temp.start = Int(b) - 64
+            temp.start = Level(Int(b) - 64)
             
             b = data.next(&offset)
-            temp.attackTime = Int(b)
+            temp.attackTime = Time(Int(b))
             
             b = data.next(&offset)
-            temp.attackLevel = Int(b) - 64
+            temp.attackLevel = Depth(Int(b) - 64)
             
             b = data.next(&offset)
-            temp.decayTime = Int(b)
+            temp.decayTime = Time(Int(b))
             
             b = data.next(&offset)
-            temp.timeVelocitySensitivity = Int(b) - 64
+            temp.timeVelocitySensitivity = Depth(Int(b) - 64)
             
             b = data.next(&offset)
-            temp.levelVelocitySensitivity = Int(b) - 64
+            temp.levelVelocitySensitivity = Depth(Int(b) - 64)
 
             return .success(temp)
         }
@@ -117,6 +125,42 @@ public struct Oscillator: Codable {
         }
 
         return .success(temp)
+    }
+}
+
+extension Oscillator.PitchEnvelope.Level: RangedInt {
+    public static let range: ClosedRange<Int> = -63...63
+
+    public static let defaultValue = 0
+
+    public var value: Int {
+        return _value
+    }
+
+    public init() {
+        _value = Self.defaultValue
+    }
+
+    public init(_ value: Int) {
+        _value = Self.range.clamp(value)
+    }
+}
+
+extension Oscillator.PitchEnvelope.Time: RangedInt {
+    public static let range: ClosedRange<Int> = 0...127
+
+    public static let defaultValue = 0
+
+    public var value: Int {
+        return _value
+    }
+
+    public init() {
+        _value = Self.defaultValue
+    }
+
+    public init(_ value: Int) {
+        _value = Self.range.clamp(value)
     }
 }
 

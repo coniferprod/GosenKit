@@ -1,7 +1,7 @@
 import SyxPack
 
 /// Additive kit.
-public struct AdditiveKit: Codable {
+public struct AdditiveKit {
     /// The number of harmonics in the additive kit.
     public static let harmonicCount = 64
     
@@ -24,10 +24,10 @@ public struct AdditiveKit: Codable {
             envelopes.append(
                 HarmonicEnvelope(
                     segments: [
-                        HarmonicEnvelope.Segment(rate: 127, level: 63),
-                        HarmonicEnvelope.Segment(rate: 127, level: 63),
-                        HarmonicEnvelope.Segment(rate: 127, level: 63),
-                        HarmonicEnvelope.Segment(rate: 127, level: 63),
+                        HarmonicEnvelope.Segment(rate: HarmonicEnvelope.Rate(127), level: HarmonicEnvelope.Level(63)),
+                        HarmonicEnvelope.Segment(rate: HarmonicEnvelope.Rate(127), level: HarmonicEnvelope.Level(63)),
+                        HarmonicEnvelope.Segment(rate: HarmonicEnvelope.Rate(127), level: HarmonicEnvelope.Level(63)),
+                        HarmonicEnvelope.Segment(rate: HarmonicEnvelope.Rate(127), level: HarmonicEnvelope.Level(63)),
                     ],
                     loopKind: .off
                 )
@@ -116,7 +116,7 @@ public struct AdditiveKit: Codable {
         // HCcode1 sum:
         var hc1Sum = 0
         for h in levels.soft {
-            hc1Sum += h & 0xFF
+            hc1Sum += h.value & 0xFF
             byteCount += 1
         }
         totalSum += hc1Sum & 0xFF
@@ -125,7 +125,7 @@ public struct AdditiveKit: Codable {
         // HCcode2 sum:
         var hc2Sum = 0
         for h in levels.loud {
-            hc2Sum += h & 0xFF
+            hc2Sum += h.value & 0xFF
             byteCount += 1
         }
         totalSum += hc2Sum & 0xFF
@@ -134,7 +134,7 @@ public struct AdditiveKit: Codable {
         // FF sum:
         var ffSum = 0
         for f in bands.levels {
-            ffSum += f & 0xFF
+            ffSum += f.value & 0xFF
             byteCount += 1
         }
         totalSum += ffSum & 0xFF

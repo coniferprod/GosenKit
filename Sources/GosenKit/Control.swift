@@ -109,17 +109,21 @@ public enum ControlDestination: String, Codable, CaseIterable {
     }
 }
 
-public struct MacroController: Codable {
+public struct MacroController {
+    public struct Depth {
+        private var _value: Int
+    }
+    
     public var destination1: ControlDestination
-    public var depth1: Int  // -31~+31
+    public var depth1: Depth  // -31~+31
     public var destination2: ControlDestination
-    public var depth2: Int // -31~+31
+    public var depth2: Depth // -31~+31
     
     public init() {
         destination1 = .cutoffOffset
-        depth1 = 0
+        depth1 = Depth(0)
         destination2 = .cutoffOffset
-        depth2 = 0
+        depth2 = Depth(0)
     }
     
     public init(
@@ -128,9 +132,9 @@ public struct MacroController: Codable {
         destination2: ControlDestination,
         depth2: Int) {
         self.destination1 = destination1
-        self.depth1 = depth1
+        self.depth1 = Depth(depth1)
         self.destination2 = destination2
-        self.depth2 = depth2
+        self.depth2 = Depth(depth2)
     }
     
     public static func parse(from data: ByteArray) -> Result<MacroController, ParseError> {
@@ -143,15 +147,32 @@ public struct MacroController: Codable {
         temp.destination1 = ControlDestination(index: Int(b))!
 
         b = data.next(&offset)
-        temp.depth1 = Int(b) - 64
+        temp.depth1 = Depth(Int(b) - 64)
         
         b = data.next(&offset)
         temp.destination2 = ControlDestination(index: Int(b))!
 
         b = data.next(&offset)
-        temp.depth2 = Int(b) - 64
+        temp.depth2 = Depth(Int(b) - 64)
         
         return .success(temp)
+    }
+}
+
+extension MacroController.Depth: RangedInt {
+    public static let range: ClosedRange<Int> = -31...31
+    public static let defaultValue = 1
+    
+    public init() {
+        _value = Self.defaultValue
+    }
+    
+    public init(_ value: Int) {
+        _value = Self.range.clamp(value)
+    }
+
+    public var value: Int {
+        return _value
     }
 }
 
@@ -285,16 +306,16 @@ public enum EffectDestination: Int, Codable, CaseIterable {
     }
 }
 
-public struct EffectControl: Codable {
-    public struct Source: Codable {
+public struct EffectControl {
+    public struct Source {
         public var source: ControlSource
         public var destination: EffectDestination
-        public var depth: Int
+        public var depth: ControlDepth
         
         public init() {
             source = .bender
             destination = .reverbDryWet1
-            depth = 0
+            depth = ControlDepth(0)
         }
         
         public static func parse(from data: ByteArray) -> Result<Source, ParseError> {
@@ -310,7 +331,7 @@ public struct EffectControl: Codable {
             temp.destination = EffectDestination(index: Int(b))!
             
             b = data.next(&offset)
-            temp.depth = Int(b) - 64
+            temp.depth = ControlDepth(Int(b) - 64)
             
             return .success(temp)
         }
@@ -349,15 +370,15 @@ public struct EffectControl: Codable {
     }
 }
 
-public struct AssignableController: Codable {
+public struct AssignableController {
     public var source: ControlSource
     public var destination: ControlDestination
-    public var depth: Int
+    public var depth: ControlDepth
     
     public init() {
         source = .bender
         destination = .cutoffOffset
-        depth = 0
+        depth = ControlDepth(0)
     }
     
     public static func parse(from data: ByteArray) -> Result<AssignableController, ParseError> {
@@ -373,7 +394,7 @@ public struct AssignableController: Codable {
         temp.destination = ControlDestination(index: Int(b))!
         
         b = data.next(&offset)
-        temp.depth = Int(b)
+        temp.depth = ControlDepth(Int(b) - 64)
 
         return .success(temp)
     }
@@ -384,7 +405,7 @@ public struct AssignableController: Codable {
 extension MacroController: SystemExclusiveData {
     public func asData() -> ByteArray {
         var data = ByteArray()
-        [destination1.index, depth1 + 64, destination2.index, depth2 + 64].forEach {
+        [destination1.index, depth1.value + 64, destination2.index, depth2.value + 64].forEach {
             data.append(Byte($0))
         }
         return data
@@ -411,7 +432,7 @@ extension VelocitySwitch: SystemExclusiveData {
 extension EffectControl.Source: SystemExclusiveData {
     public func asData() -> ByteArray {
         var data = ByteArray()
-        [source.index, destination.index, depth + 64].forEach {
+        [source.index, destination.index, depth.value + 64].forEach {
             data.append(Byte($0))
         }
         return data
@@ -425,7 +446,7 @@ extension EffectControl.Source: SystemExclusiveData {
 extension AssignableController: SystemExclusiveData {
     public func asData() -> ByteArray {
         var data = ByteArray()
-        [source.index, destination.index, depth].forEach {
+        [source.index, destination.index, depth.value].forEach {
             data.append(Byte($0))
         }
         return data

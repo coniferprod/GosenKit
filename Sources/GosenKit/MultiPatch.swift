@@ -4,26 +4,24 @@ import SyxPack
 
 
 /// A Kawai K5000 multi patch (combi on the K5000W).
-public struct MultiPatch: Codable {
+public struct MultiPatch {
     public static let sectionCount = 4
     
     /// Common settings for multi patch.
-    public struct Common: Codable {
-        public static let geqBandCount = 7
-
+    public struct Common {
         public var effects: EffectSettings
-        public var geq: [Int]  // all 0...127
+        public var geq: GEQ
         public var name: PatchName
-        public var volume: UInt  // 0...127
+        public var volume: Level
         public var sectionMutes: [Bool]
         public var effectControl: EffectControl
 
         /// Initialize common settings with defaults.
         public init() {
             effects = EffectSettings()
-            geq = [Int](repeating: 0, count: Common.geqBandCount)
+            geq = GEQ(levels: [Int](repeating: 0, count: GEQ.bandCount))
             name = PatchName("NewMulti")
-            volume = 127
+            volume = Level(127)
             sectionMutes = [Bool](repeating: false, count: MultiPatch.sectionCount)
             effectControl = EffectControl()
         }
@@ -50,13 +48,15 @@ public struct MultiPatch: Codable {
 
             //print("After effects parsed, offset = \(String(format: "%d", offset)) (data length = \(data.count))")
 
-            temp.geq = [Int]()
-            for _ in 0..<SinglePatch.Common.geqBandCount {
+            var levels = [Int]()
+            for _ in 0..<GEQ.bandCount {
                 b = data.next(&offset)
                 let v: Int = Int(b) - 64  // 58(-6) ~ 70(+6), so 64 is zero
                 //print("GEQ band \(i + 1): \(b) --> \(v)")
-                temp.geq.append(Int(v))
+                levels.append(v)
             }
+            temp.geq = GEQ(levels: levels)
+
             // Don't adjust offset, it has already been adjusted in the loop above.
 
             //print("After GEQ parsed, offset = \(String(format: "%d", offset)) (data length = \(data.count))")
@@ -67,7 +67,7 @@ public struct MultiPatch: Codable {
             //print("After name parsed, offset = \(String(format: "%d", offset)) (data length = \(data.count))")
 
             b = data.next(&offset)
-            temp.volume = UInt(b)
+            temp.volume = Level(Int(b))
             
             //print("After volume parsed, offset = \(String(format: "%d", offset)) (data length = \(data.count))")
 
@@ -97,9 +97,9 @@ public struct MultiPatch: Codable {
     }
     
     /// One section of a multi patch.
-    public struct Section: Codable {
+    public struct Section {
         public var single: InstrumentNumber
-        public var volume: UInt  // 0~127
+        public var volume: Level  // 0~127
         public var pan: Int  // 0~127
         public var effectPath: UInt  // 0~3
         public var transpose: Int  // SysEx 40~88 = -24~+24
@@ -111,7 +111,7 @@ public struct MultiPatch: Codable {
         /// Initializes a multi section with defaults.
         public init() {
             single = InstrumentNumber(number: 0)
-            volume = 127
+            volume = Level(127)
             pan = 0
             effectPath = 0
             transpose = 0
@@ -138,7 +138,7 @@ public struct MultiPatch: Codable {
             temp.single = InstrumentNumber(msb: instrumentMSB, lsb: instrumentLSB)
             
             b = data.next(&offset)
-            temp.volume = UInt(b)
+            temp.volume = Level(Int(b))
             
             b = data.next(&offset)
             temp.pan = Int(b)
@@ -249,7 +249,7 @@ public struct MultiPatch: Codable {
     /// Generates a MIDI System Exclusive message from this patch.
     /// - Parameter channel: the MIDI channel to use
     /// - Parameter instrument: 00...3F
-    public func asSystemExclusiveMessage(channel: Byte, instrument: Byte) -> ByteArray {
+    public func asSystemExclusiveMessage(channel: MIDIChannel, instrument: Byte) -> ByteArray {
         var data = ByteArray()
         
         let header = SystemExclusive.Header(
@@ -295,7 +295,7 @@ extension MultiPatch.Common: CustomStringConvertible {
         result += "\(self.effects)\n"
         
         result += "GEQ: "
-        for band in geq {
+        for band in geq.levels {
             result += "\(band) "
         }
         result += "\n"
@@ -364,9 +364,9 @@ extension MultiPatch.Common: SystemExclusiveData {
         var data = ByteArray()
         
         data.append(contentsOf: effects.asData())
-        geq.forEach { data.append(Byte($0 + 64)) } // 58(-6)~70(+6)
+        geq.levels.forEach { data.append(Byte($0.value + 64)) } // 58(-6)~70(+6)
         data.append(contentsOf: name.asData())
-        data.append(Byte(volume))
+        data.append(Byte(volume.value))
                 
         return data
     }
@@ -385,7 +385,7 @@ extension MultiPatch.Section: SystemExclusiveData {
         
         data.append(contentsOf: single.asData())
         
-        data.append(Byte(volume))
+        data.append(Byte(volume.value))
         data.append(Byte(pan))
         data.append(Byte(effectPath))
         data.append(Byte(transpose + 64))

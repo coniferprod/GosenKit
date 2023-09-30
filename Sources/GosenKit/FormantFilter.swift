@@ -1,22 +1,30 @@
 import SyxPack
 
 /// Represents a formant filter.
-public struct FormantFilter: Codable {
+public struct FormantFilter {
     /// Formant filter envelope.
-    public struct Envelope: Codable {
+    public struct Envelope {
+        public struct Rate {
+            private var _value: Int
+        }
+        
+        public struct Level {
+            private var _value: Int
+        }
+        
         /// Formant filter envelope segment.
-        public struct Segment: Codable {
-            public var rate: Int  // 0~127
-            public var level: Int // -63(1)~+63(127)
+        public struct Segment {
+            public var rate: Rate  // 0~127
+            public var level: Level // -63(1)~+63(127)
             
             public init() {
-                self.rate = 0
-                self.level = 0
+                self.rate = Rate(0)
+                self.level = Level(0)
             }
             
             public init(rate: Int, level: Int) {
-                self.rate = rate
-                self.level = level
+                self.rate = Rate(rate)
+                self.level = Level(level)
             }
             
             public static func parse(from data: ByteArray) -> Result<Segment, ParseError> {
@@ -26,10 +34,10 @@ public struct FormantFilter: Codable {
                 var temp = Segment()
                 
                 b = data.next(&offset)
-                temp.rate = Int(b)
+                temp.rate = Rate(Int(b))
                 
                 b = data.next(&offset)
-                temp.level = Int(b) - 64
+                temp.level = Level(Int(b) - 64)
                 
                 return .success(temp)
             }
@@ -40,8 +48,8 @@ public struct FormantFilter: Codable {
         public var decay2: Segment
         public var release: Segment
         public var decayLoop: HarmonicEnvelope.LoopKind
-        public var velocityDepth: Int // -63(1)~+63(127)
-        public var keyScalingDepth: Int // -63(1)~+63(127)
+        public var velocityDepth: Depth // -63(1)~+63(127)
+        public var keyScalingDepth: Depth // -63(1)~+63(127)
         
         public init() {
             attack = Segment(rate: 127, level: 63)
@@ -49,8 +57,8 @@ public struct FormantFilter: Codable {
             decay2 = Segment(rate: 127, level: 63)
             release = Segment(rate: 127, level: 63)
             decayLoop = .off
-            velocityDepth = 0
-            keyScalingDepth = 0
+            velocityDepth = Depth(0)
+            keyScalingDepth = Depth(0)
         }
         
         public static func parse(from data: ByteArray) -> Result<Envelope, ParseError> {
@@ -97,10 +105,10 @@ public struct FormantFilter: Codable {
             temp.decayLoop = HarmonicEnvelope.LoopKind(index: Int(b))!
             
             b = data.next(&offset)
-            temp.velocityDepth = Int(b) - 64
+            temp.velocityDepth = Depth(Int(b) - 64)
 
             b = data.next(&offset)
-            temp.keyScalingDepth = Int(b) - 64
+            temp.keyScalingDepth = Depth(Int(b) - 64)
 
             return .success(temp)
         }
@@ -167,37 +175,37 @@ public struct FormantFilter: Codable {
     }
 
     /// Formant filter bands.
-    public struct Bands: Codable {
-        public var levels: [Int]  // all 0~127
+    public struct Bands {
+        public var levels: [Level]  // all 0~127
 
         public static let bandCount = 128
 
         public init() {
-            levels = Array(repeating: 127, count: Bands.bandCount)
+            levels = Array(repeating: Level(127), count: Bands.bandCount)
         }
            
         public init(data d: ByteArray) {
             var offset: Int = 0
             var b: Byte = 0
             
-            levels = [Int]()
+            levels = [Level]()
             for _ in 0 ..< Bands.bandCount {
                 b = d.next(&offset)
-                levels.append(Int(b))
+                levels.append(Level(Int(b)))
             }
         }
     }
     
-    public var bias: Int  // -63(1)~+63(127)
+    public var bias: Depth  // -63(1)~+63(127)
     public var mode: Mode  // 0=ENV, 1=LFO
-    public var envelopeDepth: Int // -63(1)~+63(127)
+    public var envelopeDepth: Depth // -63(1)~+63(127)
     public var envelope: Envelope
     public var lfo: LFO
     
     public init() {
-        bias = -10
+        bias = Depth(-10)
         mode = .envelope
-        envelopeDepth = 0
+        envelopeDepth = Depth(0)
         envelope = Envelope()
         lfo = LFO()
     }
@@ -209,13 +217,13 @@ public struct FormantFilter: Codable {
         var temp = FormantFilter()
         
         b = data.next(&offset)
-        temp.bias = Int(b) - 64
+        temp.bias = Depth(Int(b) - 64)
         
         b = data.next(&offset)
         temp.mode = Mode(index: Int(b))!
         
         b = data.next(&offset)
-        temp.envelopeDepth = Int(b) - 64
+        temp.envelopeDepth = Depth(Int(b) - 64)
         
         switch Envelope.parse(from: data.slice(from: offset, length: Envelope.dataSize)) {
         case .success(let env):
@@ -236,6 +244,42 @@ public struct FormantFilter: Codable {
     }
 }
 
+extension FormantFilter.Envelope.Rate: RangedInt {
+    public static let range: ClosedRange<Int> = 0...127
+
+    public static let defaultValue = 0
+
+    public var value: Int {
+        return _value
+    }
+
+    public init() {
+        _value = Self.defaultValue
+    }
+
+    public init(_ value: Int) {
+        _value = Self.range.clamp(value)
+    }
+}
+
+extension FormantFilter.Envelope.Level: RangedInt {
+    public static let range: ClosedRange<Int> = -63...63
+
+    public static let defaultValue = 0
+
+    public var value: Int {
+        return _value
+    }
+
+    public init() {
+        _value = Self.defaultValue
+    }
+
+    public init(_ value: Int) {
+        _value = Self.range.clamp(value)
+    }
+}
+
 // MARK: - SystemExclusiveData
 
 extension FormantFilter.Envelope: SystemExclusiveData {
@@ -247,7 +291,7 @@ extension FormantFilter.Envelope: SystemExclusiveData {
         data.append(contentsOf: decay2.asData())
         data.append(contentsOf: release.asData())
         
-        [decayLoop.index, velocityDepth + 64, keyScalingDepth + 64].forEach {
+        [decayLoop.index, velocityDepth.value + 64, keyScalingDepth.value + 64].forEach {
             data.append(Byte($0))
         }
         
@@ -261,7 +305,7 @@ extension FormantFilter.Envelope: SystemExclusiveData {
 
 extension FormantFilter.Envelope.Segment: SystemExclusiveData {
     public func asData() -> ByteArray {
-        return ByteArray(arrayLiteral: Byte(rate), Byte(level + 64))
+        return ByteArray(arrayLiteral: Byte(rate.value), Byte(level.value + 64))
     }
     
     public var dataLength: Int { return FormantFilter.Envelope.Segment.dataSize }
@@ -273,7 +317,7 @@ extension FormantFilter: SystemExclusiveData {
     public func asData() -> ByteArray {
         var data = ByteArray()
 
-        [bias + 64, mode.index, envelopeDepth + 64].forEach {
+        [bias.value + 64, mode.index, envelopeDepth.value + 64].forEach {
             data.append(Byte($0))
         }
 
@@ -290,7 +334,7 @@ extension FormantFilter: SystemExclusiveData {
 
 extension FormantFilter.Bands: SystemExclusiveData {
     public func asData() -> ByteArray {
-        return levels.map { Byte($0) }
+        return levels.map { Byte($0.value) }
     }
 
     public var dataLength: Int { return FormantFilter.Bands.dataSize }
