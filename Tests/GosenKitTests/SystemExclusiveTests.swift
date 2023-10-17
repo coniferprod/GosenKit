@@ -38,8 +38,6 @@ final class SystemExclusiveTests: XCTestCase {
         let header = SystemExclusive.Header(
             channel: MIDIChannel(1),
             function: SystemExclusive.Function.oneBlockDump,
-            group: 0x00,
-            machineIdentifier: 0x0a,
             substatus1: 0x00,
             substatus2: BankIdentifier.a.rawValue)
         

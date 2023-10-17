@@ -4,20 +4,22 @@ import SyxPack
 public struct Oscillator {
     /// Pitch envelope of an oscillator.
     public struct PitchEnvelope {
-        public struct Level {
-            private var _value: Int
-        }
-        
+        // Pitch envelope time 0~127
         public struct Time {
             private var _value: Int
         }
         
+        /// Pitch envelope level -63~+63
+        public struct Level {
+            private var _value: Int
+        }
+
         public var start: Level
         public var attackTime: Time
         public var attackLevel: Level
         public var decayTime: Time
-        public var timeVelocitySensitivity: Depth
-        public var levelVelocitySensitivity: Depth
+        public var timeVelocitySensitivity: Level
+        public var levelVelocitySensitivity: Level
         
         /// Initializes a default pitch envelope.
         public init() {
@@ -25,8 +27,8 @@ public struct Oscillator {
             attackTime = Time(0)
             attackLevel = Level(127)
             decayTime = Time(0)
-            timeVelocitySensitivity = Depth(0)
-            levelVelocitySensitivity = Depth(0)
+            timeVelocitySensitivity = Level(0)
+            levelVelocitySensitivity = Level(0)
         }
         
         public static func parse(from data: ByteArray) -> Result<PitchEnvelope, ParseError> {
@@ -42,16 +44,16 @@ public struct Oscillator {
             temp.attackTime = Time(Int(b))
             
             b = data.next(&offset)
-            temp.attackLevel = Depth(Int(b) - 64)
+            temp.attackLevel = Level(Int(b) - 64)
             
             b = data.next(&offset)
             temp.decayTime = Time(Int(b))
             
             b = data.next(&offset)
-            temp.timeVelocitySensitivity = Depth(Int(b) - 64)
+            temp.timeVelocitySensitivity = Level(Int(b) - 64)
             
             b = data.next(&offset)
-            temp.levelVelocitySensitivity = Depth(Int(b) - 64)
+            temp.levelVelocitySensitivity = Level(Int(b) - 64)
 
             return .success(temp)
         }
@@ -77,19 +79,19 @@ public struct Oscillator {
     }
 
     public var wave: Wave
-    public var coarse: Int
-    public var fine: Int
+    public var coarse: Coarse
+    public var fine: Fine
     public var keyScalingToPitch: KeyScaling
-    public var fixedKey: Int  // TODO: OFF / MIDI note
+    public var fixedKey: FixedKey
     public var pitchEnvelope: PitchEnvelope
     
     /// Initializes an oscillator with default settings.
     public init() {
         wave = Wave(number: 411)
-        coarse = 0
-        fine = 0
+        coarse = Coarse(0)
+        fine = Fine(0)
         keyScalingToPitch = .zeroCent
-        fixedKey = 0
+        fixedKey = .off
         pitchEnvelope = PitchEnvelope()
     }
     
@@ -106,13 +108,22 @@ public struct Oscillator {
         temp.wave = Wave(msb: waveMSB, lsb: waveLSB)
         
         b = data.next(&offset)
-        temp.coarse = Int(b) - 24
+        temp.coarse = Coarse(Int(b) - 24)
 
         b = data.next(&offset)
-        temp.fine = Int(b) - 64
+        temp.fine = Fine(Int(b) - 64)
 
         b = data.next(&offset)
-        temp.fixedKey = Int(b)
+        if b == 0 {
+            temp.fixedKey = .off
+        }
+        else {
+            // MIDI spec says: 21 ~ 108 = ON(A-1 ~ C7).
+            // With Middle C defined as C4, A0=21 and C8=108.
+            // So it seems like the K5000 wants to use the Yamaha convention,
+            // where Middle C is C3, so that A-1=21 and C7=108.
+            temp.fixedKey = .on(Key(note: MIDINote(Int(b))))
+        }
 
         b = data.next(&offset)
         temp.keyScalingToPitch = KeyScaling(index: Int(b))!
@@ -128,42 +139,6 @@ public struct Oscillator {
     }
 }
 
-extension Oscillator.PitchEnvelope.Level: RangedInt {
-    public static let range: ClosedRange<Int> = -63...63
-
-    public static let defaultValue = 0
-
-    public var value: Int {
-        return _value
-    }
-
-    public init() {
-        _value = Self.defaultValue
-    }
-
-    public init(_ value: Int) {
-        _value = Self.range.clamp(value)
-    }
-}
-
-extension Oscillator.PitchEnvelope.Time: RangedInt {
-    public static let range: ClosedRange<Int> = 0...127
-
-    public static let defaultValue = 0
-
-    public var value: Int {
-        return _value
-    }
-
-    public init() {
-        _value = Self.defaultValue
-    }
-
-    public init(_ value: Int) {
-        _value = Self.range.clamp(value)
-    }
-}
-
 // MARK: - SystemExclusiveData
 
 extension Oscillator.PitchEnvelope: SystemExclusiveData {
@@ -172,12 +147,12 @@ extension Oscillator.PitchEnvelope: SystemExclusiveData {
         var data = ByteArray()
         
         [
-            start + 64,
-            attackTime,
-            attackLevel + 64,
-            decayTime,
-            timeVelocitySensitivity + 64,
-            levelVelocitySensitivity + 64
+            start.value + 64,
+            attackTime.value,
+            attackLevel.value + 64,
+            decayTime.value,
+            timeVelocitySensitivity.value + 64,
+            levelVelocitySensitivity.value + 64
         ]
         .forEach {
             data.append(Byte($0))
@@ -199,10 +174,15 @@ extension Oscillator: SystemExclusiveData {
         
         data.append(contentsOf: wave.asData())
         
+        var fixedKeyByte = 0x00
+        if case .on(let key) = fixedKey {
+            fixedKeyByte = key.note.value
+        }
+        
         [
-            coarse + 24,
-            fine + 64,
-            fixedKey,
+            coarse.value + 24,
+            fine.value + 64,
+            fixedKeyByte,
             keyScalingToPitch.index
         ]
         .forEach {
@@ -256,5 +236,41 @@ extension Oscillator.KeyScaling: CustomStringConvertible {
             result = "50cent"
         }
         return result
+    }
+}
+
+extension Oscillator.PitchEnvelope.Time: RangedInt {
+    public static let range: ClosedRange<Int> = 0...127
+
+    public static let defaultValue = 0
+
+    public var value: Int {
+        return _value
+    }
+
+    public init() {
+        _value = Self.defaultValue
+    }
+
+    public init(_ value: Int) {
+        _value = Self.range.clamp(value)
+    }
+}
+
+extension Oscillator.PitchEnvelope.Level: RangedInt {
+    public static let range: ClosedRange<Int> = -63...63
+
+    public static let defaultValue = 0
+
+    public var value: Int {
+        return _value
+    }
+
+    public init() {
+        _value = Self.defaultValue
+    }
+
+    public init(_ value: Int) {
+        _value = Self.range.clamp(value)
     }
 }

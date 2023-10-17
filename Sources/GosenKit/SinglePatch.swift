@@ -282,8 +282,6 @@ public struct SinglePatch {
         let header = SystemExclusive.Header(
             channel: channel,
             function: .oneBlockDump,
-            group: 0x00,
-            machineIdentifier: 0x0a,
             substatus1: 0x00,
             substatus2: bank.rawValue)
 

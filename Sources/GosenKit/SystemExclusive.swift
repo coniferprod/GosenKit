@@ -1,11 +1,14 @@
 import SyxPack
 
+/// K5000S/R/W MIDI System Exclusive message.
 public enum SystemExclusive {
+    public static let groupIdentifier: Byte = 0x00    // synth group ID
+    public static let machineIdentifier: Byte = 0x0A  // K5000S/R/W machine ID
+    
+    /// System Exclusive header.
     public struct Header {
         public var channel: MIDIChannel
         public var function: Function
-        public var group: Byte
-        public var machineIdentifier: Byte
         public var substatus1: Byte
         public var substatus2: Byte
         
@@ -21,6 +24,7 @@ public enum SystemExclusive {
         }
     }
     
+    /// System Exclusive function.
     public enum Function: Byte {
         case oneBlockDumpRequest = 0x00
         case allBlockDumpRequest = 0x01
@@ -161,11 +165,11 @@ public struct DumpCommand {
             case 1:
                 maybeCardinality = Cardinality(rawValue: b)!
             case 2:  // // "5th" in spec, always 0x00
-                if b != 0x00 {
+                if b != SystemExclusive.groupIdentifier {
                     return nil
                 }
             case 3: // "6th" in spec, always 0x0A
-                if b != 0x0A {
+                if b != SystemExclusive.machineIdentifier {
                     return nil
                 }
             case 4: // patch kind ("7th" in spec): 0x00, 0x10, 0x11 or 0x20
@@ -229,9 +233,7 @@ public struct ParameterChange {
     /// MIDI channel (1...16)
     public var channel: MIDIChannel
     
-    // Function is always 0x10
-    // Group is always 0x00
-    // Machine is always 0x0A
+    // Function is always 0x10 for parameter send
     
     public var sub1: Byte
     public var sub2: Byte
@@ -249,16 +251,14 @@ extension SystemExclusive.Header: SystemExclusiveData {
         return [
             Byte(channel.value - 1),
             function.rawValue,
-            group,
-            machineIdentifier,
+            SystemExclusive.groupIdentifier,
+            SystemExclusive.machineIdentifier,
             substatus1,
             substatus2,
         ]
     }
     
-    public var dataLength: Int {
-        return 6
-    }
+    public var dataLength: Int { 6 }
 }
 
 extension DumpCommand: SystemExclusiveData {
@@ -266,8 +266,8 @@ extension DumpCommand: SystemExclusiveData {
         var result: ByteArray = [
             Byte(self.channel.value - 1),   // adjust 1~16 to 0~15
             self.cardinality.rawValue,  // either 0x20 or 0x21
-            0x00,  // always
-            0x0A,  // always
+            SystemExclusive.groupIdentifier,
+            SystemExclusive.machineIdentifier,
             self.kind.rawValue,  // single, multi, drum kit, drum instrument
         ]
         
@@ -299,8 +299,8 @@ extension ParameterChange: SystemExclusiveData {
         return [
             Byte(self.channel.value - 1),   // adjust 1~16 to 0~15
             SystemExclusive.Function.parameterSend.rawValue,
-            0x00,
-            0x0A,
+            SystemExclusive.groupIdentifier,
+            SystemExclusive.machineIdentifier,
             sub1, sub2, sub3, sub4, sub5, dataHigh, dataLow,
         ]
     }

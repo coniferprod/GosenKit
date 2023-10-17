@@ -2,6 +2,7 @@ import SyxPack
 
 /// Common settings for harmonics.
 public struct HarmonicCommon {
+    /// Harmonic group.
     public enum Group: String, CaseIterable {
         case low
         case high
@@ -370,18 +371,23 @@ extension HarmonicCommon: SystemExclusiveData {
     public func asData() -> ByteArray {
         var data = ByteArray()
         
-        data.append(isMorfEnabled ? 1 : 0)
-        data.append(Byte(totalGain.value))
-        data.append(Byte(group.index))
-        data.append(Byte(keyScalingToGain.value + 64))
-        data.append(Byte(velocityCurve.value - 1))
-        data.append(Byte(velocityDepth.value))
-        
+        [
+            isMorfEnabled ? 1 : 0,
+            totalGain.value,
+            group.index,
+            keyScalingToGain.value + 64,
+            velocityCurve.value - 1,
+            velocityDepth.value
+        ]
+        .forEach {
+            data.append(Byte($0))
+        }
+                
         return data
     }
     
     /// The number of data bytes in the harmonic common settings.
-    public var dataLength: Int { return HarmonicCommon.dataSize }
+    public var dataLength: Int { HarmonicCommon.dataSize }
 
     public static let dataSize = 6
 }
@@ -393,7 +399,7 @@ extension HarmonicEnvelope.Segment: SystemExclusiveData {
     }
     
     /// The number of data bytes in this harmonic envelope segment.
-    public var dataLength: Int { return HarmonicEnvelope.Segment.dataSize }
+    public var dataLength: Int { HarmonicEnvelope.Segment.dataSize }
 
     public static let dataSize = 2
 }

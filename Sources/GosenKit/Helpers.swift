@@ -98,19 +98,29 @@ extension String {
     }
 }
 
-/// Key with note number and name.
-public struct Key: Codable {
-    private var noteNames = ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"]
+/// Octave setting convention
+public enum Octave: Int {
+    case roland = -1
+    case yamaha = -2
     
-    public var note: Int
+    /// Default octave setting
+    public static let defaultValue = Octave.roland.rawValue
+}
+
+/// Key with note number and name.
+public struct Key {
+    private var noteNames = ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"]
+    private var octave = Octave.yamaha  // K5000 uses the Yamaha convention (Middle C = C3)
+    
+    public var note: MIDINote
     
     public var name: String {
-        let octave = self.note / 12 - 1
-        let name = self.noteNames[self.note % 12]
+        let octave = self.note.value / 12 + self.octave.rawValue
+        let name = self.noteNames[self.note.value % 12]
         return "\(name)\(octave)"
     }
     
-    public init(note: Int) {
+    public init(note: MIDINote) {
         self.note = note
     }
     
@@ -144,16 +154,16 @@ public struct Key: Codable {
         }
 
         if let octave = Int(octavePart), let noteIndex = self.noteNames.firstIndex(where: { $0 == notePart }) {
-            self.note = (octave + 1) * 12 + noteIndex
+            self.note = MIDINote((octave - self.octave.rawValue) * 12 + noteIndex)
         }
         else {
-            self.note = 0
+            self.note = MIDINote(0)
         }
     }
 }
 
 /// Keyboard zone with low and high keys.
-public struct Zone: Codable {
+public struct Zone {
     public var high: Key
     public var low: Key
     

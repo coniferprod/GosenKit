@@ -74,64 +74,52 @@ public struct Source {
         }
 
         /// Pan settings.
-        public struct Pan: Codable {
+        public struct PanSettings {
             /// Pan kind.
-            public enum Kind: String, Codable, CaseIterable {
-                case normal
-                case random
-                case keyScale
-                case negativeKeyScale
-                
+            public enum Kind: Byte, Codable, CaseIterable {
+                case normal = 0
+                case keyScaling = 1
+                case negativeKeyScaling = 2
+                case random = 3
+
                 /// Initializes the pan kind from a data byte.
                 public init?(index: Int) {
                     switch index {
                     case 0: self = .normal
-                    case 1: self = .random
-                    case 2: self = .keyScale
-                    case 3: self = .negativeKeyScale
+                    case 1: self = .keyScaling
+                    case 2: self = .negativeKeyScaling
+                    case 3: self = .random
                     default: return nil
                     }
                 }
             }
-
+            
             public var kind: Kind
-            public var value: Int
+            public var value: Pan  // only when kind=.normal
             
             /// Initializes default pan settings.
             public init() {
                 self.kind = .normal
-                self.value = 0
+                self.value = Pan(0)
             }
             
             /// Initializes pan settings from kind and value.
-            public init(kind: Kind, value: Int) {
+            public init(kind: Kind, value: Pan) {
                 self.kind = kind
                 self.value = value
             }
             
-            /// Initializes pan settings from MIDI System Exclusive data.
-            public init(data d: ByteArray) {
-                var offset: Int = 0
-                var b: Byte = 0
-                
-                b = d.next(&offset)
-                kind = Kind(index: Int(b))!
-                
-                b = d.next(&offset)
-                value = Int(b) - 64
-            }
-            
-            public static func parse(from data: ByteArray) -> Result<Pan, ParseError> {
+            public static func parse(from data: ByteArray) -> Result<PanSettings, ParseError> {
                 var offset: Int = 0
                 var b: Byte = 0
 
-                var temp = Pan()
+                var temp = PanSettings()
                 
                 b = data.next(&offset)
                 temp.kind = Kind(index: Int(b))!
                 
                 b = data.next(&offset)
-                temp.value = Int(b) - 64
+                temp.value = Pan(Int(b) - 64)
                 
                 return .success(temp)
             }
@@ -146,11 +134,11 @@ public struct Source {
         public var benderCutoff: Int
         public var modulation: Modulation
         public var keyOnDelay: Int
-        public var pan: Pan
+        public var pan: PanSettings
         
         /// Initializes default control settings.
         public init() {
-            zone = Zone(high: Key(note: 127), low: Key(note: 0))
+            zone = Zone(high: Key(note: MIDINote(127)), low: Key(note: MIDINote(0)))
             velocitySwitch = VelocitySwitch(kind: .off, threshold: 4)
             effectPath = 0
             volume = 120
@@ -158,7 +146,7 @@ public struct Source {
             benderCutoff = 0
             modulation = Modulation()
             keyOnDelay = 0
-            pan = Pan(kind: .normal, value: 0)
+            pan = PanSettings(kind: .normal, value: Pan(0))
         }
         
         public static func parse(from data: ByteArray) -> Result<Control, ParseError> {
@@ -168,9 +156,9 @@ public struct Source {
             var temp = Control()
             
             b = data.next(&offset)
-            let zoneLow = Key(note: Int(b))
+            let zoneLow = Key(note: MIDINote(Int(b)))
             b = data.next(&offset)
-            let zoneHigh = Key(note: Int(b))
+            let zoneHigh = Key(note: MIDINote(Int(b)))
             temp.zone = Zone(high: zoneHigh, low: zoneLow)
             
             b = data.next(&offset)
@@ -204,7 +192,7 @@ public struct Source {
             b = data.next(&offset)
             temp.keyOnDelay = Int(b)
             
-            switch Pan.parse(from: data.slice(from: offset, length: Pan.dataSize)) {
+            switch PanSettings.parse(from: data.slice(from: offset, length: PanSettings.dataSize)) {
             case .success(let pan):
                 temp.pan = pan
             case .failure(let error):
@@ -293,22 +281,22 @@ extension Source.Control.Modulation: SystemExclusiveData {
         return data
     }
     
-    public var dataLength: Int { return Source.Control.Modulation.dataSize }
+    public var dataLength: Int { Source.Control.Modulation.dataSize }
     
     public static let dataSize = 18
 }
 
-extension Source.Control.Pan: SystemExclusiveData {
+extension Source.Control.PanSettings: SystemExclusiveData {
     public func asData() -> ByteArray {
         var data = ByteArray()
         
         data.append(Byte(kind.index))
-        data.append(Byte(value + 64))
+        data.append(Byte(value.value + 64))
         
         return data
     }
 
-    public var dataLength: Int { return Source.Control.Pan.dataSize }
+    public var dataLength: Int { Source.Control.PanSettings.dataSize }
 
     public static let dataSize = 2
 }
@@ -317,8 +305,8 @@ extension Source.Control: SystemExclusiveData {
     public func asData() -> ByteArray {
         var data = ByteArray()
         
-        data.append(Byte(zone.low.note))
-        data.append(Byte(zone.high.note))
+        data.append(Byte(zone.low.note.value))
+        data.append(Byte(zone.high.note.value))
         data.append(contentsOf: velocitySwitch.asData())
         data.append(Byte(effectPath))
         data.append(Byte(volume))
@@ -331,7 +319,7 @@ extension Source.Control: SystemExclusiveData {
         return data
     }
 
-    public var dataLength: Int { return Source.Control.dataSize }
+    public var dataLength: Int { Source.Control.dataSize }
 
     public static let dataSize = 28
 }
@@ -349,7 +337,7 @@ extension Source: SystemExclusiveData {
         return data
     }
     
-    public var dataLength: Int { return Source.dataSize }
+    public var dataLength: Int { Source.dataSize }
     
     public static let dataSize = 86
 }
@@ -400,7 +388,7 @@ extension Source.Control.Modulation: CustomStringConvertible {
     }
 }
 
-extension Source.Control.Pan: CustomStringConvertible {
+extension Source.Control.PanSettings: CustomStringConvertible {
     public var description: String {
         var s = ""
         s += "kind=\(kind), value=\(value)"
@@ -408,18 +396,18 @@ extension Source.Control.Pan: CustomStringConvertible {
     }
 }
 
-extension Source.Control.Pan.Kind: CustomStringConvertible {
+extension Source.Control.PanSettings.Kind: CustomStringConvertible {
     public var description: String {
         var result = ""
         switch self {
         case .normal:
             result = "Normal"
+        case .keyScaling:
+            result = "Key Scale"
+        case .negativeKeyScaling:
+            result = "Negative Key Scale"
         case .random:
             result = "Random"
-        case .keyScale:
-            result = "Key Scale"
-        case .negativeKeyScale:
-            result = "Negative Key Scale"
         }
         return result
     }

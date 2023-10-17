@@ -100,13 +100,13 @@ public struct MultiPatch {
     public struct Section {
         public var single: InstrumentNumber
         public var volume: Level  // 0~127
-        public var pan: Int  // 0~127
+        public var pan: Int  // 0~127  // *really?*
         public var effectPath: UInt  // 0~3
-        public var transpose: Int  // SysEx 40~88 = -24~+24
+        public var transpose: Transpose  // SysEx 40~88 = -24~+24
         public var tune: Int  // SysEx 1~127 = -63~+63
         public var zone: Zone
         public var velocitySwitch: VelocitySwitch
-        public var receiveChannel: UInt8  // SysEx 0~15 = 1~16
+        public var receiveChannel: MIDIChannel  // SysEx 0~15 = 1~16
         
         /// Initializes a multi section with defaults.
         public init() {
@@ -114,11 +114,11 @@ public struct MultiPatch {
             volume = Level(127)
             pan = 0
             effectPath = 0
-            transpose = 0
+            transpose = Transpose(0)
             tune = 0
-            zone = Zone(high: Key(note: 0), low: Key(note: 127))
+            zone = Zone(high: Key(note: MIDINote(0)), low: Key(note: MIDINote(127)))
             velocitySwitch = VelocitySwitch(kind: .off, threshold: 0)  // TODO: check these
-            receiveChannel = 1
+            receiveChannel = MIDIChannel(1)
         }
         
         /// Parses one section of a multi patch from System Exclusive data.
@@ -147,16 +147,18 @@ public struct MultiPatch {
             temp.effectPath = UInt(b)
             
             b = data.next(&offset)
-            temp.transpose = Int(b) - 64  // SysEx 40~88 to -24~+24
+            temp.transpose = Transpose(Int(b) - 64)  // SysEx 40~88 to -24~+24
 
             b = data.next(&offset)
-            temp.tune = Int(b) - 64  // SysEx 1~127 to -63...+63
+            temp.tune = Int(b) - 64  // SysEx 1~127 to -63...+63  // offset 1?
             
             b = data.next(&offset)
             let zoneLow = b
             b = data.next(&offset)
             let zoneHigh = b
-            temp.zone = Zone(high: Key(note: Int(zoneHigh)), low: Key(note: Int(zoneLow)))
+            temp.zone = Zone(
+                high: Key(note: MIDINote(Int(zoneHigh))),
+                low: Key(note: MIDINote(Int(zoneLow))))
 
             var velocitySwitchBytes = ByteArray()
             b = data.next(&offset)
@@ -172,7 +174,7 @@ public struct MultiPatch {
             }
             
             b = data.next(&offset)
-            temp.receiveChannel = b + 1  // adjust channel to 1~16
+            temp.receiveChannel = MIDIChannel(Int(b + 1))  // adjust channel to 1~16
             
             return .success(temp)
         }
@@ -255,8 +257,6 @@ public struct MultiPatch {
         let header = SystemExclusive.Header(
             channel: channel,
             function: .oneBlockDump,
-            group: 0x00,
-            machineIdentifier: 0x0a,
             substatus1: 0x20,
             substatus2: instrument)
 
@@ -372,7 +372,7 @@ extension MultiPatch.Common: SystemExclusiveData {
     }
     
     /// The length of multi patch common part System Exclusive data.
-    public var dataLength: Int { return MultiPatch.Common.dataSize }
+    public var dataLength: Int { MultiPatch.Common.dataSize }
     
     public static let dataSize = 54
 }
@@ -388,18 +388,18 @@ extension MultiPatch.Section: SystemExclusiveData {
         data.append(Byte(volume.value))
         data.append(Byte(pan))
         data.append(Byte(effectPath))
-        data.append(Byte(transpose + 64))
+        data.append(Byte(transpose.value + 64))
         data.append(Byte(tune + 64))
-        data.append(Byte(zone.low.note))
-        data.append(Byte(zone.high.note))
+        data.append(Byte(zone.low.note.value))
+        data.append(Byte(zone.high.note.value))
         data.append(contentsOf: velocitySwitch.asData())
-        data.append(receiveChannel - 1)  // adjust to 0~15
+        data.append(Byte(receiveChannel.value - 1))  // adjust to 0~15
         
         return data
     }
     
     /// The length of multi patch section data.
-    public var dataLength: Int { return MultiPatch.Section.dataSize }
+    public var dataLength: Int { MultiPatch.Section.dataSize }
     
     public static let dataSize = 12
 }

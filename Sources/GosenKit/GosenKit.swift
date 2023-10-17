@@ -328,3 +328,51 @@ extension Gain: RangedInt {
     }
 }
 
+public struct MIDINote: Equatable {
+    private var _value: Int
+}
+
+extension MIDINote: RangedInt {
+    public static let range: ClosedRange<Int> = 0...127
+    
+    public static let defaultValue = 60  // Middle C
+
+    public var value: Int {
+        return _value
+    }
+
+    public init() {
+        _value = Self.defaultValue
+    }
+
+    public init(_ value: Int) {
+        _value = Self.range.clamp(value)
+    }
+}
+
+public enum FixedKey {
+    case off
+    case on(Key)
+}
+
+public struct Transpose {
+    private var _value: Int
+}
+
+extension Transpose: RangedInt {
+    public static let range: ClosedRange<Int> = -24...24
+    public static let defaultValue = 1
+    
+    public init() {
+        _value = Self.defaultValue
+    }
+    
+    public init(_ value: Int) {
+        _value = Self.range.clamp(value)
+    }
+
+    public var value: Int {
+        return _value
+    }
+}
+

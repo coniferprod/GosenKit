@@ -4,10 +4,12 @@ import SyxPack
 public struct FormantFilter {
     /// Formant filter envelope.
     public struct Envelope {
+        /// Formant filter envelope rate (0~127).
         public struct Rate {
             private var _value: Int
         }
         
+        /// Format filter envelope level (-63~+63).
         public struct Level {
             private var _value: Int
         }
@@ -115,7 +117,7 @@ public struct FormantFilter {
     }
     
     /// Formant filter LFO.
-    public struct LFO: Codable {
+    public struct LFO {
         public enum Shape: String, Codable, CaseIterable {
             case triangle
             case sawtooth
@@ -131,14 +133,19 @@ public struct FormantFilter {
             }
         }
 
-        public var speed: Int  // 0~127
+        /// Format filter LFO depth (0~63).
+        public struct Depth {
+            private var _value: Int
+        }
+        
+        public var speed: Level  // 0~127
         public var shape: Shape
-        public var depth: Int  // 0~63
+        public var depth: Depth  // 0~63
         
         public init() {
             shape = .triangle
-            speed = 0
-            depth = 0
+            speed = Level(0)
+            depth = Depth(0)
         }
         
         public static func parse(from data: ByteArray) -> Result<LFO, ParseError> {
@@ -148,13 +155,13 @@ public struct FormantFilter {
             var temp = LFO()
             
             b = data.next(&offset)
-            temp.speed = Int(b)
+            temp.speed = Level(Int(b))
 
             b = data.next(&offset)
             temp.shape = Shape(index: Int(b))!
             
             b = data.next(&offset)
-            temp.depth = Int(b)
+            temp.depth = Depth(Int(b))
 
             return .success(temp)
         }
@@ -280,6 +287,24 @@ extension FormantFilter.Envelope.Level: RangedInt {
     }
 }
 
+extension FormantFilter.LFO.Depth: RangedInt {
+    public static let range: ClosedRange<Int> = 0...63
+
+    public static let defaultValue = 0
+
+    public var value: Int {
+        return _value
+    }
+
+    public init() {
+        _value = Self.defaultValue
+    }
+
+    public init(_ value: Int) {
+        _value = Self.range.clamp(value)
+    }
+}
+
 // MARK: - SystemExclusiveData
 
 extension FormantFilter.Envelope: SystemExclusiveData {
@@ -345,9 +370,16 @@ extension FormantFilter.Bands: SystemExclusiveData {
 extension FormantFilter.LFO: SystemExclusiveData {
     public func asData() -> ByteArray {
         var data = ByteArray()
-        [speed, shape.index, depth].forEach {
+        
+        [
+            speed.value,
+            shape.index,
+            depth.value
+        ]
+        .forEach {
             data.append(Byte($0))
         }
+        
         return data
     }
     

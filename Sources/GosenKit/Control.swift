@@ -110,6 +110,7 @@ public enum ControlDestination: String, Codable, CaseIterable {
 }
 
 public struct MacroController {
+    /// Macro depth
     public struct Depth {
         private var _value: Int
     }

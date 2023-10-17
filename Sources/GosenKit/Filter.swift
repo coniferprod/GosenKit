@@ -19,10 +19,12 @@ public struct Filter {
 
     /// Filter envelope.
     public struct Envelope {
+        /// Filter envelope time (for attack, decay 1, decay 2, and release)
         public struct Time {
             private var _value: Int
         }
         
+        /// Filter envelope level (for decay 1, decay 2, etc.)
         public struct Level {
             private var _value: Int
         }
@@ -236,11 +238,20 @@ extension Filter.Envelope: SystemExclusiveData {
     public func asData() -> ByteArray {
         var data = ByteArray()
         
-        [attackTime.value, decay1Time.value, decay1Level.value + 64,
-         decay2Time.value, decay2Level.value + 64, releaseTime.value,
-         keyScalingToAttack.value + 64, keyScalingToDecay1.value + 64,
-         velocityToEnvelope.value + 64, velocityToAttack.value + 64,
-         velocityToDecay1.value + 64].forEach {
+        [
+            attackTime.value,
+            decay1Time.value,
+            decay1Level.value + 64,
+            decay2Time.value, 
+            decay2Level.value + 64,
+            releaseTime.value,
+            keyScalingToAttack.value + 64, 
+            keyScalingToDecay1.value + 64,
+            velocityToEnvelope.value + 64, 
+            velocityToAttack.value + 64,
+            velocityToDecay1.value + 64
+        ]
+        .forEach {
             data.append(Byte($0))
         }
 

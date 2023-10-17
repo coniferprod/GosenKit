@@ -2,7 +2,7 @@ import SyxPack
 
 /// Drum waveform.
 public struct DrumWave {
-    private(set) var number: Int  // wave number 0~224 (9 bits)
+    private(set) var number: Int  // wave number 0~285 (9 bits)
     
     /// Initialize drum wave with number.
     public init(number: Int) {
@@ -25,7 +25,7 @@ public struct DrumWave {
         let waveLSBString = String(lsb, radix: 2).padded(with: "0", to: 7, from: .left)
         let waveString = waveMSBString + waveLSBString
         // Now we should have a 9-bit binary string, convert it to a decimal number.
-        // The wave number is zero-based in the SysEx file, but treated as one-based.
+        // The wave number is zero-based in the SysEx file, but treated as one-based. (0=MUTE)
         if let number = Int(waveString, radix: 2) {
             return number + 1
         }
@@ -326,10 +326,12 @@ public struct DrumWave {
 public struct DrumSource {
     /// Pitch envelope for a drum source.
     public struct PitchEnvelope {
+        /// Drum source pitch envelope level
         public struct Level {
             private var _value: Int
         }
         
+        /// Drum source pitch envelope time
         public struct Time {
             private var _value: Int
         }
@@ -363,23 +365,33 @@ public struct DrumSource {
     }
     
     /// Velocity control for drum source DCA.
-    public struct VelocityControl: Codable {
-        public var level: Int  // 0~63
-        public var attackTime: Int  // (-63)1~(+63)127
-        public var decay1Time: Int  // (-63)1~(+63)127
+    public struct VelocityControl {
+        /// Drum source velocity control level
+        public struct Level {
+            private var _value: Int
+        }
+        
+        /// Drum source velocity control time
+        public struct Time {
+            private var _value: Int
+        }
+
+        public var level: Level  // 0~63
+        public var attackTime: Time  // (-63)1~(+63)127
+        public var decay1Time: Time  // (-63)1~(+63)127
         
         /// Initalize velocity control settings with default values.
         public init() {
-            self.level = 0
-            self.attackTime = 0
-            self.decay1Time = 0
+            self.level = Level(0)
+            self.attackTime = Time(0)
+            self.decay1Time = Time(0)
         }
         
         /// Initialize velocity control settings.
         public init(level: Int, attackTime: Int, decay1Time: Int) {
-            self.level = level
-            self.attackTime = attackTime
-            self.decay1Time = decay1Time
+            self.level = Level(level)
+            self.attackTime = Time(attackTime)
+            self.decay1Time = Time(decay1Time)
         }
         
         /// Parse velocity control settings from MIDI System Exclusive data.
@@ -390,13 +402,13 @@ public struct DrumSource {
             var temp = VelocityControl()
             
             b = data.next(&offset)
-            temp.level = Int(b)
+            temp.level = Level(Int(b))
             
             b = data.next(&offset)
-            temp.attackTime = Int(b) - 64
+            temp.attackTime = Time(Int(b) - 64)
             
             b = data.next(&offset)
-            temp.decay1Time = Int(b) - 64
+            temp.decay1Time = Time(Int(b) - 64)
             
             return .success(temp)
         }
@@ -404,17 +416,17 @@ public struct DrumSource {
     
     /// Amplifier envelope for drum source.
     public struct AmplifierEnvelope {
-        var attackTime: Int   // 0~127
-        var decay1Time: Int   // 0~127
-        var decay1Level: Int  // 0~127
-        var releaseTime: Int  // 0~127
+        var attackTime: Level   // 0~127
+        var decay1Time: Level   // 0~127
+        var decay1Level: Level  // 0~127
+        var releaseTime: Level  // 0~127
         
         /// Initialize drum source amplifier envelope with default values.
         public init() {
-            self.attackTime = 0
-            self.decay1Time = 0
-            self.decay1Level = 0
-            self.releaseTime = 0
+            self.attackTime = Level(0)
+            self.decay1Time = Level(0)
+            self.decay1Level = Level(0)
+            self.releaseTime = Level(0)
         }
         
         /// Parse drum source amplifier envelope from MIDI System Exclusive data.
@@ -425,13 +437,13 @@ public struct DrumSource {
             var temp = AmplifierEnvelope()
             
             b = data.next(&offset)
-            temp.attackTime = Int(b)
+            temp.attackTime = Level(Int(b))
             b = data.next(&offset)
-            temp.decay1Time = Int(b)
+            temp.decay1Time = Level(Int(b))
             b = data.next(&offset)
-            temp.decay1Level = Int(b)
+            temp.decay1Level = Level(Int(b))
             b = data.next(&offset)
-            temp.releaseTime = Int(b)
+            temp.releaseTime = Level(Int(b))
 
             return .success(temp)
         }
@@ -542,6 +554,40 @@ extension DrumSource.PitchEnvelope.Level: RangedInt {
 extension DrumSource.PitchEnvelope.Time: RangedInt {
     public static let range: ClosedRange<Int> = 0...127
     public static let defaultValue = 1
+    
+    public init() {
+        _value = Self.defaultValue
+    }
+    
+    public init(_ value: Int) {
+        _value = Self.range.clamp(value)
+    }
+
+    public var value: Int {
+        return _value
+    }
+}
+
+extension DrumSource.VelocityControl.Level: RangedInt {
+    public static let range: ClosedRange<Int> = 0...63
+    public static let defaultValue = 0
+    
+    public init() {
+        _value = Self.defaultValue
+    }
+    
+    public init(_ value: Int) {
+        _value = Self.range.clamp(value)
+    }
+
+    public var value: Int {
+        return _value
+    }
+}
+
+extension DrumSource.VelocityControl.Time: RangedInt {
+    public static let range: ClosedRange<Int> = -63...63
+    public static let defaultValue = 0
     
     public init() {
         _value = Self.defaultValue
@@ -924,10 +970,10 @@ extension DrumSource.AmplifierEnvelope: SystemExclusiveData {
     public func asData() -> ByteArray {
         var data = ByteArray()
         
-        data.append(Byte(self.attackTime))
-        data.append(Byte(self.decay1Time))
-        data.append(Byte(self.decay1Level))
-        data.append(Byte(self.releaseTime))
+        [attackTime, decay1Time, decay1Level, releaseTime]
+        .forEach {
+            data.append(Byte($0.value))
+        }
 
         return data
     }
@@ -941,9 +987,9 @@ extension DrumSource.VelocityControl: SystemExclusiveData {
     public func asData() -> ByteArray {
         var data = ByteArray()
         
-        data.append(Byte(self.level))
-        data.append(Byte(self.attackTime + 64))
-        data.append(Byte(self.decay1Time + 64))
+        data.append(Byte(self.level.value))
+        data.append(Byte(self.attackTime.value + 64))
+        data.append(Byte(self.decay1Time.value + 64))
         
         return data
     }

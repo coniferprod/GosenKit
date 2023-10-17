@@ -6,13 +6,13 @@ import SyxPack
 
 final class GosenKitTests: XCTestCase {
     func testKeyName() {
-        let key = Key(note: 60)
-        XCTAssertEqual(key.name, "C4")
+        let key = Key(note: MIDINote(60))
+        XCTAssertEqual(key.name, "C3")
     }
 
     func testKeyNumber() {
-        let key = Key(name: "C4")
-        XCTAssertEqual(key.note, 60)
+        let key = Key(name: "C3")
+        XCTAssertEqual(key.note.value, 60)
     }
     
     func testNextByte() {

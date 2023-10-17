@@ -1,7 +1,7 @@
 import SyxPack
 
 
-public struct Morf: Codable {
+public struct Morf {
     public struct CopyParameters: Codable {
         public var patchNumber: Int  // 0~127
         public var sourceNumber: Int  // 0~11 (0~5:soft, 6~11:loud)
@@ -38,18 +38,18 @@ public struct Morf: Codable {
         }
     }
 
-    public struct Envelope: Codable {
-        public var time1: Int  // all times 0~127
-        public var time2: Int
-        public var time3: Int
-        public var time4: Int
+    public struct Envelope {
+        public var time1: Level  // all times 0~127
+        public var time2: Level
+        public var time3: Level
+        public var time4: Level
         public var loopKind: HarmonicEnvelope.LoopKind
         
         public init() {
-            time1 = 0
-            time2 = 0
-            time3 = 0
-            time4 = 0
+            time1 = Level(0)
+            time2 = Level(0)
+            time3 = Level(0)
+            time4 = Level(0)
             loopKind = .off
         }
         
@@ -58,16 +58,16 @@ public struct Morf: Codable {
             var b: Byte = 0
         
             b = d.next(&offset)
-            time1 = Int(b)
+            time1 = Level(Int(b))
             
             b = d.next(&offset)
-            time2 = Int(b)
+            time2 = Level(Int(b))
 
             b = d.next(&offset)
-            time3 = Int(b)
+            time3 = Level(Int(b))
             
             b = d.next(&offset)
-            time4 = Int(b)
+            time4 = Level(Int(b))
 
             b = d.next(&offset)
             loopKind = HarmonicEnvelope.LoopKind(index: Int(b))!
@@ -80,16 +80,16 @@ public struct Morf: Codable {
             var temp = Envelope()
             
             b = data.next(&offset)
-            temp.time1 = Int(b)
+            temp.time1 = Level(Int(b))
             
             b = data.next(&offset)
-            temp.time2 = Int(b)
+            temp.time2 = Level(Int(b))
 
             b = data.next(&offset)
-            temp.time3 = Int(b)
+            temp.time3 = Level(Int(b))
             
             b = data.next(&offset)
-            temp.time4 = Int(b)
+            temp.time4 = Level(Int(b))
 
             b = data.next(&offset)
             temp.loopKind = HarmonicEnvelope.LoopKind(index: Int(b))!
@@ -140,7 +140,7 @@ extension Morf.CopyParameters: SystemExclusiveData {
         return [Byte(patchNumber), Byte(sourceNumber)]
     }
     
-    public var dataLength: Int { return Morf.CopyParameters.dataSize }
+    public var dataLength: Int { Morf.CopyParameters.dataSize }
     
     public static let dataSize = 2
 }
@@ -158,7 +158,7 @@ extension Morf: SystemExclusiveData {
         return data
     }
 
-    public var dataLength: Int { return Morf.dataSize }
+    public var dataLength: Int { Morf.dataSize }
 
     public static let dataSize = 13
 }
@@ -166,13 +166,21 @@ extension Morf: SystemExclusiveData {
 extension Morf.Envelope: SystemExclusiveData {
     public func asData() -> ByteArray {
         var data = ByteArray()
-        [time1, time2, time3, time4, loopKind.index].forEach {
+        
+        [
+            time1.value,
+            time2.value,
+            time3.value,
+            time4.value,
+            loopKind.index
+        ].forEach {
             data.append(Byte($0))
         }
+        
         return data
     }
     
-    public var dataLength: Int { return Morf.Envelope.dataSize }
+    public var dataLength: Int { Morf.Envelope.dataSize }
     
     public static let dataSize = 5
 }
