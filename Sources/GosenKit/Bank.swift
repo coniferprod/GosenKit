@@ -16,10 +16,10 @@ public struct SingleBank {
 public enum BankIdentifier: Byte, CaseIterable, CustomStringConvertible {
     case a = 0x00
     case b = 0x01
-    // there is no bank C, kind of
     case d = 0x02  // this only on K5000S/R
     case e = 0x03
     case f = 0x04
+    case multi = 0x66  // the multi/combi bank has no ID
     case none = 0x99
 
     public var description: String {
@@ -34,6 +34,8 @@ public enum BankIdentifier: Byte, CaseIterable, CustomStringConvertible {
             return "E"
         case .f:
             return "F"
+        case .multi:
+            return "C"  // multi/combi is referred to as C1-C64 in the MIDI spec
         case .none:
             return "N/A"
         }

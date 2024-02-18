@@ -104,8 +104,8 @@ public enum Cardinality: Byte, CustomStringConvertible {
 public enum PatchKind: Byte, CaseIterable, CustomStringConvertible {
     case single = 0x00
     case multi = 0x20
-    case drumKit = 0x10
-    case drumInstrument = 0x11
+    case drumKit = 0x10  // only on K5000W
+    case drumInstrument = 0x11  // only on K5000W
 
     public var description: String {
         switch self {
@@ -167,77 +167,212 @@ public struct DumpCommand {
     }
     
     public static func parse(from data: ByteArray) -> Result<DumpCommand, ParseError> {
-        guard MIDIChannel.range.contains(Int(data[0] + 1)) else {
+        guard
+            MIDIChannel.range.contains(Int(data[0] + 1))
+        else {
             return .failure(.invalidData(0))
         }
         
-        guard Cardinality.isValid(value: data[1]) else {
+        guard 
+            Cardinality.isValid(value: data[1])
+        else {
             return .failure(.invalidData(1))
         }
         
-        // "5th" in spec, always 0x00
-        guard data[2] == SystemExclusive.groupIdentifier else {
+        // "5th" in spec (section 5.3, "Dump command table"), always 0x00
+        guard 
+            data[2] == SystemExclusive.groupIdentifier 
+        else {
             return .failure(.invalidData(2))
         }
         
         // "6th" in spec, always 0x0A
-        guard data[3] == SystemExclusive.machineIdentifier else {
+        guard 
+            data[3] == SystemExclusive.machineIdentifier
+        else {
             return .failure(.invalidData(3))
         }
 
         // patch kind ("7th" in spec): 0x00, 0x10, 0x11 or 0x20
-        guard PatchKind.isValid(value: data[4]) else {
+        guard 
+            PatchKind.isValid(value: data[4])
+        else {
             return .failure(.invalidData(4))
         }
         
-        // bank ID ("8th" in spec)
-        guard BankIdentifier.isValid(value: data[5]) else {
-            return .failure(.invalidData(5))
-        }
+        // Match the patterns from the "Dump command table".
+        // Leave out bytes "5th" and "6th" (data[2] and data[3]) because they are always the same.
+        // We already have guard statements for them (see above).
+        switch (data[0], data[1], data[4], data[5], data[6], data[7]) {
+            
+        //
+        // K50000W
+        //
 
-        let maybeChannel = MIDIChannel(Int(data[0]))
-        let maybeCardinality: Cardinality = Cardinality(rawValue: data[1])!
-        let maybeKind = PatchKind(rawValue: data[4])!
+        // One Add Bank A
+        case (let channel, Cardinality.one.rawValue, PatchKind.single.rawValue, BankIdentifier.a.rawValue, let sub1, _):
+            let temp = DumpCommand(
+                channel: MIDIChannel(Int(channel) + 1),
+                cardinality: .one,
+                bank: .a,
+                kind: .single,
+                subBytes: [sub1])
+            return .success(temp)
+            
+        // One PCM Bank B
+        case (let channel, Cardinality.one.rawValue, PatchKind.single.rawValue, BankIdentifier.b.rawValue, let sub1, _):
+            let temp = DumpCommand(
+                channel: MIDIChannel(Int(channel) + 1),
+                cardinality: .one,
+                bank: .b,
+                kind: .single,
+                subBytes: [sub1])
+            return .success(temp)
+            
+        // One Exp Bank E
+        case (let channel, Cardinality.one.rawValue, PatchKind.single.rawValue, BankIdentifier.e.rawValue, let sub1, _):
+            let temp = DumpCommand(
+                channel: MIDIChannel(Int(channel) + 1),
+                cardinality: .one,
+                bank: .e,
+                kind: .single,
+                subBytes: [sub1])
+            return .success(temp)
+            
+        // One Exp Bank F
+        case (let channel, Cardinality.one.rawValue, PatchKind.single.rawValue, BankIdentifier.f.rawValue, let sub1, _):
+            let temp = DumpCommand(
+                channel: MIDIChannel(Int(channel) + 1),
+                cardinality: .one,
+                bank: .f,
+                kind: .single,
+                subBytes: [sub1])
+            return .success(temp)
+            
+        // One dr kit
+        case (let channel, Cardinality.one.rawValue, PatchKind.drumKit.rawValue, _, _, _):
+            let temp = DumpCommand(
+                channel: MIDIChannel(Int(channel) + 1),
+                cardinality: .one,
+                bank: .none,
+                kind: .drumKit)
+            return .success(temp)
+            
+        // One dr inst
+        case (let channel, Cardinality.one.rawValue, PatchKind.drumInstrument.rawValue, _, _, _):
+            let temp = DumpCommand(
+                channel: MIDIChannel(Int(channel) + 1),
+                cardinality: .one,
+                bank: .none,
+                kind: .drumInstrument)
+            return .success(temp)
+            
+        // One combi
+        case (let channel, Cardinality.one.rawValue, PatchKind.multi.rawValue, _, let sub1, _):
+            let temp = DumpCommand(
+                channel: MIDIChannel(Int(channel) + 1),
+                cardinality: .one,
+                bank: .multi,
+                kind: .multi,
+                subBytes: [sub1])
+            return .success(temp)
 
-        var maybeBank: BankIdentifier = .none
-        if maybeKind == .single {
-            maybeBank = BankIdentifier(rawValue: data[5])!  // 0x0 ... 0x04
-        }
+        // Block ADD Bank A
+        case (let channel, Cardinality.block.rawValue, PatchKind.single.rawValue, BankIdentifier.a.rawValue, let sub1, let sub2):
+            let temp = DumpCommand(
+                channel: MIDIChannel(Int(channel) + 1),
+                cardinality: .block,
+                bank: .a,
+                kind: .single,
+                subBytes: [sub1, sub2])
+            return .success(temp)
+            
+        // Block PCM Bank B
+        case (let channel, Cardinality.block.rawValue, PatchKind.single.rawValue, BankIdentifier.b.rawValue, _, _):
+            let temp = DumpCommand(
+                channel: MIDIChannel(Int(channel) + 1),
+                cardinality: .block,
+                bank: .b,
+                kind: .single)
+            return .success(temp)
+            
+        // Block Exp Bank E
+        case (let channel, Cardinality.block.rawValue, PatchKind.single.rawValue, BankIdentifier.e.rawValue, let sub1, let sub2):
+            let temp = DumpCommand(
+                channel: MIDIChannel(Int(channel) + 1),
+                cardinality: .block,
+                bank: .e,
+                kind: .single,
+                subBytes: [sub1, sub2])
+            return .success(temp)
+            
+        // Block Exp Bank F
+        case (let channel, Cardinality.block.rawValue, PatchKind.single.rawValue, BankIdentifier.f.rawValue, let sub1, let sub2):
+            let temp = DumpCommand(
+                channel: MIDIChannel(Int(channel) + 1),
+                cardinality: .block,
+                bank: .f,
+                kind: .single,
+                subBytes: [sub1, sub2])
+            return .success(temp)
+            
+        // Block dr inst
+        case (let channel, Cardinality.block.rawValue, PatchKind.drumInstrument.rawValue, _, _, _):
+            let temp = DumpCommand(
+                channel: MIDIChannel(Int(channel) + 1),
+                cardinality: .block,
+                bank: .none,
+                kind: .drumInstrument)
+            return .success(temp)
+            
+        // Block combi / multi
+        case (let channel, Cardinality.block.rawValue, PatchKind.multi.rawValue, _, _, _):
+            let temp = DumpCommand(
+                channel: MIDIChannel(Int(channel) + 1),
+                cardinality: .block,
+                bank: .multi,
+                kind: .multi)
+            return .success(temp)
 
-        var sub = ByteArray()
-
-        if maybeCardinality == .one {
-            switch maybeKind {
-            case .single:
-                sub.append(data[6])  // sub1 of single for all banks ("9th" in spec)
-            case .multi:
-                maybeBank = .none
-                sub.append(data[5])  // sub1 of combi/multi ("8th" in spec)
-            case .drumKit, .drumInstrument:  // no sub-bytes
-                maybeBank = .none
-            }
-        }
-        else {  // must be .block
-            if maybeKind == .single {  // "block single" is the only one with a tone map
-                if maybeBank != .b {   // but not for PCM bank
-                    // Get the tone map
-                    sub.append(contentsOf: data.slice(from: 6, length: ToneMap.dataSize))
-                }
-            }
-            // No sub-bytes for block combi/multi or drum instrument
-            else {
-                maybeBank = .none
-            }
-        }
-
-        let temp = DumpCommand(
-            channel: maybeChannel,
-            cardinality: maybeCardinality,
-            bank: maybeBank,
-            kind: maybeKind
-        )
+        //
+        // K5000S/R
+        //
+            
+        // One ADD Bank A is the same
         
-        return .success(temp)
+        // One Add Bank D
+        case (let channel, Cardinality.one.rawValue, PatchKind.single.rawValue, BankIdentifier.d.rawValue, let sub1, _):
+            let temp = DumpCommand(
+                channel: MIDIChannel(Int(channel) + 1),
+                cardinality: .one,
+                bank: .d,
+                kind: .single,
+                subBytes: [sub1])
+            return .success(temp)
+                
+        // One Exp Bank E and F are the same
+            
+        // One multi is the same as one combi
+            
+        // Block ADD Bank A is the same
+            
+        // Block ADD Bank D
+        case (let channel, Cardinality.block.rawValue, PatchKind.single.rawValue, BankIdentifier.d.rawValue, let sub1, let sub2):
+            let temp = DumpCommand(
+                channel: MIDIChannel(Int(channel) + 1),
+                cardinality: .block,
+                bank: .d,
+                kind: .single,
+                subBytes: [sub1, sub2])
+            return .success(temp)
+            
+        // Block Exp Bank E is the same
+        // Block Exp Bank F is the same
+        // Block multi is the same as block combi
+        
+        default:
+            return .failure(.invalidData(0))
+        }
     }
 }
 

@@ -157,46 +157,46 @@ final class SystemExclusiveTests: XCTestCase {
     // The test dump commands are organized like section 5.3 "Dump command table"
     // in the K5000 MIDI implementation document (p. 43).
     
+    // NOTE: There is always are least 8 bytes of data, because the header will be
+    // followed by the actual patch data. Depending on the dump command, some of
+    // the data at the end will be ignored.
+    
     // K5000W
     // One
-    let oneADDBankA: ByteArray = [ 0x00, 0x20, 0x00, 0x0A, 0x00, 0x00, 0x00 ] // One ADD Bank A (see 3.1.1b)
-    let onePCMBankB: ByteArray = [ 0x00, 0x20, 0x00, 0x0A, 0x00, 0x01, 0x00 ] // One PCM Bank B (see 3.1.1d)
-    let oneExpBankE: ByteArray = [ 0x00, 0x20, 0x00, 0x0A, 0x00, 0x03, 0x00 ] // One Exp Bank E ((see 3.1.1m)
-    let oneExpBankF: ByteArray = [ 0x00, 0x20, 0x00, 0x0A, 0x00, 0x04, 0x00 ] // One Exp Bank F (see 3.1.1o)
-    let oneDrumKit: ByteArray = [ 0x00, 0x20, 0x00, 0x0A, 0x10 ]
-    let oneDrumInstrument: ByteArray = [ 0x00, 0x20, 0x00, 0x0A, 0x11, 0x00 ]
-    let oneCombi: ByteArray = [ 0x00, 0x20, 0x00, 0x0A, 0x20, 0x00 ] // One Multi/Combi (see 3.1.1i)
+    let oneADDBankA: ByteArray = [ 0x00, 0x20, 0x00, 0x0A, 0x00, 0x00, 0x00, /* filler */ 0x00 ] // One ADD Bank A (see 3.1.1b)
+    let onePCMBankB: ByteArray = [ 0x00, 0x20, 0x00, 0x0A, 0x00, 0x01, 0x00, /* filler */ 0x00 ] // One PCM Bank B (see 3.1.1d)
+    let oneExpBankE: ByteArray = [ 0x00, 0x20, 0x00, 0x0A, 0x00, 0x03, 0x00, /* filler */ 0x00 ] // One Exp Bank E ((see 3.1.1m)
+    let oneExpBankF: ByteArray = [ 0x00, 0x20, 0x00, 0x0A, 0x00, 0x04, 0x00, /* filler */ 0x00 ] // One Exp Bank F (see 3.1.1o)
+    let oneDrumKit: ByteArray = [ 0x00, 0x20, 0x00, 0x0A, 0x10, /* filler */ 0x00, 0x00, 0x00 ]
+    let oneDrumInstrument: ByteArray = [ 0x00, 0x20, 0x00, 0x0A, 0x11, 0x00, /* filler */ 0x00, 0x00 ]
+    let oneCombi: ByteArray = [ 0x00, 0x20, 0x00, 0x0A, 0x20, 0x00, /* filler */ 0x00, 0x00 ] // One Multi/Combi (see 3.1.1i)
 
     // Block
     let blockADDBankA: ByteArray = [ 0x00, 0x21, 0x00, 0x0A, 0x00, 0x00,
-                                     /* tone map of 19 bytes follows */
-                                     0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-                                     0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 ]
-    let blockPCMBankB: ByteArray = [ 0x00, 0x21, 0x00, 0x0A, 0x00, 0x01 ]
+                                     /* tone map of 19 bytes would follow */
+                                     /* filler */ 0x00, 0x00 ]
+    let blockPCMBankB: ByteArray = [ 0x00, 0x21, 0x00, 0x0A, 0x00, 0x01, /* filler */ 0x00, 0x00 ]
     let blockExpBankE: ByteArray = [ 0x00, 0x21, 0x00, 0x0A, 0x00, 0x03,
-                                     /* tone map of 19 bytes follows */
-                                     0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-                                     0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 ]
+                                     /* tone map of 19 bytes would follow */
+                                     /* filler */ 0x00, 0x00 ]
     let blockExpBankF: ByteArray = [ 0x00, 0x21, 0x00, 0x0A, 0x00, 0x04,
-                                     /* tone map of 19 bytes follows */
-                                     0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-                                     0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 ]
-    let blockDrumInstrument: ByteArray = [ 0x00, 0x21, 0x00, 0x0A, 0x11 ]
-    let blockCombi: ByteArray = [ 0x00, 0x21, 0x00, 0x0A, 0x20 ]
+                                     /* tone map of 19 bytes would follow */
+                                     /* filler */ 0x00, 0x00 ]
+    let blockDrumInstrument: ByteArray = [ 0x00, 0x21, 0x00, 0x0A, 0x11, /* filler */ 0x00, 0x00, 0x00 ]
+    let blockCombi: ByteArray = [ 0x00, 0x21, 0x00, 0x0A, 0x20, /* filler */ 0x00, 0x00, 0x00 ]
 
     // K5000S/R
     // One
     // oneADDBankA is the same as on the K5000W
-    let oneADDBankD: ByteArray = [ 0x00, 0x20, 0x00, 0x0A, 0x00, 0x02, 0x00 ] // One ADD Bank D (see 3.1.1k)
+    let oneADDBankD: ByteArray = [ 0x00, 0x20, 0x00, 0x0A, 0x00, 0x02, 0x00, /* filler */ 0x00 ] // One ADD Bank D (see 3.1.1k)
     // oneExpBankE and oneExpBankF are the same as on the K5000W
     // oneMulti is the same as oneCombi on the K5000W
     
     // Block
     // blockADDBankA is the same as on the K5000W
     let blockADDBankD: ByteArray = [ 0x00, 0x21, 0x00, 0x0A, 0x00, 0x02,
-                                     /* tone map of 19 bytes follows */
-                                     0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-                                     0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 ]
+                                     /* tone map of 19 bytes would follow */
+                                     /* filler */ 0x00, 0x00 ]
     // blockExpBankE and blockExpBankF are the same as on the K5000W
     // blockMulti is the same as blockCombi on the K5000W
     
@@ -245,14 +245,14 @@ final class SystemExclusiveTests: XCTestCase {
     func testDumpCommand_oneCombi() {
         let actual = DumpCommand(data: oneCombi)
         XCTAssertTrue(actual != nil)
-        let expected = DumpCommand(channel: MIDIChannel(1), cardinality: .one, bank: .none, kind: .multi, subBytes: [0x00])
+        let expected = DumpCommand(channel: MIDIChannel(1), cardinality: .one, bank: .multi, kind: .multi, subBytes: [0x00])
         XCTAssertEqual(actual, expected)
     }
     
     func testDumpCommand_blockADDBankA() {
         let actual = DumpCommand(data: blockADDBankA)
         XCTAssertTrue(actual != nil)
-        let expected = DumpCommand(channel: MIDIChannel(1), cardinality: .block, bank: .a, kind: .single, subBytes: ByteArray(repeating: 0x00, count: ToneMap.dataSize))
+        let expected = DumpCommand(channel: MIDIChannel(1), cardinality: .block, bank: .a, kind: .single, subBytes: [0x00, 0x00])
         XCTAssertEqual(actual, expected)
     }
     
@@ -266,14 +266,14 @@ final class SystemExclusiveTests: XCTestCase {
     func testDumpCommand_blockExpBankE() {
         let actual = DumpCommand(data: blockExpBankE)
         XCTAssertTrue(actual != nil)
-        let expected = DumpCommand(channel: MIDIChannel(1), cardinality: .block, bank: .e, kind: .single, subBytes: ByteArray(repeating: 0x00, count: ToneMap.dataSize))
+        let expected = DumpCommand(channel: MIDIChannel(1), cardinality: .block, bank: .e, kind: .single, subBytes: [0x00, 0x00])
         XCTAssertEqual(actual, expected)
     }
     
     func testDumpCommand_blockExpBankF() {
         let actual = DumpCommand(data: blockExpBankF)
         XCTAssertTrue(actual != nil)
-        let expected = DumpCommand(channel: MIDIChannel(1), cardinality: .block, bank: .f, kind: .single, subBytes: ByteArray(repeating: 0x00, count: ToneMap.dataSize))
+        let expected = DumpCommand(channel: MIDIChannel(1), cardinality: .block, bank: .f, kind: .single, subBytes: [0x00, 0x00])
         XCTAssertEqual(actual, expected)
     }
     
@@ -287,7 +287,7 @@ final class SystemExclusiveTests: XCTestCase {
     func testDumpCommand_blockCombi() {
         let actual = DumpCommand(data: blockCombi)
         XCTAssertTrue(actual != nil)
-        let expected = DumpCommand(channel: MIDIChannel(1), cardinality: .block, bank: .none, kind: .multi, subBytes: [])
+        let expected = DumpCommand(channel: MIDIChannel(1), cardinality: .block, bank: .multi, kind: .multi, subBytes: [])
         XCTAssertEqual(actual, expected)
     }
 
@@ -301,7 +301,7 @@ final class SystemExclusiveTests: XCTestCase {
     func testDumpCommand_blockADDBankD() {
         let actual = DumpCommand(data: blockADDBankD)
         XCTAssertTrue(actual != nil)
-        let expected = DumpCommand(channel: MIDIChannel(1), cardinality: .block, bank: .d, kind: .single, subBytes: [0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00])
+        let expected = DumpCommand(channel: MIDIChannel(1), cardinality: .block, bank: .d, kind: .single, subBytes: [0x00, 0x00])
         XCTAssertEqual(actual, expected)
     }
     
