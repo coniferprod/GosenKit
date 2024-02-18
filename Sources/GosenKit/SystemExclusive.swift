@@ -95,6 +95,10 @@ public enum Cardinality: Byte, CustomStringConvertible {
             return "Block"
         }
     }
+    
+    public static func isValid(value: Byte) -> Bool {
+        return value == Cardinality.one.rawValue || value == Cardinality.block.rawValue
+    }
 }
 
 public enum PatchKind: Byte, CaseIterable, CustomStringConvertible {
@@ -115,6 +119,10 @@ public enum PatchKind: Byte, CaseIterable, CustomStringConvertible {
             return "Drum Instrument"
         }
     }
+    
+    public static func isValid(value: Byte) -> Bool {
+        return PatchKind.allCases.contains(where: { $0.rawValue == value })
+    }
 }
 
 /// Dump command header for various patch types.
@@ -134,7 +142,7 @@ public struct DumpCommand {
     /// Sub-bytes, like instrument number or tone map
     public var subBytes: ByteArray
     
-    /// Initialze a default dump command
+    /// Initialize a default dump command
     public init() {
         self.init(channel: MIDIChannel(1), cardinality: .one, bank: .a, kind: .single)
     }
@@ -148,46 +156,56 @@ public struct DumpCommand {
         self.subBytes = subBytes
     }
     
-    /// Initializes a dump command from MIDI System Exclusive data. Returns `nil` if the data is invalid.
     public init?(data: ByteArray) {
-        var maybeChannel = MIDIChannel(1)
-        var maybeCardinality: Cardinality = .one
+        let result = DumpCommand.parse(from: data)
+        switch result {
+        case .success(let command):
+            self = command
+        case .failure:
+            return nil
+        }
+    }
+    
+    public static func parse(from data: ByteArray) -> Result<DumpCommand, ParseError> {
+        guard MIDIChannel.range.contains(Int(data[0] + 1)) else {
+            return .failure(.invalidData(0))
+        }
+        
+        guard Cardinality.isValid(value: data[1]) else {
+            return .failure(.invalidData(1))
+        }
+        
+        // "5th" in spec, always 0x00
+        guard data[2] == SystemExclusive.groupIdentifier else {
+            return .failure(.invalidData(2))
+        }
+        
+        // "6th" in spec, always 0x0A
+        guard data[3] == SystemExclusive.machineIdentifier else {
+            return .failure(.invalidData(3))
+        }
+
+        // patch kind ("7th" in spec): 0x00, 0x10, 0x11 or 0x20
+        guard PatchKind.isValid(value: data[4]) else {
+            return .failure(.invalidData(4))
+        }
+        
+        // bank ID ("8th" in spec)
+        guard BankIdentifier.isValid(value: data[5]) else {
+            return .failure(.invalidData(5))
+        }
+
+        let maybeChannel = MIDIChannel(Int(data[0]))
+        let maybeCardinality: Cardinality = Cardinality(rawValue: data[1])!
+        let maybeKind = PatchKind(rawValue: data[4])!
+
         var maybeBank: BankIdentifier = .none
-        var maybeKind: PatchKind = .single
-        
-        //print("\(#file):\(#line) data.count = \(data.count)")
-        
-        // Iterate through all the bytes and pick up information
-        for (index, b) in data.enumerated() {
-            switch index {
-            case 0: // channel byte
-                maybeChannel = MIDIChannel(Int(b) + 1)  // adjust channel from 0~15 to 1~16
-            case 1:
-                maybeCardinality = Cardinality(rawValue: b)!
-            case 2:  // // "5th" in spec, always 0x00
-                if b != SystemExclusive.groupIdentifier {
-                    return nil
-                }
-            case 3: // "6th" in spec, always 0x0A
-                if b != SystemExclusive.machineIdentifier {
-                    return nil
-                }
-            case 4: // patch kind ("7th" in spec): 0x00, 0x10, 0x11 or 0x20
-                maybeKind = PatchKind(rawValue: b)!
-            case 5:  // bank ID ("8th" in spec)
-                switch maybeKind {
-                case .drumKit, .drumInstrument, .multi:
-                    maybeBank = .none
-                default:
-                    maybeBank = BankIdentifier(rawValue: b)!  // 0x0 ... 0x04
-                }
-            default:
-                break
-            }
+        if maybeKind == .single {
+            maybeBank = BankIdentifier(rawValue: data[5])!  // 0x0 ... 0x04
         }
 
         var sub = ByteArray()
-        
+
         if maybeCardinality == .one {
             switch maybeKind {
             case .single:
@@ -211,8 +229,15 @@ public struct DumpCommand {
                 maybeBank = .none
             }
         }
+
+        let temp = DumpCommand(
+            channel: maybeChannel,
+            cardinality: maybeCardinality,
+            bank: maybeBank,
+            kind: maybeKind
+        )
         
-        self.init(channel: maybeChannel, cardinality: maybeCardinality, bank: maybeBank, kind: maybeKind, subBytes: sub)
+        return .success(temp)
     }
 }
 

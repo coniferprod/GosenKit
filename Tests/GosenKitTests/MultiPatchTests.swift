@@ -38,14 +38,18 @@ final class MultiPatchTests: XCTestCase {
     
     func testMultiPatch_fromData() {
         if case let .manufacturerSpecific(_, payload) = Message(data: self.patchData) {
-            if let dumpCommand = DumpCommand(data: payload) {
-                let data = ByteArray(payload[dumpCommand.dataLength...])
+            let dumpCommand = DumpCommand.parse(from: payload)
+            switch dumpCommand {
+            case .success(let command):
+                let data = ByteArray(payload[command.dataLength...])
                 switch MultiPatch.parse(from: data) {
                 case .success(let patch):
                     XCTAssert(patch.common.name.value == "Evening3")
                 case .failure(let error):
                     XCTFail("\(error)")
                 }
+            case .failure(let error):
+                XCTFail("\(error)")
             }
         }
         else {

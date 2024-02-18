@@ -4,7 +4,7 @@ import SyxPack
 /// Effect definition.
 public struct EffectDefinition {
     /// Effect kind enumeration.
-    public enum Kind: Int, CaseIterable {
+    public enum Kind: Byte, CaseIterable {
         case hall1
         case hall2
         case hall3

@@ -13,7 +13,7 @@ public struct SingleBank {
 }
 
 /// Bank identifier.
-public enum BankIdentifier: Byte, CustomStringConvertible {
+public enum BankIdentifier: Byte, CaseIterable, CustomStringConvertible {
     case a = 0x00
     case b = 0x01
     // there is no bank C, kind of
@@ -37,6 +37,10 @@ public enum BankIdentifier: Byte, CustomStringConvertible {
         case .none:
             return "N/A"
         }
+    }
+    
+    public static func isValid(value: Byte) -> Bool {
+        return BankIdentifier.allCases.contains(where: { $0.rawValue == value })
     }
 }
 
