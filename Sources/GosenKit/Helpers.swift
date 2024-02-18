@@ -263,7 +263,7 @@ extension InstrumentNumber: SystemExclusiveData {
         
         // Take the first two bits and convert them to a number
         let msbBitString = bitString.prefix(2)
-        let msb = Byte(bitString, radix: 2)!
+        let msb = Byte(msbBitString, radix: 2)!
         
         // Take the last seven bits and convert them to a number
         let lsbBitString = bitString.suffix(7)

@@ -30,4 +30,9 @@ final class GosenKitTests: XCTestCase {
         ("testkeyName", testKeyName),
         ("testKeyNumber", testKeyNumber),
     ]
+    
+    func test_DefaultValueIsInRange() {
+        let gain = Gain()
+        XCTAssertEqual(gain.value, 1)
+    }
 }

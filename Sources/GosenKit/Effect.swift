@@ -344,7 +344,7 @@ extension EffectSettings: CustomStringConvertible {
             result += "Effect \(effectNumber): "
         }
 
-        let effectName = EffectDefinition.names[effectDefinition.kind.rawValue]
+        let effectName = EffectDefinition.names[Int(effectDefinition.kind.rawValue)]
         result += effectName.name
         
         if effectNumber == 0 {

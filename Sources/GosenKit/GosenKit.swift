@@ -83,6 +83,7 @@ extension Volume: RangedInt {
     }
 
     public init() {
+        assert(Self.range.contains(Self.defaultValue), "Default value must be in range")
         _value = Self.defaultValue
     }
 
@@ -105,6 +106,8 @@ extension Level: RangedInt {
     }
 
     public init() {
+        assert(Self.range.contains(Self.defaultValue), "Default value must be in range")
+
         _value = Self.defaultValue
     }
 
@@ -127,6 +130,8 @@ extension Depth: RangedInt {
     }
 
     public init() {
+        assert(Self.range.contains(Self.defaultValue), "Default value must be in range")
+
         _value = Self.defaultValue
     }
 
@@ -149,6 +154,8 @@ extension Pan: RangedInt {
     }
 
     public init() {
+        assert(Self.range.contains(Self.defaultValue), "Default value must be in range")
+
         _value = Self.defaultValue
     }
 
@@ -166,6 +173,8 @@ extension MIDIChannel: RangedInt {
     public static let defaultValue = 1
     
     public init() {
+        assert(Self.range.contains(Self.defaultValue), "Default value must be in range")
+
         _value = Self.defaultValue
     }
     
@@ -187,6 +196,8 @@ extension VelocityCurve: RangedInt {
     public static let defaultValue = 1
     
     public init() {
+        assert(Self.range.contains(Self.defaultValue), "Default value must be in range")
+
         _value = Self.defaultValue
     }
     
@@ -205,9 +216,11 @@ public struct ControlDepth {
 
 extension ControlDepth: RangedInt {
     public static let range: ClosedRange<Int> = -63...63
-    public static let defaultValue = 1
+    public static let defaultValue = 0
     
     public init() {
+        assert(Self.range.contains(Self.defaultValue), "Default value must be in range")
+
         _value = Self.defaultValue
     }
     
@@ -226,9 +239,11 @@ public struct Coarse {
 
 extension Coarse: RangedInt {
     public static let range: ClosedRange<Int> = -24...24
-    public static let defaultValue = 1
+    public static let defaultValue = 0
     
     public init() {
+        assert(Self.range.contains(Self.defaultValue), "Default value must be in range")
+
         _value = Self.defaultValue
     }
     
@@ -247,9 +262,11 @@ public struct Fine {
 
 extension Fine: RangedInt {
     public static let range: ClosedRange<Int> = -63...63
-    public static let defaultValue = 1
+    public static let defaultValue = 0
     
     public init() {
+        assert(Self.range.contains(Self.defaultValue), "Default value must be in range")
+
         _value = Self.defaultValue
     }
     
@@ -276,6 +293,8 @@ extension EffectDepth: RangedInt {
     }
 
     public init() {
+        assert(Self.range.contains(Self.defaultValue), "Default value must be in range")
+
         _value = Self.defaultValue
     }
 
@@ -298,6 +317,8 @@ extension Resonance: RangedInt {
     }
 
     public init() {
+        assert(Self.range.contains(Self.defaultValue), "Default value must be in range")
+
         _value = Self.defaultValue
     }
 
@@ -313,13 +334,15 @@ public struct Gain {
 extension Gain: RangedInt {
     public static let range: ClosedRange<Int> = 1...63
 
-    public static let defaultValue = 0
+    public static let defaultValue = 1
 
     public var value: Int {
         return _value
     }
 
     public init() {
+        assert(Self.range.contains(Self.defaultValue), "Default value must be in range")
+        
         _value = Self.defaultValue
     }
 
@@ -342,6 +365,8 @@ extension MIDINote: RangedInt {
     }
 
     public init() {
+        assert(Self.range.contains(Self.defaultValue), "Default value must be in range")
+
         _value = Self.defaultValue
     }
 
@@ -361,9 +386,11 @@ public struct Transpose {
 
 extension Transpose: RangedInt {
     public static let range: ClosedRange<Int> = -24...24
-    public static let defaultValue = 1
+    public static let defaultValue = 0
     
     public init() {
+        assert(Self.range.contains(Self.defaultValue), "Default value must be in range")
+
         _value = Self.defaultValue
     }
     
@@ -375,4 +402,3 @@ extension Transpose: RangedInt {
         return _value
     }
 }
-
