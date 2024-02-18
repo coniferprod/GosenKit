@@ -115,21 +115,21 @@ public struct Morf {
     public init(data d: ByteArray) {
         var offset: Int = 0
         
-        var length = CopyParameters.dataSize
-        copy1 = CopyParameters(data: d.slice(from: offset, length: length))
-        offset += length
+        var size = CopyParameters.dataSize
+        copy1 = CopyParameters(data: d.slice(from: offset, length: size))
+        offset += size
 
-        copy2 = CopyParameters(data: d.slice(from: offset, length: length))
-        offset += length
+        copy2 = CopyParameters(data: d.slice(from: offset, length: size))
+        offset += size
 
-        copy3 = CopyParameters(data: d.slice(from: offset, length: length))
-        offset += length
+        copy3 = CopyParameters(data: d.slice(from: offset, length: size))
+        offset += size
 
-        copy4 = CopyParameters(data: d.slice(from: offset, length: length))
-        offset += length
+        copy4 = CopyParameters(data: d.slice(from: offset, length: size))
+        offset += size
 
-        length = Envelope.dataSize
-        envelope = Envelope(data: d.slice(from: offset, length: length))
+        size = Envelope.dataSize
+        envelope = Envelope(data: d.slice(from: offset, length: size))
     }
 }
 
@@ -149,7 +149,13 @@ extension Morf: SystemExclusiveData {
     public func asData() -> ByteArray {
         var data = ByteArray()
         
-        [ copy1, copy2, copy3, copy4 ].forEach {
+        [ 
+            copy1,
+            copy2,
+            copy3,
+            copy4
+        ]
+        .forEach {
             data.append(contentsOf: $0.asData())
         }
         
@@ -173,7 +179,8 @@ extension Morf.Envelope: SystemExclusiveData {
             time3.value,
             time4.value,
             loopKind.index
-        ].forEach {
+        ]
+        .forEach {
             data.append(Byte($0))
         }
         

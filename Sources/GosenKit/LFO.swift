@@ -112,7 +112,14 @@ extension LFO: SystemExclusiveData {
     public func asData() -> ByteArray {
         var data = ByteArray()
         
-        [waveform.index, speed.value, delayOnset.value, fadeInTime.value, fadeInToSpeed.value].forEach {
+        [
+            waveform.index,
+            speed.value,
+            delayOnset.value,
+            fadeInTime.value,
+            fadeInToSpeed.value
+        ]
+        .forEach {
             data.append(Byte($0))
         }
 
@@ -123,7 +130,7 @@ extension LFO: SystemExclusiveData {
         return data
     }
     
-    public var dataLength: Int { return LFO.dataSize }
+    public var dataLength: Int { LFO.dataSize }
     
     public static let dataSize = 11
 }
@@ -133,7 +140,7 @@ extension LFO.Control: SystemExclusiveData {
         return ByteArray(arrayLiteral: Byte(depth.value), Byte(keyScaling.value + 64))
     }
 
-    public var dataLength: Int { return LFO.Control.dataSize }
+    public var dataLength: Int { LFO.Control.dataSize }
 
     public static let dataSize = 2
 }

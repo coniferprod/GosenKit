@@ -197,16 +197,18 @@ public struct Amplifier {
             
             var temp = Modulation()
             
-            switch KeyScalingControl.parse(from: data.slice(from: offset, length: KeyScalingControl.dataSize)) {
+            var size = KeyScalingControl.dataSize
+            switch KeyScalingControl.parse(from: data.slice(from: offset, length: size)) {
             case .success(let control):
                 temp.keyScalingToEnvelope = control
             case .failure(let error):
                 return .failure(error)
             }
             
-            offset += KeyScalingControl.dataSize
+            offset += size
             
-            switch VelocityControl.parse(from: data.slice(from: offset, length: VelocityControl.dataSize)) {
+            size = VelocityControl.dataSize
+            switch VelocityControl.parse(from: data.slice(from: offset, length: size)) {
             case .success(let control):
                 temp.velocityToEnvelope = control
             case .failure(let error):
@@ -236,15 +238,17 @@ public struct Amplifier {
         b = data.next(&offset)
         temp.velocityCurve = VelocityCurve(Int(b) + 1)  // 0~11 to 1~12
 
-        switch Envelope.parse(from: data.slice(from: offset, length: Envelope.dataSize)) {
+        var size = Envelope.dataSize
+        switch Envelope.parse(from: data.slice(from: offset, length: size)) {
         case .success(let env):
             temp.envelope = env
         case .failure(let error):
             return .failure(error)
         }
-        offset += Envelope.dataSize
+        offset += size
 
-        switch Modulation.parse(from: data.slice(from: offset, length: Modulation.dataSize)) {
+        size = Modulation.dataSize
+        switch Modulation.parse(from: data.slice(from: offset, length: size)) {
         case .success(let mod):
             temp.modulation = mod
         case .failure(let error):
@@ -261,17 +265,22 @@ extension Amplifier.Envelope: SystemExclusiveData {
     public func asData() -> ByteArray {
         var data = ByteArray()
         
-        [attackTime.value,
-         decay1Time.value, decay1Level.value,
-         decay2Time.value, decay2Level.value,
-         releaseTime.value].forEach {
+        [
+            attackTime.value,
+            decay1Time.value,
+            decay1Level.value,
+            decay2Time.value, 
+            decay2Level.value,
+            releaseTime.value
+        ]
+        .forEach {
             data.append(Byte($0))
         }
         
         return data
     }
     
-    public var dataLength: Int { return Amplifier.Envelope.dataSize }
+    public var dataLength: Int { Amplifier.Envelope.dataSize }
     
     public static let dataSize = 6
 }
@@ -287,7 +296,7 @@ extension Amplifier: SystemExclusiveData {
         return data
     }
     
-    public var dataLength: Int { return Amplifier.dataSize }
+    public var dataLength: Int { Amplifier.dataSize }
     
     public static let dataSize = 15
 }
@@ -302,9 +311,7 @@ extension Amplifier.Modulation: SystemExclusiveData {
         return data
     }
     
-    public var dataLength: Int {
-        return Amplifier.Modulation.dataSize
-    }
+    public var dataLength: Int { Amplifier.Modulation.dataSize }
     
     public static let dataSize = KeyScalingControl.dataSize + VelocityControl.dataSize
 }
@@ -312,7 +319,13 @@ extension Amplifier.Modulation: SystemExclusiveData {
 extension Amplifier.Modulation.KeyScalingControl: SystemExclusiveData {
     public func asData() -> ByteArray {
         var data = ByteArray()
-        [level.value, attackTime.value, decay1Time.value, release.value].forEach {
+        [
+            level.value,
+            attackTime.value,
+            decay1Time.value,
+            release.value
+        ]
+        .forEach {
             data.append(Byte($0 + 64))
         }
         return data
@@ -326,7 +339,13 @@ extension Amplifier.Modulation.KeyScalingControl: SystemExclusiveData {
 extension Amplifier.Modulation.VelocityControl: SystemExclusiveData {
     public func asData() -> ByteArray {
         var data = ByteArray()
-        [level.value, attackTime.value + 64, decay1Time.value + 64, release.value + 64].forEach {
+        [
+            level.value,
+            attackTime.value + 64,
+            decay1Time.value + 64,
+            release.value + 64
+        ]
+        .forEach {
             data.append(Byte($0))
         }
         return data
@@ -401,6 +420,8 @@ extension Amplifier.Envelope.Time: RangedInt {
     }
 
     public init() {
+        assert(Self.range.contains(Self.defaultValue), "Default value must be in range")
+
         _value = Self.defaultValue
     }
 
@@ -419,6 +440,8 @@ extension Amplifier.Envelope.Level: RangedInt {
     }
 
     public init() {
+        assert(Self.range.contains(Self.defaultValue), "Default value must be in range")
+
         _value = Self.defaultValue
     }
 
@@ -437,6 +460,8 @@ extension Amplifier.Modulation.KeyScalingControl.Time: RangedInt {
     }
 
     public init() {
+        assert(Self.range.contains(Self.defaultValue), "Default value must be in range")
+
         _value = Self.defaultValue
     }
 
@@ -455,6 +480,8 @@ extension Amplifier.Modulation.KeyScalingControl.Level: RangedInt {
     }
 
     public init() {
+        assert(Self.range.contains(Self.defaultValue), "Default value must be in range")
+
         _value = Self.defaultValue
     }
 
@@ -473,6 +500,8 @@ extension Amplifier.Modulation.VelocityControl.Time: RangedInt {
     }
 
     public init() {
+        assert(Self.range.contains(Self.defaultValue), "Default value must be in range")
+
         _value = Self.defaultValue
     }
 
@@ -487,6 +516,8 @@ extension Amplifier.Modulation.VelocityControl.Level: RangedInt {
     public static let defaultValue = 0
 
     public var value: Int {
+        assert(Self.range.contains(Self.defaultValue), "Default value must be in range")
+
         return _value
     }
 

@@ -176,6 +176,8 @@ extension Filter.Envelope.Time: RangedInt {
     }
 
     public init() {
+        assert(Self.range.contains(Self.defaultValue), "Default value must be in range")
+
         _value = Self.defaultValue
     }
 
@@ -194,6 +196,8 @@ extension Filter.Envelope.Level: RangedInt {
     }
 
     public init() {
+        assert(Self.range.contains(Self.defaultValue), "Default value must be in range")
+
         _value = Self.defaultValue
     }
 
@@ -229,7 +233,7 @@ extension Filter: SystemExclusiveData {
         return data
     }
     
-    public var dataLength: Int { return Filter.dataSize }
+    public var dataLength: Int { Filter.dataSize }
     
     public static let dataSize = 20
 }
@@ -258,7 +262,7 @@ extension Filter.Envelope: SystemExclusiveData {
         return data
     }
     
-    public var dataLength: Int { return Filter.Envelope.dataSize }
+    public var dataLength: Int { Filter.Envelope.dataSize }
     
     public static let dataSize = 11
 }

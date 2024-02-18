@@ -245,39 +245,40 @@ public struct EffectSettings {
         b = data.next(&offset)
         temp.algorithm = Int(b + 1)  // adjust 0~3 to 1~4
         
-        switch EffectDefinition.parse(from: data.slice(from: offset, length: EffectDefinition.dataSize)) {
+        var size = EffectDefinition.dataSize
+        switch EffectDefinition.parse(from: data.slice(from: offset, length: size)) {
         case .success(let effect):
             temp.reverb = effect
         case .failure(let error):
             return .failure(error)
         }
-        offset += EffectDefinition.dataSize
+        offset += size
         
-        switch EffectDefinition.parse(from: data.slice(from: offset, length: EffectDefinition.dataSize)) {
+        switch EffectDefinition.parse(from: data.slice(from: offset, length: size)) {
         case .success(let effect):
             temp.effect1 = effect
         case .failure(let error):
             return .failure(error)
         }
-        offset += EffectDefinition.dataSize
+        offset += size
         
-        switch EffectDefinition.parse(from: data.slice(from: offset, length: EffectDefinition.dataSize)) {
+        switch EffectDefinition.parse(from: data.slice(from: offset, length: size)) {
         case .success(let effect):
             temp.effect2 = effect
         case .failure(let error):
             return .failure(error)
         }
-        offset += EffectDefinition.dataSize
+        offset += size
         
-        switch EffectDefinition.parse(from: data.slice(from: offset, length: EffectDefinition.dataSize)) {
+        switch EffectDefinition.parse(from: data.slice(from: offset, length: size)) {
         case .success(let effect):
             temp.effect3 = effect
         case .failure(let error):
             return .failure(error)
         }
-        offset += EffectDefinition.dataSize
+        offset += size
         
-        switch EffectDefinition.parse(from: data.slice(from: offset, length: EffectDefinition.dataSize)) {
+        switch EffectDefinition.parse(from: data.slice(from: offset, length: size)) {
         case .success(let effect):
             temp.effect4 = effect
         case .failure(let error):
@@ -296,8 +297,12 @@ extension EffectDefinition: SystemExclusiveData {
         var data = ByteArray()
         
         [
-            kind.index, depth.value,
-            parameter1.value, parameter2.value, parameter3.value, parameter4.value
+            kind.index, 
+            depth.value,
+            parameter1.value, 
+            parameter2.value,
+            parameter3.value,
+            parameter4.value
         ]
         .forEach {
             data.append(Byte($0))
@@ -307,7 +312,7 @@ extension EffectDefinition: SystemExclusiveData {
     }
     
     /// Number of MIDI System Exclusive bytes.
-    public var dataLength: Int { return EffectDefinition.dataSize }
+    public var dataLength: Int { EffectDefinition.dataSize }
     
     public static let dataSize = 6
 }
@@ -326,7 +331,7 @@ extension EffectSettings: SystemExclusiveData {
         return data
     }
 
-    public var dataLength: Int { return EffectSettings.dataSize }
+    public var dataLength: Int { EffectSettings.dataSize }
     public static let dataSize = 31
 }
 

@@ -162,7 +162,7 @@ extension Oscillator.PitchEnvelope: SystemExclusiveData {
     }
     
     /// The number of data bytes for the pitch envelope.
-    public var dataLength: Int { return Oscillator.PitchEnvelope.dataSize }
+    public var dataLength: Int { Oscillator.PitchEnvelope.dataSize }
     
     public static let dataSize = 6
 }
@@ -195,7 +195,7 @@ extension Oscillator: SystemExclusiveData {
     }
     
     /// The number of data bytes for the oscillator.
-    public var dataLength: Int { return Oscillator.dataSize }
+    public var dataLength: Int { Oscillator.dataSize }
     
     public static let dataSize = 12
 }
@@ -249,6 +249,8 @@ extension Oscillator.PitchEnvelope.Time: RangedInt {
     }
 
     public init() {
+        assert(Self.range.contains(Self.defaultValue), "Default value must be in range")
+
         _value = Self.defaultValue
     }
 
@@ -267,6 +269,8 @@ extension Oscillator.PitchEnvelope.Level: RangedInt {
     }
 
     public init() {
+        assert(Self.range.contains(Self.defaultValue), "Default value must be in range")
+
         _value = Self.defaultValue
     }
 

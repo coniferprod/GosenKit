@@ -69,39 +69,39 @@ public struct FormantFilter {
 
             var temp = Envelope()
             
-            let length = Segment.dataSize
+            let size = Segment.dataSize
             
-            switch Segment.parse(from: data.slice(from: offset, length: length)) {
+            switch Segment.parse(from: data.slice(from: offset, length: size)) {
             case .success(let seg):
                 temp.attack = seg
             case .failure(let error):
                 return .failure(error)
             }
-            offset += length
+            offset += size
 
-            switch Segment.parse(from: data.slice(from: offset, length: length)) {
+            switch Segment.parse(from: data.slice(from: offset, length: size)) {
             case .success(let seg):
                 temp.decay1 = seg
             case .failure(let error):
                 return .failure(error)
             }
-            offset += length
+            offset += size
 
-            switch Segment.parse(from: data.slice(from: offset, length: length)) {
+            switch Segment.parse(from: data.slice(from: offset, length: size)) {
             case .success(let seg):
                 temp.decay2 = seg
             case .failure(let error):
                 return .failure(error)
             }
-            offset += length
+            offset += size
 
-            switch Segment.parse(from: data.slice(from: offset, length: length)) {
+            switch Segment.parse(from: data.slice(from: offset, length: size)) {
             case .success(let seg):
                 temp.release = seg
             case .failure(let error):
                 return .failure(error)
             }
-            offset += length
+            offset += size
 
             b = data.next(&offset)
             temp.decayLoop = HarmonicEnvelope.LoopKind(index: Int(b))!
@@ -232,15 +232,17 @@ public struct FormantFilter {
         b = data.next(&offset)
         temp.envelopeDepth = Depth(Int(b) - 64)
         
-        switch Envelope.parse(from: data.slice(from: offset, length: Envelope.dataSize)) {
+        var size = Envelope.dataSize
+        switch Envelope.parse(from: data.slice(from: offset, length: size)) {
         case .success(let env):
             temp.envelope = env
         case .failure(let error):
             return .failure(error)
         }
-        offset += Envelope.dataSize
+        offset += size
         
-        switch LFO.parse(from: data.slice(from: offset, length: LFO.dataSize)) {
+        size = LFO.dataSize
+        switch LFO.parse(from: data.slice(from: offset, length: size)) {
         case .success(let lfo):
             temp.lfo = lfo
         case .failure(let error):
@@ -261,6 +263,8 @@ extension FormantFilter.Envelope.Rate: RangedInt {
     }
 
     public init() {
+        assert(Self.range.contains(Self.defaultValue), "Default value must be in range")
+
         _value = Self.defaultValue
     }
 
@@ -279,6 +283,8 @@ extension FormantFilter.Envelope.Level: RangedInt {
     }
 
     public init() {
+        assert(Self.range.contains(Self.defaultValue), "Default value must be in range")
+
         _value = Self.defaultValue
     }
 
@@ -297,6 +303,8 @@ extension FormantFilter.LFO.Depth: RangedInt {
     }
 
     public init() {
+        assert(Self.range.contains(Self.defaultValue), "Default value must be in range")
+
         _value = Self.defaultValue
     }
 
@@ -316,14 +324,19 @@ extension FormantFilter.Envelope: SystemExclusiveData {
         data.append(contentsOf: decay2.asData())
         data.append(contentsOf: release.asData())
         
-        [decayLoop.index, velocityDepth.value + 64, keyScalingDepth.value + 64].forEach {
+        [
+            decayLoop.index,
+            velocityDepth.value + 64,
+            keyScalingDepth.value + 64
+        ]
+        .forEach {
             data.append(Byte($0))
         }
         
         return data
     }
     
-    public var dataLength: Int { return FormantFilter.Envelope.dataSize }
+    public var dataLength: Int { FormantFilter.Envelope.dataSize }
     
     public static let dataSize = 11
 }
@@ -333,7 +346,7 @@ extension FormantFilter.Envelope.Segment: SystemExclusiveData {
         return ByteArray(arrayLiteral: Byte(rate.value), Byte(level.value + 64))
     }
     
-    public var dataLength: Int { return FormantFilter.Envelope.Segment.dataSize }
+    public var dataLength: Int { FormantFilter.Envelope.Segment.dataSize }
     
     public static let dataSize = 2
 }
@@ -342,7 +355,12 @@ extension FormantFilter: SystemExclusiveData {
     public func asData() -> ByteArray {
         var data = ByteArray()
 
-        [bias.value + 64, mode.index, envelopeDepth.value + 64].forEach {
+        [
+            bias.value + 64,
+            mode.index,
+            envelopeDepth.value + 64
+        ]
+        .forEach {
             data.append(Byte($0))
         }
 
@@ -352,7 +370,7 @@ extension FormantFilter: SystemExclusiveData {
         return data
     }
     
-    public var dataLength: Int { return FormantFilter.dataSize }
+    public var dataLength: Int { FormantFilter.dataSize }
     
     public static let dataSize = 17  // does not include the bands!
 }
@@ -362,7 +380,7 @@ extension FormantFilter.Bands: SystemExclusiveData {
         return levels.map { Byte($0.value) }
     }
 
-    public var dataLength: Int { return FormantFilter.Bands.dataSize }
+    public var dataLength: Int { FormantFilter.Bands.dataSize }
 
     public static let dataSize = 128
 }
@@ -383,7 +401,7 @@ extension FormantFilter.LFO: SystemExclusiveData {
         return data
     }
     
-    public var dataLength: Int { return FormantFilter.LFO.dataSize }
+    public var dataLength: Int { FormantFilter.LFO.dataSize }
 
     public static let dataSize = 3
 }

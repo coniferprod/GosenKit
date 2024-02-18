@@ -37,14 +37,15 @@ public struct MultiPatch {
             
             var temp = Common()  // initialize with defaults, then fill in
             
-            let effectData = data.slice(from: offset, length: EffectSettings.dataSize)
+            var size = EffectSettings.dataSize
+            let effectData = data.slice(from: offset, length: size)
             switch EffectSettings.parse(from: effectData) {
             case .success(let effects):
                 temp.effects = effects
             case .failure(let error):
                 return .failure(error)
             }
-            offset += EffectSettings.dataSize
+            offset += size
 
             //print("After effects parsed, offset = \(String(format: "%d", offset)) (data length = \(data.count))")
 
@@ -61,8 +62,9 @@ public struct MultiPatch {
 
             //print("After GEQ parsed, offset = \(String(format: "%d", offset)) (data length = \(data.count))")
 
-            temp.name = PatchName(data: data.slice(from: offset, length: PatchName.length))
-            offset += PatchName.length
+            size = PatchName.length
+            temp.name = PatchName(data: data.slice(from: offset, length: size))
+            offset += size
 
             //print("After name parsed, offset = \(String(format: "%d", offset)) (data length = \(data.count))")
 
@@ -81,14 +83,15 @@ public struct MultiPatch {
                 !(b.isBitSet(3))
             ]
 
-            let effectControlData = data.slice(from: offset, length: EffectControl.dataSize)
+            size = EffectControl.dataSize
+            let effectControlData = data.slice(from: offset, length: size)
             switch EffectControl.parse(from: effectControlData) {
             case .success(let control):
                 temp.effectControl = control
             case .failure(let error):
                 return .failure(error)
             }
-            offset += EffectControl.dataSize
+            offset += size
 
             //print("After Effect Control parsed, offset = \(String(format: "%d", offset)) (data length = \(data.count))")
 
@@ -101,7 +104,7 @@ public struct MultiPatch {
         public var single: InstrumentNumber
         public var volume: Level  // 0~127
         public var pan: Int  // 0~127  // *really?*
-        public var effectPath: UInt  // 0~3
+        public var effectPath: Int  // 0~3
         public var transpose: Transpose  // SysEx 40~88 = -24~+24
         public var tune: Int  // SysEx 1~127 = -63~+63
         public var zone: Zone
@@ -144,7 +147,7 @@ public struct MultiPatch {
             temp.pan = Int(b)
 
             b = data.next(&offset)
-            temp.effectPath = UInt(b)
+            temp.effectPath = Int(b)
             
             b = data.next(&offset)
             temp.transpose = Transpose(Int(b) - 64)  // SysEx 40~88 to -24~+24
@@ -202,23 +205,25 @@ public struct MultiPatch {
         
         var temp = MultiPatch()
         
-        switch Common.parse(from: data.slice(from: offset, length: Common.dataSize)) {
+        var size = Common.dataSize
+        switch Common.parse(from: data.slice(from: offset, length: size)) {
         case .success(let common):
             temp.common = common
         case .failure(let error):
             return .failure(error)
         }
-        offset += Common.dataSize
+        offset += size
         
+        size = Section.dataSize
         temp.sections = [Section]()
         for _ in 0..<MultiPatch.sectionCount {
-            switch Section.parse(from: data.slice(from: offset, length: Section.dataSize)) {
+            switch Section.parse(from: data.slice(from: offset, length: size)) {
             case .success(let section):
                 temp.sections.append(section)
             case .failure(let error):
                 return .failure(error)
             }
-            offset += Section.dataSize
+            offset += size
         }
         
         return .success(temp)
@@ -385,13 +390,19 @@ extension MultiPatch.Section: SystemExclusiveData {
         
         data.append(contentsOf: single.asData())
         
-        data.append(Byte(volume.value))
-        data.append(Byte(pan))
-        data.append(Byte(effectPath))
-        data.append(Byte(transpose.value + 64))
-        data.append(Byte(tune + 64))
-        data.append(Byte(zone.low.note.value))
-        data.append(Byte(zone.high.note.value))
+        [
+            volume.value,
+            pan,
+            effectPath,
+            transpose.value + 64,
+            tune + 64,
+            zone.low.note.value,
+            zone.high.note.value
+        ]
+        .forEach {
+            data.append(Byte($0))
+        }
+        
         data.append(contentsOf: velocitySwitch.asData())
         data.append(Byte(receiveChannel.value - 1))  // adjust to 0~15
         

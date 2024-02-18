@@ -42,34 +42,40 @@ public struct AdditiveKit {
         
         let _ = data.next(&offset)
         
-        switch HarmonicCommon.parse(from: data.slice(from: offset, length: HarmonicCommon.dataSize)) {
+        var size = HarmonicCommon.dataSize
+        switch HarmonicCommon.parse(from: data.slice(from: offset, length: size)) {
         case .success(let common):
             temp.common = common
         case .failure(let error):
             return .failure(error)
         }
-        offset += HarmonicCommon.dataSize
+        offset += size
         
-        temp.morf = Morf(data: data.slice(from: offset, length: Morf.dataSize))
-        offset += Morf.dataSize
+        size = Morf.dataSize
+        temp.morf = Morf(data: data.slice(from: offset, length: size))
+        offset += size
 
-        switch FormantFilter.parse(from: data.slice(from: offset, length: FormantFilter.dataSize)) {
+        size = FormantFilter.dataSize
+        switch FormantFilter.parse(from: data.slice(from: offset, length: size)) {
         case .success(let ff):
             temp.formantFilter = ff
         case .failure(let error):
             return .failure(error)
         }
-        offset += FormantFilter.dataSize
+        offset += size
         
-        temp.levels = HarmonicLevels(data: data.slice(from: offset, length: HarmonicLevels.dataSize))
-        offset += HarmonicLevels.dataSize
+        size = HarmonicLevels.dataSize
+        temp.levels = HarmonicLevels(data: data.slice(from: offset, length: size))
+        offset += size
         
-        temp.bands = FormantFilter.Bands(data: data.slice(from: offset, length: FormantFilter.Bands.dataSize))
-        offset += FormantFilter.Bands.dataSize
+        size = FormantFilter.Bands.dataSize
+        temp.bands = FormantFilter.Bands(data: data.slice(from: offset, length: size))
+        offset += size
         
+        size = HarmonicEnvelope.dataSize
         temp.envelopes = [HarmonicEnvelope]()
         for _ in 0 ..< AdditiveKit.harmonicCount {
-            let envelopeData = data.slice(from: offset, length: HarmonicEnvelope.dataSize)
+            let envelopeData = data.slice(from: offset, length: size)
 
             switch HarmonicEnvelope.parse(from: envelopeData) {
             case .success(let envelope):
@@ -78,7 +84,7 @@ public struct AdditiveKit {
                 return .failure(error)
             }
 
-            offset += HarmonicEnvelope.dataSize
+            offset += size
         }
 
         return .success(temp)
@@ -198,7 +204,7 @@ extension AdditiveKit: SystemExclusiveData {
         return data
     }
     
-    public var dataLength: Int { return AdditiveKit.dataSize }
+    public var dataLength: Int { AdditiveKit.dataSize }
     
     public static let dataSize = 806
 }

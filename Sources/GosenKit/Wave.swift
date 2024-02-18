@@ -25,9 +25,7 @@ public struct Wave: Codable {
     }
     
     /// Is this wave the additive wave or not.
-    public var isAdditive: Bool {
-        return self.number == Wave.additiveWaveNumber
-    }
+    public var isAdditive: Bool { self.number == Wave.additiveWaveNumber }
     
     public static func numberFromBytes(_ msb: Byte, _ lsb: Byte) -> Int? {
         let waveMSBString = String(msb, radix: 2).padded(with: "0", to: 3, from: .left)

@@ -29,45 +29,47 @@ public struct Source {
 
                 var temp = Modulation()  // initialize with defaults, then fill in
                 
-                switch MacroController.parse(from: data.slice(from: offset, length: MacroController.dataSize)) {
+                var size = MacroController.dataSize
+                switch MacroController.parse(from: data.slice(from: offset, length: size)) {
                 case .success(let mc):
                     temp.pressure = mc
                 case .failure(let error):
                     return .failure(error)
                 }
-                offset += MacroController.dataSize
+                offset += size
 
-                switch MacroController.parse(from: data.slice(from: offset, length: MacroController.dataSize)) {
+                switch MacroController.parse(from: data.slice(from: offset, length: size)) {
                 case .success(let mc):
                     temp.wheel = mc
                 case .failure(let error):
                     return .failure(error)
                 }
-                offset += MacroController.dataSize
+                offset += size
                 
-                switch MacroController.parse(from: data.slice(from: offset, length: MacroController.dataSize)) {
+                switch MacroController.parse(from: data.slice(from: offset, length: size)) {
                 case .success(let mc):
                     temp.expression = mc
                 case .failure(let error):
                     return .failure(error)
                 }
-                offset += MacroController.dataSize
+                offset += size
             
-                switch AssignableController.parse(from: data.slice(from: offset, length: AssignableController.dataSize)) {
+                size = AssignableController.dataSize
+                switch AssignableController.parse(from: data.slice(from: offset, length: size)) {
                 case .success(let ac):
                     temp.assignable1 = ac
                 case .failure(let error):
                     return .failure(error)
                 }
-                offset += AssignableController.dataSize
+                offset += size
                 
-                switch AssignableController.parse(from: data.slice(from: offset, length: AssignableController.dataSize)) {
+                switch AssignableController.parse(from: data.slice(from: offset, length: size)) {
                 case .success(let ac):
                     temp.assignable2 = ac
                 case .failure(let error):
                     return .failure(error)
                 }
-                offset += AssignableController.dataSize
+                offset += size
 
                 return .success(temp)
             }
@@ -181,18 +183,20 @@ public struct Source {
             b = data.next(&offset)
             temp.benderCutoff = Int(b)
             
-            switch Modulation.parse(from: data.slice(from: offset, length: Modulation.dataSize)) {
+            var size = Modulation.dataSize
+            switch Modulation.parse(from: data.slice(from: offset, length: size)) {
             case .success(let modulation):
                 temp.modulation = modulation
             case .failure(let error):
                 return .failure(error)
             }
-            offset += Modulation.dataSize
+            offset += size
             
+            size = PanSettings.dataSize
             b = data.next(&offset)
             temp.keyOnDelay = Int(b)
             
-            switch PanSettings.parse(from: data.slice(from: offset, length: PanSettings.dataSize)) {
+            switch PanSettings.parse(from: data.slice(from: offset, length: size)) {
             case .success(let pan):
                 temp.pan = pan
             case .failure(let error):
@@ -223,39 +227,44 @@ public struct Source {
 
         var temp = Source()
         
-        switch Control.parse(from: data.slice(from: offset, length: Control.dataSize)) {
+        var size = Control.dataSize
+        switch Control.parse(from: data.slice(from: offset, length: size)) {
         case .success(let control):
             temp.control = control
         case .failure(let error):
             return .failure(error)
         }
-        offset += Control.dataSize
+        offset += size
         
-        switch Oscillator.parse(from: data.slice(from: offset, length: Oscillator.dataSize)) {
+        size = Oscillator.dataSize
+        switch Oscillator.parse(from: data.slice(from: offset, length: size)) {
         case .success(let osc):
             temp.oscillator = osc
         case .failure(let error):
             return .failure(error)
         }
-        offset += Oscillator.dataSize
+        offset += size
         
-        switch Filter.parse(from: data.slice(from: offset, length: Filter.dataSize)) {
+        size = Filter.dataSize
+        switch Filter.parse(from: data.slice(from: offset, length: size)) {
         case .success(let filter):
             temp.filter = filter
         case .failure(let error):
             return .failure(error)
         }
-        offset += Filter.dataSize
+        offset += size
 
-        switch Amplifier.parse(from: data.slice(from: offset, length: Amplifier.dataSize)) {
+        size = Amplifier.dataSize
+        switch Amplifier.parse(from: data.slice(from: offset, length: size)) {
         case .success(let amp):
             temp.amplifier = amp
         case .failure(let error):
             return .failure(error)
         }
-        offset += Amplifier.dataSize
+        offset += size
  
-        switch LFO.parse(from: data.slice(from: offset, length: LFO.dataSize)) {
+        size = LFO.dataSize
+        switch LFO.parse(from: data.slice(from: offset, length: size)) {
         case .success(let lfo):
             temp.lfo = lfo
         case .failure(let error):

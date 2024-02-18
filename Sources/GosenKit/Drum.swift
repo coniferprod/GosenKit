@@ -15,9 +15,7 @@ public struct DrumWave {
     }
     
     /// Gets the name of this drum wave.
-    public var name: String {
-        return DrumWave.names[Int(self.number)]
-    }
+    public var name: String { DrumWave.names[Int(self.number)] }
     
     /// Gets the drum wave number from `msb` and ` lsb`.
     public static func numberFromBytes(_ msb: Byte, _ lsb: Byte) -> Int? {
@@ -499,30 +497,33 @@ public struct DrumSource {
         b = data.next(&offset)
         temp.fine = Fine(Int(b) - 64)
         
-        let pitchEnvData = data.slice(from: offset, length: PitchEnvelope.dataSize)
+        var size = PitchEnvelope.dataSize
+        let pitchEnvData = data.slice(from: offset, length: size)
         switch PitchEnvelope.parse(from: pitchEnvData) {
         case .success(let pitchEnv):
             temp.pitchEnvelope = pitchEnv
         case .failure(let error):
             return .failure(error)
         }
-        offset += PitchEnvelope.dataSize
+        offset += size
         
         b = data.next(&offset)
         temp.filterCutoff = Level(Int(b))
         b = data.next(&offset)
         temp.filterCutoffVelocityDepth = Depth(Int(b) - 64)
 
-        let ampEnvData = data.slice(from: offset, length: AmplifierEnvelope.dataSize)
+        size = AmplifierEnvelope.dataSize
+        let ampEnvData = data.slice(from: offset, length: size)
         switch AmplifierEnvelope.parse(from: ampEnvData) {
         case .success(let ampEnv):
             temp.amplifierEnvelope = ampEnv
         case .failure(let error):
             return .failure(error)
         }
-        offset += AmplifierEnvelope.dataSize
+        offset += size
         
-        let controlData = data.slice(from: offset, length: VelocityControl.dataSize)
+        size = VelocityControl.dataSize
+        let controlData = data.slice(from: offset, length: size)
         switch VelocityControl.parse(from: controlData) {
         case .success(let control):
             temp.amplifierVelocitySensitivity = control
@@ -536,9 +537,11 @@ public struct DrumSource {
 
 extension DrumSource.PitchEnvelope.Level: RangedInt {
     public static let range: ClosedRange<Int> = -63...63
-    public static let defaultValue = 1
+    public static let defaultValue = 0
     
     public init() {
+        assert(Self.range.contains(Self.defaultValue), "Default value must be in range")
+
         _value = Self.defaultValue
     }
     
@@ -553,9 +556,11 @@ extension DrumSource.PitchEnvelope.Level: RangedInt {
 
 extension DrumSource.PitchEnvelope.Time: RangedInt {
     public static let range: ClosedRange<Int> = 0...127
-    public static let defaultValue = 1
+    public static let defaultValue = 0
     
     public init() {
+        assert(Self.range.contains(Self.defaultValue), "Default value must be in range")
+
         _value = Self.defaultValue
     }
     
@@ -573,6 +578,8 @@ extension DrumSource.VelocityControl.Level: RangedInt {
     public static let defaultValue = 0
     
     public init() {
+        assert(Self.range.contains(Self.defaultValue), "Default value must be in range")
+
         _value = Self.defaultValue
     }
     
@@ -590,6 +597,8 @@ extension DrumSource.VelocityControl.Time: RangedInt {
     public static let defaultValue = 0
     
     public init() {
+        assert(Self.range.contains(Self.defaultValue), "Default value must be in range")
+
         _value = Self.defaultValue
     }
     
@@ -703,23 +712,25 @@ public struct DrumInstrument {
         
         var temp = DrumInstrument()
 
-        let commonData = data.slice(from: offset, length: Common.dataSize)
+        var size = Common.dataSize
+        let commonData = data.slice(from: offset, length: size)
         switch Common.parse(from: commonData) {
         case .success(let common):
             temp.common = common
         case .failure(let error):
             return .failure(error)
         }
-        offset += Common.dataSize
+        offset += size
 
-        let sourceData = data.slice(from: offset, length: DrumSource.dataSize)
+        size = DrumSource.dataSize
+        let sourceData = data.slice(from: offset, length: size)
         switch DrumSource.parse(from: sourceData) {
         case .success(let source):
             temp.source = source
         case .failure(let error):
             return .failure(error)
         }
-        offset += Source.dataSize
+        offset += size
         
         return .success(temp)
     }
@@ -787,16 +798,17 @@ public struct DrumKit {
             print("Parsing drum kit common data, \(data.count) bytes")
 
             var temp = Common()  // initialize with defaults, then fill in
-            
+
+            var size = EffectSettings.dataSize
             print("Next: Drum Kit Common, EffectSettings, offset = \(offset)")
-            let effectData = data.slice(from: offset, length: EffectSettings.dataSize)
+            let effectData = data.slice(from: offset, length: size)
             switch EffectSettings.parse(from: effectData) {
             case .success(let effects):
                 temp.effects = effects
             case .failure(let error):
                 return .failure(error)
             }
-            offset += EffectSettings.dataSize
+            offset += size
 
             print("Next: Drum Kit Common, GEQ, offset = \(offset)")
             var levels = [Int]()
@@ -813,21 +825,23 @@ public struct DrumKit {
             offset += 1
             
             print("Next: Drum Kit Common, Name, offset = \(offset)")
-            temp.name = PatchName(data: data.slice(from: offset, length: PatchName.length))
-            offset += PatchName.length
+            size = PatchName.length
+            temp.name = PatchName(data: data.slice(from: offset, length: size))
+            offset += size
             
             print("Next: Drum Kit Common, Volume, offset = \(offset)")
             b = data.next(&offset)
             temp.volume = Level(Int(b))
             
             print("Next: Drum Kit Common, EffectControl, offset = \(offset)")
-            switch EffectControl.parse(from: data.slice(from: offset, length: EffectControl.dataSize)) {
+            size = EffectControl.dataSize
+            switch EffectControl.parse(from: data.slice(from: offset, length: size)) {
             case .success(let control):
                 temp.effectControl = control
             case .failure(let error):
                 return .failure(error)
             }
-            offset += EffectControl.dataSize
+            offset += size
 
             return .success(temp)
         }
@@ -851,8 +865,9 @@ public struct DrumKit {
         let _ = data.next(&offset)  // checksum
 
         var temp = DrumKit()
-        
-        let commonData = data.slice(from: offset, length: DrumKit.Common.dataSize)
+
+        let size = DrumKit.Common.dataSize
+        let commonData = data.slice(from: offset, length: size)
         switch Common.parse(from: commonData) {
         case .success(let common):
             temp.common = common
@@ -908,7 +923,7 @@ extension DrumInstrument.Common: SystemExclusiveData {
         return data
     }
     
-    public var dataLength: Int { return DrumInstrument.Common.dataSize }
+    public var dataLength: Int { DrumInstrument.Common.dataSize }
     
     public static let dataSize = 6
 }
@@ -924,7 +939,7 @@ extension DrumSource.PitchEnvelope {
         return data
     }
     
-    public var dataLength: Int { return DrumSource.PitchEnvelope.dataSize }
+    public var dataLength: Int { DrumSource.PitchEnvelope.dataSize }
     
     public static let dataSize = 3
 }
@@ -961,7 +976,7 @@ extension DrumSource {
         return data
     }
     
-    public var dataLength: Int { return DrumSource.dataSize }
+    public var dataLength: Int { DrumSource.dataSize }
     
     public static let dataSize = 18
 }
@@ -994,7 +1009,7 @@ extension DrumSource.VelocityControl: SystemExclusiveData {
         return data
     }
     
-    public var dataLength: Int { return DrumSource.PitchEnvelope.dataSize }
+    public var dataLength: Int { DrumSource.PitchEnvelope.dataSize }
     
     public static let dataSize = 3
 }
@@ -1010,7 +1025,7 @@ extension DrumInstrument: SystemExclusiveData {
         return data
     }
     
-    public var dataLength: Int { return DrumInstrument.Common.dataSize }
+    public var dataLength: Int { DrumInstrument.Common.dataSize }
     
     public static let dataSize = 1 + 6 + 18
 }
@@ -1026,7 +1041,7 @@ extension DrumNote: SystemExclusiveData {
         return data
     }
     
-    public var dataLength: Int { return DrumNote.dataSize }
+    public var dataLength: Int { DrumNote.dataSize }
     
     public static let dataSize = 2
 }
@@ -1045,7 +1060,7 @@ extension DrumKit: SystemExclusiveData {
         return data
     }
     
-    public var dataLength: Int { return DrumKit.dataSize }
+    public var dataLength: Int { DrumKit.dataSize }
     
     public static let dataSize = DrumKit.Common.dataSize + DrumKit.noteCount * DrumNote.dataSize
 }
@@ -1063,7 +1078,7 @@ extension DrumKit.Common: SystemExclusiveData {
         return data
     }
     
-    public var dataLength: Int { return DrumKit.Common.dataSize }
+    public var dataLength: Int { DrumKit.Common.dataSize }
     
     public static let dataSize = 54
 }

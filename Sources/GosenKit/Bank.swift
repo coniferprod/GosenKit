@@ -62,9 +62,10 @@ public struct MultiBank {
         
         var temp = MultiBank()
         
+        let size = MultiPatch.dataSize
         var patches = [MultiPatch]()
         for _ in 0..<MultiBank.patchCount {
-            let patchData = data.slice(from: offset, length: MultiPatch.dataSize)
+            let patchData = data.slice(from: offset, length: size)
             //print("patchData: from: \(offset) length: \(patchData.count)")
             switch MultiPatch.parse(from: patchData) {
             case .success(let multiPatch):
@@ -73,7 +74,7 @@ public struct MultiBank {
             case .failure(let error):
                 return .failure(error)
             }
-            offset += MultiPatch.dataSize
+            offset += size
         }
         
         temp.patches = patches

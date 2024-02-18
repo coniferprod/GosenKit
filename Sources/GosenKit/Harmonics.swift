@@ -214,6 +214,8 @@ extension HarmonicEnvelope.Rate: RangedInt {
     }
 
     public init() {
+        assert(Self.range.contains(Self.defaultValue), "Default value must be in range")
+
         _value = Self.defaultValue
     }
 
@@ -232,6 +234,8 @@ extension HarmonicEnvelope.Level: RangedInt {
     }
 
     public init() {
+        assert(Self.range.contains(Self.defaultValue), "Default value must be in range")
+
         _value = Self.defaultValue
     }
 
@@ -345,7 +349,7 @@ extension HarmonicEnvelope: SystemExclusiveData {
     }
     
     /// The number of data bytes in the harmonic envelope.
-    public var dataLength: Int { return HarmonicEnvelope.dataSize }
+    public var dataLength: Int { HarmonicEnvelope.dataSize }
     
     public static let dataSize = 4 * 2 // four segments with two bytes each
 }
@@ -361,7 +365,7 @@ extension HarmonicLevels: SystemExclusiveData {
     }
     
     /// The number of data bytes in the harmonic levels.
-    public var dataLength: Int { return HarmonicLevels.dataSize }
+    public var dataLength: Int { HarmonicLevels.dataSize }
 
     public static let dataSize: Int = 128
 }

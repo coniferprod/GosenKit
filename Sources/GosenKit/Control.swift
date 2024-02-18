@@ -162,9 +162,11 @@ public struct MacroController {
 
 extension MacroController.Depth: RangedInt {
     public static let range: ClosedRange<Int> = -31...31
-    public static let defaultValue = 1
+    public static let defaultValue = 0
     
     public init() {
+        assert(Self.range.contains(Self.defaultValue), "Default value must be in range")
+
         _value = Self.defaultValue
     }
     
@@ -350,17 +352,17 @@ public struct EffectControl {
         var temp = EffectControl()  // initialize with defaults, then fill in
         
         var offset: Int = 0
-        let length = Source.dataSize
+        let size = Source.dataSize
         
-        switch Source.parse(from: data.slice(from: offset, length: length)) {
+        switch Source.parse(from: data.slice(from: offset, length: size)) {
         case .success(let source):
             temp.source1 = source
         case .failure(let error):
             return .failure(error)
         }
-        offset += length
+        offset += size
         
-        switch Source.parse(from: data.slice(from: offset, length: length)) {
+        switch Source.parse(from: data.slice(from: offset, length: size)) {
         case .success(let source):
             temp.source2 = source
         case .failure(let error):
@@ -406,13 +408,19 @@ public struct AssignableController {
 extension MacroController: SystemExclusiveData {
     public func asData() -> ByteArray {
         var data = ByteArray()
-        [destination1.index, depth1.value + 64, destination2.index, depth2.value + 64].forEach {
+        [
+            destination1.index,
+            depth1.value + 64,
+            destination2.index,
+            depth2.value + 64
+        ]
+        .forEach {
             data.append(Byte($0))
         }
         return data
     }
 
-    public var dataLength: Int { return MacroController.dataSize }
+    public var dataLength: Int { MacroController.dataSize }
     
     public static let dataSize = 4
 }
@@ -427,19 +435,24 @@ extension VelocitySwitch: SystemExclusiveData {
         return data
     }
     
-    public var dataLength: Int { return 1 }
+    public var dataLength: Int { 1 }
 }
 
 extension EffectControl.Source: SystemExclusiveData {
     public func asData() -> ByteArray {
         var data = ByteArray()
-        [source.index, destination.index, depth.value + 64].forEach {
+        [
+            source.index,
+            destination.index,
+            depth.value + 64
+        ]
+        .forEach {
             data.append(Byte($0))
         }
         return data
     }
     
-    public var dataLength: Int { return EffectControl.Source.dataSize }
+    public var dataLength: Int { EffectControl.Source.dataSize }
     
     public static let dataSize = 3
 }
@@ -447,13 +460,18 @@ extension EffectControl.Source: SystemExclusiveData {
 extension AssignableController: SystemExclusiveData {
     public func asData() -> ByteArray {
         var data = ByteArray()
-        [source.index, destination.index, depth.value].forEach {
+        [
+            source.index,
+            destination.index,
+            depth.value
+        ]
+        .forEach {
             data.append(Byte($0))
         }
         return data
     }
     
-    public var dataLength: Int { return AssignableController.dataSize }
+    public var dataLength: Int { AssignableController.dataSize }
     
     public static let dataSize = 3
 }
@@ -468,7 +486,7 @@ extension EffectControl: SystemExclusiveData {
         return data
     }
     
-    public var dataLength: Int { return EffectControl.dataSize }
+    public var dataLength: Int { EffectControl.dataSize }
     
     public static let dataSize = 6
 }
@@ -476,13 +494,19 @@ extension EffectControl: SystemExclusiveData {
 extension SwitchControl: SystemExclusiveData {
     public func asData() -> ByteArray {
         var data = ByteArray()
-        [switch1.index, switch2.index, footSwitch1.index, footSwitch2.index].forEach {
+        [
+            switch1.index,
+            switch2.index,
+            footSwitch1.index,
+            footSwitch2.index
+        ]
+        .forEach {
             data.append(Byte($0))
         }
         return data
     }
     
-    public var dataLength: Int { return 4 }
+    public var dataLength: Int { 4 }
 }
 
 // MARK: - CustomStringConvertible

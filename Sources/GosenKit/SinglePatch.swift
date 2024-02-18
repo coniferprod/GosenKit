@@ -103,14 +103,15 @@ public struct SinglePatch {
             
             var temp = Common()  // initialize with defaults, then fill in
             
-            let effectData = data.slice(from: offset, length: EffectSettings.dataSize)
+            var size = EffectSettings.dataSize
+            let effectData = data.slice(from: offset, length: size)
             switch EffectSettings.parse(from: effectData) {
             case .success(let effects):
                 temp.effects = effects
             case .failure(let error):
                 return .failure(error)
             }
-            offset += EffectSettings.dataSize
+            offset += size
 
             var levels = [Int]()
             for _ in 0..<GEQ.bandCount {
@@ -123,9 +124,10 @@ public struct SinglePatch {
             
             // Eat the drum mark (39)
             offset += 1
-            
-            temp.name = PatchName(data: data.slice(from: offset, length: PatchName.length))
-            offset += PatchName.length
+
+            size = PatchName.length
+            temp.name = PatchName(data: data.slice(from: offset, length: size))
+            offset += size
             
             b = data.next(&offset)
             temp.volume = Volume(Int(b))
@@ -154,13 +156,14 @@ public struct SinglePatch {
             b = data.next(&offset)
             temp.amplitudeModulation = AmplitudeModulation(index: Int(b))!
 
-            switch EffectControl.parse(from: data.slice(from: offset, length: EffectControl.dataSize)) {
+            size = EffectControl.dataSize
+            switch EffectControl.parse(from: data.slice(from: offset, length: size)) {
             case .success(let control):
                 temp.effectControl = control
             case .failure(let error):
                 return .failure(error)
             }
-            offset += EffectControl.dataSize
+            offset += size
 
             b = data.next(&offset)
             let isPortamentoActive = (b == 1)
@@ -235,23 +238,25 @@ public struct SinglePatch {
 
         var temp = SinglePatch()  // initialize with defaults, then fill in
         
-        switch Common.parse(from: data.slice(from: offset, length: Common.dataSize)) {
+        var size = Common.dataSize
+        switch Common.parse(from: data.slice(from: offset, length: size)) {
         case .success(let common):
             temp.common = common
         case .failure(let error):
             return .failure(error)
         }
-        offset += Common.dataSize
+        offset += size
         
+        size = Source.dataSize
         temp.sources.removeAll()  // empty the source list first!
         for _ in 0..<temp.common.sourceCount {
-            switch Source.parse(from: data.slice(from: offset, length: Source.dataSize)) {
+            switch Source.parse(from: data.slice(from: offset, length: size)) {
             case .success(let source):
                 temp.sources.append(source)
             case .failure(let error):
                 return .failure(error)
             }
-            offset += Source.dataSize
+            offset += size
         }
         
         temp.additiveKits = AdditiveKitDictionary()
@@ -259,12 +264,13 @@ public struct SinglePatch {
         // How many additive kits should we expect then?
         let additiveKitCount = temp.sources.filter{ $0.oscillator.wave.isAdditive }.count
         var kitIndex = 0
+        size = AdditiveKit.dataSize
         while kitIndex < additiveKitCount {
-            switch AdditiveKit.parse(from: data.slice(from: offset, length: AdditiveKit.dataSize)) {
+            switch AdditiveKit.parse(from: data.slice(from: offset, length: size)) {
             case .success(let kit):
                 temp.additiveKits["s\(kitIndex + 1)"] = kit
                 kitIndex += 1
-                offset += AdditiveKit.dataSize
+                offset += size
             case .failure(let error):
                 return .failure(error)
             }
@@ -363,7 +369,7 @@ extension SinglePatch: SystemExclusiveData {
 
     /// The length of single patch System Exclusive data.
     public var dataLength: Int {
-        return 1 + Common.dataSize + self.sources.count * Source.dataSize
+        1 + Common.dataSize + self.sources.count * Source.dataSize
     }
 }
 
@@ -425,7 +431,7 @@ extension SinglePatch.Common: SystemExclusiveData {
     }
 
     /// The number of bytes in the single patch common data.
-    public var dataLength: Int { return SinglePatch.Common.dataSize }
+    public var dataLength: Int { SinglePatch.Common.dataSize }
 
     public static let dataSize = 81
 }
