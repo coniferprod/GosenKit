@@ -993,7 +993,7 @@ extension DrumSource.AmplifierEnvelope: SystemExclusiveData {
         return data
     }
     
-    public var dataLength: Int { return DrumSource.AmplifierEnvelope.dataSize }
+    public var dataLength: Int { DrumSource.AmplifierEnvelope.dataSize }
     
     public static let dataSize = 4
 }
