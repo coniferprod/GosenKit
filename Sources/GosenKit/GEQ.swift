@@ -8,9 +8,9 @@ public struct GEQ {
         private var _value: Int
     }
 
-    var levels: [Level]  // 58(-6) ~ 70(+6), so 64 is zero
+    public var levels: [Level]  // 58(-6) ~ 70(+6), so 64 is zero
     
-    init(levels: [Int]) {
+    public init(levels: [Int]) {
         self.levels = [Level]()
         levels.forEach {
             self.levels.append(GEQ.Level($0))
