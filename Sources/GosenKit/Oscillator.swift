@@ -87,7 +87,7 @@ public struct Oscillator {
     
     /// Initializes an oscillator with default settings.
     public init() {
-        wave = Wave(number: 411)
+        wave = .pcm(411)
         coarse = Coarse(0)
         fine = Fine(0)
         keyScalingToPitch = .zeroCent
@@ -105,7 +105,13 @@ public struct Oscillator {
         let waveMSB = b
         b = data.next(&offset)
         let waveLSB = b
-        temp.wave = Wave(msb: waveMSB, lsb: waveLSB)
+        
+        switch Wave.parse(msb: waveMSB, lsb: waveLSB) {
+        case .success(let wave):
+            temp.wave = wave
+        case .failure(let error):
+            return .failure(error)
+        }
         
         b = data.next(&offset)
         temp.coarse = Coarse(Int(b) - 24)

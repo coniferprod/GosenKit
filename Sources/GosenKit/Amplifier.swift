@@ -4,19 +4,12 @@ import SyxPack
 public struct Amplifier {
     /// Amplifier envelope
     public struct Envelope: Equatable {
-        public static func == (lhs: Amplifier.Envelope, rhs: Amplifier.Envelope) -> Bool {
-            return lhs.attackTime == rhs.attackTime &&
-            lhs.decay1Time == rhs.decay1Time
-            && lhs.decay1Level == rhs.decay1Level
-            && lhs.decay2Time == rhs.decay2Time
-            && lhs.decay2Level == rhs.decay2Level
-            && lhs.releaseTime == rhs.releaseTime
-        }
-        
+        /// Amplifier envelope time
         public struct Time {
             private var _value: Int
         }
         
+        /// Amplifier envelope level
         public struct Level {
             private var _value: Int
         }
@@ -31,12 +24,12 @@ public struct Amplifier {
         
         /// Initialize amplifier envelope with default values.
         public init() {
-            attackTime = Time(0)
-            decay1Time = Time(0)
-            decay1Level = Level(127)
-            decay2Time = Time(0)
-            decay2Level = Level(127)
-            releaseTime = Time(0)
+            attackTime = 0
+            decay1Time = 0
+            decay1Level = 127
+            decay2Time = 0
+            decay2Level = 127
+            releaseTime = 0
         }
         
         /// Initialize amplifier envelope with explicit values.
@@ -49,6 +42,7 @@ public struct Amplifier {
             self.releaseTime = Time(releaseTime)
         }
         
+        /// Parse from binary data.
         public static func parse(from data: ByteArray) -> Result<Envelope, ParseError> {
             var offset: Int = 0
             var b: Byte = 0
@@ -75,6 +69,15 @@ public struct Amplifier {
             
             return .success(temp)
         }
+        
+        public static func == (lhs: Amplifier.Envelope, rhs: Amplifier.Envelope) -> Bool {
+            return lhs.attackTime == rhs.attackTime &&
+            lhs.decay1Time == rhs.decay1Time
+            && lhs.decay1Level == rhs.decay1Level
+            && lhs.decay2Time == rhs.decay2Time
+            && lhs.decay2Level == rhs.decay2Level
+            && lhs.releaseTime == rhs.releaseTime
+        }
     }
 
     /// Amplifier modulation settings.
@@ -96,10 +99,10 @@ public struct Amplifier {
             public var release: Time
             
             public init() {
-                level = Level(0)
-                attackTime = Time(0)
-                decay1Time = Time(0)
-                release = Time(0)
+                level = 0
+                attackTime = 0
+                decay1Time = 0
+                release = 0
             }
             
             public init(level: Int, attackTime: Int, decay1Time: Int, release: Int) {
@@ -149,10 +152,10 @@ public struct Amplifier {
             public var release: Time
             
             public init() {
-                level = Level(0)
-                attackTime = Time(0)
-                decay1Time = Time(0)
-                release = Time(0)
+                level = 0
+                attackTime = 0
+                decay1Time = 0
+                release = 0
             }
             
             public init(level: Int, attackTime: Int, decay1Time: Int, release: Int) {
@@ -224,11 +227,12 @@ public struct Amplifier {
     public var modulation: Modulation
     
     public init() {
-        velocityCurve = VelocityCurve(1)
+        velocityCurve = 1
         envelope = Envelope()
         modulation = Modulation()
     }
 
+    /// Parse from binary data.
     public static func parse(from data: ByteArray) -> Result<Amplifier, ParseError> {
         var offset: Int = 0
         var b: Byte = 0
@@ -450,6 +454,20 @@ extension Amplifier.Envelope.Level: RangedInt {
     }
 }
 
+extension Amplifier.Envelope.Level: ExpressibleByIntegerLiteral {
+    /// Initialize with an integer literal.
+    public init(integerLiteral value: Int) {
+        _value = Self.range.clamp(value)
+    }
+}
+
+extension Amplifier.Envelope.Time: ExpressibleByIntegerLiteral {
+    /// Initialize with an integer literal.
+    public init(integerLiteral value: Int) {
+        _value = Self.range.clamp(value)
+    }
+}
+
 extension Amplifier.Modulation.KeyScalingControl.Time: RangedInt {
     public static let range: ClosedRange<Int> = -63...63
 
@@ -466,6 +484,13 @@ extension Amplifier.Modulation.KeyScalingControl.Time: RangedInt {
     }
 
     public init(_ value: Int) {
+        _value = Self.range.clamp(value)
+    }
+}
+
+extension Amplifier.Modulation.KeyScalingControl.Time: ExpressibleByIntegerLiteral {
+    /// Initialize with an integer literal.
+    public init(integerLiteral value: Int) {
         _value = Self.range.clamp(value)
     }
 }
@@ -490,6 +515,13 @@ extension Amplifier.Modulation.KeyScalingControl.Level: RangedInt {
     }
 }
 
+extension Amplifier.Modulation.KeyScalingControl.Level: ExpressibleByIntegerLiteral {
+    /// Initialize with an integer literal.
+    public init(integerLiteral value: Int) {
+        _value = Self.range.clamp(value)
+    }
+}
+
 extension Amplifier.Modulation.VelocityControl.Time: RangedInt {
     public static let range: ClosedRange<Int> = -63...63
 
@@ -510,6 +542,13 @@ extension Amplifier.Modulation.VelocityControl.Time: RangedInt {
     }
 }
 
+extension Amplifier.Modulation.VelocityControl.Time: ExpressibleByIntegerLiteral {
+    /// Initialize with an integer literal.
+    public init(integerLiteral value: Int) {
+        _value = Self.range.clamp(value)
+    }
+}
+
 extension Amplifier.Modulation.VelocityControl.Level: RangedInt {
     public static let range: ClosedRange<Int> = 0...63
 
@@ -526,6 +565,13 @@ extension Amplifier.Modulation.VelocityControl.Level: RangedInt {
     }
 
     public init(_ value: Int) {
+        _value = Self.range.clamp(value)
+    }
+}
+
+extension Amplifier.Modulation.VelocityControl.Level: ExpressibleByIntegerLiteral {
+    /// Initialize with an integer literal.
+    public init(integerLiteral value: Int) {
         _value = Self.range.clamp(value)
     }
 }

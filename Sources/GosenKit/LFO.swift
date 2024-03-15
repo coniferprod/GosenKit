@@ -25,8 +25,8 @@ public struct LFO {
         public var keyScaling: Depth
         
         public init() {
-            self.depth = Depth(0)
-            self.keyScaling = Depth(0)
+            self.depth = 0
+            self.keyScaling = 0
         }
         
         public init(depth: Depth, keyScaling: Depth) {
@@ -47,14 +47,14 @@ public struct LFO {
     
     public init() {
         waveform = .square
-        speed = Level(0)
-        fadeInTime = Level(0)
-        fadeInToSpeed = Depth(0)
-        delayOnset = Level(0)
+        speed = 0
+        fadeInTime = 0
+        fadeInToSpeed = 0
+        delayOnset = 0
         
-        vibrato = Control(depth: Depth(0), keyScaling: Depth(0))
-        growl = Control(depth: Depth(0), keyScaling: Depth(0))
-        tremolo = Control(depth: Depth(0), keyScaling: Depth(0))
+        vibrato = Control(depth: 0, keyScaling: 0)
+        growl = Control(depth: 0, keyScaling: 0)
+        tremolo = Control(depth: 0, keyScaling: 0)
     }
     
     public static func parse(from data: ByteArray) -> Result<LFO, ParseError> {

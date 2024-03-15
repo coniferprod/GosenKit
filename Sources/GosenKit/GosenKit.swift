@@ -92,6 +92,13 @@ extension Volume: RangedInt {
     }
 }
 
+extension Volume: ExpressibleByIntegerLiteral {
+    /// Initialize with an integer literal.
+    public init(integerLiteral value: Int) {
+        _value = Self.range.clamp(value)
+    }
+}
+
 public struct Level {
     private var _value: Int
 }
@@ -112,6 +119,13 @@ extension Level: RangedInt {
     }
 
     public init(_ value: Int) {
+        _value = Self.range.clamp(value)
+    }
+}
+
+extension Level: ExpressibleByIntegerLiteral {
+    /// Initialize with an integer literal.
+    public init(integerLiteral value: Int) {
         _value = Self.range.clamp(value)
     }
 }
@@ -140,6 +154,13 @@ extension Depth: RangedInt {
     }
 }
 
+extension Depth: ExpressibleByIntegerLiteral {
+    /// Initialize with an integer literal.
+    public init(integerLiteral value: Int) {
+        _value = Self.range.clamp(value)
+    }
+}
+
 public struct Pan {
     private var _value: Int
 }
@@ -160,6 +181,13 @@ extension Pan: RangedInt {
     }
 
     public init(_ value: Int) {
+        _value = Self.range.clamp(value)
+    }
+}
+
+extension Pan: ExpressibleByIntegerLiteral {
+    /// Initialize with an integer literal.
+    public init(integerLiteral value: Int) {
         _value = Self.range.clamp(value)
     }
 }
@@ -210,6 +238,13 @@ extension VelocityCurve: RangedInt {
     }
 }
 
+extension VelocityCurve: ExpressibleByIntegerLiteral {
+    /// Initialize with an integer literal.
+    public init(integerLiteral value: Int) {
+        _value = Self.range.clamp(value)
+    }
+}
+
 public struct ControlDepth {
     private var _value: Int
 }
@@ -230,6 +265,13 @@ extension ControlDepth: RangedInt {
 
     public var value: Int {
         return _value
+    }
+}
+
+extension ControlDepth: ExpressibleByIntegerLiteral {
+    /// Initialize with an integer literal.
+    public init(integerLiteral value: Int) {
+        _value = Self.range.clamp(value)
     }
 }
 
@@ -256,6 +298,13 @@ extension Coarse: RangedInt {
     }
 }
 
+extension Coarse: ExpressibleByIntegerLiteral {
+    /// Initialize with an integer literal.
+    public init(integerLiteral value: Int) {
+        _value = Self.range.clamp(value)
+    }
+}
+
 public struct Fine {
     private var _value: Int
 }
@@ -279,6 +328,13 @@ extension Fine: RangedInt {
     }
 }
 
+extension Fine: ExpressibleByIntegerLiteral {
+    /// Initialize with an integer literal.
+    public init(integerLiteral value: Int) {
+        _value = Self.range.clamp(value)
+    }
+}
+
 public struct EffectDepth {
     private var _value: Int
 }
@@ -299,6 +355,37 @@ extension EffectDepth: RangedInt {
     }
 
     public init(_ value: Int) {
+        _value = Self.range.clamp(value)
+    }
+}
+
+public struct EffectPath {
+    private var _value: Int
+}
+
+extension EffectPath: RangedInt {
+    public static let range: ClosedRange<Int> = 1...4
+
+    public static let defaultValue = 1
+
+    public var value: Int {
+        return _value
+    }
+
+    public init() {
+        assert(Self.range.contains(Self.defaultValue), "Default value must be in range")
+
+        _value = Self.defaultValue
+    }
+
+    public init(_ value: Int) {
+        _value = Self.range.clamp(value)
+    }
+}
+
+extension EffectPath: ExpressibleByIntegerLiteral {
+    /// Initialize with an integer literal.
+    public init(integerLiteral value: Int) {
         _value = Self.range.clamp(value)
     }
 }
@@ -327,6 +414,13 @@ extension Resonance: RangedInt {
     }
 }
 
+extension Resonance: ExpressibleByIntegerLiteral {
+    /// Initialize with an integer literal.
+    public init(integerLiteral value: Int) {
+        _value = Self.range.clamp(value)
+    }
+}
+
 public struct Gain {
     private var _value: Int
 }
@@ -351,6 +445,75 @@ extension Gain: RangedInt {
     }
 }
 
+extension Gain: ExpressibleByIntegerLiteral {
+    /// Initialize with an integer literal.
+    public init(integerLiteral value: Int) {
+        _value = Self.range.clamp(value)
+    }
+}
+
+public struct BenderPitch {
+    private var _value: Int
+}
+
+extension BenderPitch: RangedInt {
+    public static let range: ClosedRange<Int> = -12...12
+
+    public static let defaultValue = 0
+
+    public var value: Int {
+        return _value
+    }
+
+    public init() {
+        assert(Self.range.contains(Self.defaultValue), "Default value must be in range")
+
+        _value = Self.defaultValue
+    }
+
+    public init(_ value: Int) {
+        _value = Self.range.clamp(value)
+    }
+}
+
+extension BenderPitch: ExpressibleByIntegerLiteral {
+    /// Initialize with an integer literal.
+    public init(integerLiteral value: Int) {
+        _value = Self.range.clamp(value)
+    }
+}
+
+public struct BenderCutoff {
+    private var _value: Int
+}
+
+extension BenderCutoff: RangedInt {
+    public static let range: ClosedRange<Int> = 0...31
+
+    public static let defaultValue = 0
+
+    public var value: Int {
+        return _value
+    }
+
+    public init() {
+        assert(Self.range.contains(Self.defaultValue), "Default value must be in range")
+
+        _value = Self.defaultValue
+    }
+
+    public init(_ value: Int) {
+        _value = Self.range.clamp(value)
+    }
+}
+
+extension BenderCutoff: ExpressibleByIntegerLiteral {
+    /// Initialize with an integer literal.
+    public init(integerLiteral value: Int) {
+        _value = Self.range.clamp(value)
+    }
+}
+
 public struct MIDINote: Equatable {
     private var _value: Int
 }
@@ -371,6 +534,13 @@ extension MIDINote: RangedInt {
     }
 
     public init(_ value: Int) {
+        _value = Self.range.clamp(value)
+    }
+}
+
+extension MIDINote: ExpressibleByIntegerLiteral {
+    /// Initialize with an integer literal.
+    public init(integerLiteral value: Int) {
         _value = Self.range.clamp(value)
     }
 }

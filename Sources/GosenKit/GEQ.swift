@@ -37,3 +37,10 @@ extension GEQ.Level: RangedInt {
         _value = Self.range.clamp(value)
     }
 }
+
+extension GEQ.Level: ExpressibleByIntegerLiteral {
+    /// Initialize with an integer literal.
+    public init(integerLiteral value: Int) {
+        _value = Self.range.clamp(value)
+    }
+}

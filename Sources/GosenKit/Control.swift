@@ -122,9 +122,9 @@ public struct MacroController {
     
     public init() {
         destination1 = .cutoffOffset
-        depth1 = Depth(0)
+        depth1 = 0
         destination2 = .cutoffOffset
-        depth2 = Depth(0)
+        depth2 = 0
     }
     
     public init(
@@ -176,6 +176,13 @@ extension MacroController.Depth: RangedInt {
 
     public var value: Int {
         return _value
+    }
+}
+
+extension MacroController.Depth: ExpressibleByIntegerLiteral {
+    /// Initialize with an integer literal.
+    public init(integerLiteral value: Int) {
+        _value = Self.range.clamp(value)
     }
 }
 
@@ -318,7 +325,7 @@ public struct EffectControl {
         public init() {
             source = .bender
             destination = .reverbDryWet1
-            depth = ControlDepth(0)
+            depth = 0
         }
         
         public static func parse(from data: ByteArray) -> Result<Source, ParseError> {
@@ -381,7 +388,7 @@ public struct AssignableController {
     public init() {
         source = .bender
         destination = .cutoffOffset
-        depth = ControlDepth(0)
+        depth = 0
     }
     
     public static func parse(from data: ByteArray) -> Result<AssignableController, ParseError> {

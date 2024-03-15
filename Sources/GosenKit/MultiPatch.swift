@@ -21,7 +21,7 @@ public struct MultiPatch {
             effects = EffectSettings()
             geq = GEQ(levels: [Int](repeating: 0, count: GEQ.bandCount))
             name = PatchName("NewMulti")
-            volume = Level(127)
+            volume = 127
             sectionMutes = [Bool](repeating: false, count: MultiPatch.sectionCount)
             effectControl = EffectControl()
         }
@@ -104,7 +104,7 @@ public struct MultiPatch {
         public var single: InstrumentNumber
         public var volume: Level  // 0~127
         public var pan: Int  // 0~127  // *really?*
-        public var effectPath: Int  // 0~3
+        public var effectPath: EffectPath  // 0~3 in SysEx, store as 1~4
         public var transpose: Transpose  // SysEx 40~88 = -24~+24
         public var tune: Int  // SysEx 1~127 = -63~+63
         public var zone: Zone
@@ -114,12 +114,12 @@ public struct MultiPatch {
         /// Initializes a multi section with defaults.
         public init() {
             single = InstrumentNumber(number: 0)
-            volume = Level(127)
+            volume = 127
             pan = 0
-            effectPath = 0
+            effectPath = 1
             transpose = Transpose(0)
             tune = 0
-            zone = Zone(high: Key(note: MIDINote(0)), low: Key(note: MIDINote(127)))
+            zone = Zone(low: Key(note: 0), high: Key(note: 127))
             velocitySwitch = VelocitySwitch(kind: .off, threshold: 0)  // TODO: check these
             receiveChannel = MIDIChannel(1)
         }
@@ -147,7 +147,7 @@ public struct MultiPatch {
             temp.pan = Int(b)
 
             b = data.next(&offset)
-            temp.effectPath = Int(b)
+            temp.effectPath = EffectPath(Int(b) + 1)
             
             b = data.next(&offset)
             temp.transpose = Transpose(Int(b) - 64)  // SysEx 40~88 to -24~+24
@@ -160,8 +160,9 @@ public struct MultiPatch {
             b = data.next(&offset)
             let zoneHigh = b
             temp.zone = Zone(
-                high: Key(note: MIDINote(Int(zoneHigh))),
-                low: Key(note: MIDINote(Int(zoneLow))))
+                low: Key(note: MIDINote(Int(zoneLow))),
+                high: Key(note: MIDINote(Int(zoneHigh)))
+            )
 
             var velocitySwitchBytes = ByteArray()
             b = data.next(&offset)
@@ -393,7 +394,7 @@ extension MultiPatch.Section: SystemExclusiveData {
         [
             volume.value,
             pan,
-            effectPath,
+            effectPath.value - 1,  // adjust to 0~3
             transpose.value + 64,
             tune + 64,
             zone.low.note.value,

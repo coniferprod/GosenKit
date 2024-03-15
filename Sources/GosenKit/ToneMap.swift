@@ -12,7 +12,9 @@ public class ToneMap {
     
     /// Initializes a tone map from System Exclusive data.
     public init?(data: ByteArray) {
-        guard data.count == ToneMap.dataSize else {
+        guard 
+            data.count == ToneMap.dataSize
+        else {
             return nil
         }
         
@@ -62,9 +64,12 @@ public class ToneMap {
     ///      - tone: The tone number from 1 to 128
     /// - Returns: `true` if the tone is included, `false` if not
     public func includes(tone: Int) -> Bool {
-        guard (1...maxCount).contains(tone) else {
+        guard
+            (1...maxCount).contains(tone)
+        else {
             return false
         }
+
         return self.included[tone - 1]  // adjusted to 0...127
     }
 }

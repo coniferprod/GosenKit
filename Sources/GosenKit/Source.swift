@@ -102,7 +102,7 @@ public struct Source {
             /// Initializes default pan settings.
             public init() {
                 self.kind = .normal
-                self.value = Pan(0)
+                self.value = 0
             }
             
             /// Initializes pan settings from kind and value.
@@ -130,19 +130,19 @@ public struct Source {
         public var zone: Zone
         
         public var velocitySwitch: VelocitySwitch
-        public var effectPath: Int
-        public var volume: Int
-        public var benderPitch: Int
-        public var benderCutoff: Int
+        public var effectPath: EffectPath
+        public var volume: Volume
+        public var benderPitch: BenderPitch
+        public var benderCutoff: BenderCutoff
         public var modulation: Modulation
-        public var keyOnDelay: Int
+        public var keyOnDelay: Level
         public var pan: PanSettings
         
         /// Initializes default control settings.
         public init() {
-            zone = Zone(high: Key(note: MIDINote(127)), low: Key(note: MIDINote(0)))
+            zone = Zone(low: Key(note: 0), high: Key(note: 127))
             velocitySwitch = VelocitySwitch(kind: .off, threshold: 4)
-            effectPath = 0
+            effectPath = 1
             volume = 120
             benderPitch = 0
             benderCutoff = 0
@@ -161,7 +161,7 @@ public struct Source {
             let zoneLow = Key(note: MIDINote(Int(b)))
             b = data.next(&offset)
             let zoneHigh = Key(note: MIDINote(Int(b)))
-            temp.zone = Zone(high: zoneHigh, low: zoneLow)
+            temp.zone = Zone(low: zoneLow, high: zoneHigh)
             
             b = data.next(&offset)
             switch VelocitySwitch.parse(from: [b]) {
@@ -172,16 +172,16 @@ public struct Source {
             }
             
             b = data.next(&offset)
-            temp.effectPath = Int(b)
+            temp.effectPath = EffectPath(Int(b))
             
             b = data.next(&offset)
-            temp.volume = Int(b)
+            temp.volume = Volume(Int(b))
             
             b = data.next(&offset)
-            temp.benderPitch = Int(b)
+            temp.benderPitch = BenderPitch(Int(b) - 12)  // adjust 0...24 to -12...+12
             
             b = data.next(&offset)
-            temp.benderCutoff = Int(b)
+            temp.benderCutoff = BenderCutoff(Int(b))
             
             var size = Modulation.dataSize
             switch Modulation.parse(from: data.slice(from: offset, length: size)) {
@@ -194,7 +194,7 @@ public struct Source {
             
             size = PanSettings.dataSize
             b = data.next(&offset)
-            temp.keyOnDelay = Int(b)
+            temp.keyOnDelay = Level(Int(b))
             
             switch PanSettings.parse(from: data.slice(from: offset, length: size)) {
             case .success(let pan):
@@ -317,12 +317,12 @@ extension Source.Control: SystemExclusiveData {
         data.append(Byte(zone.low.note.value))
         data.append(Byte(zone.high.note.value))
         data.append(contentsOf: velocitySwitch.asData())
-        data.append(Byte(effectPath))
-        data.append(Byte(volume))
-        data.append(Byte(benderPitch))
-        data.append(Byte(benderCutoff))
+        data.append(Byte(effectPath.value - 1))  // adjust to 0~3
+        data.append(Byte(volume.value))
+        data.append(Byte(benderPitch.value + 12))  // adjust -12...+12 to 0...24
+        data.append(Byte(benderCutoff.value))
         data.append(contentsOf: modulation.asData())
-        data.append(Byte(keyOnDelay))
+        data.append(Byte(keyOnDelay.value))
         data.append(contentsOf: pan.asData())
 
         return data

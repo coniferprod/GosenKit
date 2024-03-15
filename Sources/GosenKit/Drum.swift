@@ -380,9 +380,9 @@ public struct DrumSource {
         
         /// Initalize velocity control settings with default values.
         public init() {
-            self.level = Level(0)
-            self.attackTime = Time(0)
-            self.decay1Time = Time(0)
+            self.level = 0
+            self.attackTime = 0
+            self.decay1Time = 0
         }
         
         /// Initialize velocity control settings.
@@ -421,10 +421,10 @@ public struct DrumSource {
         
         /// Initialize drum source amplifier envelope with default values.
         public init() {
-            self.attackTime = Level(0)
-            self.decay1Time = Level(0)
-            self.decay1Level = Level(0)
-            self.releaseTime = Level(0)
+            self.attackTime = 0
+            self.decay1Time = 0
+            self.decay1Level = 0
+            self.releaseTime = 0
         }
         
         /// Parse drum source amplifier envelope from MIDI System Exclusive data.
@@ -460,10 +460,10 @@ public struct DrumSource {
     
     /// Initialize drum source with default values.
     public init() {
-        self.volume = Level(100)
-        self.pan = Pan(0)
+        self.volume = 100
+        self.pan = 0
         self.wave = DrumWave(number: 1)
-        self.coarse = Coarse(0)
+        self.coarse = 0
         self.fine = Fine(0)
         self.pitchEnvelope = PitchEnvelope()
         self.filterCutoff = Level(0)
@@ -554,6 +554,13 @@ extension DrumSource.PitchEnvelope.Level: RangedInt {
     }
 }
 
+extension DrumSource.PitchEnvelope.Level: ExpressibleByIntegerLiteral {
+    /// Initialize with an integer literal.
+    public init(integerLiteral value: Int) {
+        _value = Self.range.clamp(value)
+    }
+}
+
 extension DrumSource.PitchEnvelope.Time: RangedInt {
     public static let range: ClosedRange<Int> = 0...127
     public static let defaultValue = 0
@@ -592,6 +599,13 @@ extension DrumSource.VelocityControl.Level: RangedInt {
     }
 }
 
+extension DrumSource.VelocityControl.Level: ExpressibleByIntegerLiteral {
+    /// Initialize with an integer literal.
+    public init(integerLiteral value: Int) {
+        _value = Self.range.clamp(value)
+    }
+}
+
 extension DrumSource.VelocityControl.Time: RangedInt {
     public static let range: ClosedRange<Int> = -63...63
     public static let defaultValue = 0
@@ -608,6 +622,13 @@ extension DrumSource.VelocityControl.Time: RangedInt {
 
     public var value: Int {
         return _value
+    }
+}
+
+extension DrumSource.VelocityControl.Time: ExpressibleByIntegerLiteral {
+    /// Initialize with an integer literal.
+    public init(integerLiteral value: Int) {
+        _value = Self.range.clamp(value)
     }
 }
 
@@ -628,11 +649,11 @@ public struct DrumInstrument {
         public var volume: Level  // 0~127
         public var gate: Gate
         public var exclusionGroup: ExclusionGroup
-        public var effectPath: Int  // 1~4 (in SysEx 0~3)
+        public var effectPath: EffectPath  // 1~4 (in SysEx 0~3)
         
         /// Initialize drum instrument common data with default values.
         public init() {
-            self.volume = Level(100)
+            self.volume = 100
             self.gate = .off
             self.exclusionGroup = .off
             self.effectPath = 1
@@ -667,7 +688,7 @@ public struct DrumInstrument {
             }
             
             b = data.next(&offset)
-            temp.effectPath = Int(b + 1)  // adjust to 1...4
+            temp.effectPath = EffectPath(Int(b + 1))  // adjust to 1...4
             
             b = data.next(&offset)  // src_mute is fixed to 0x01, so don't care
             
@@ -787,7 +808,7 @@ public struct DrumKit {
             self.effects = EffectSettings()
             self.geq = GEQ(levels: [2, 1, 0, 0, -1, -2, 1])
             self.name = PatchName("DrumKit")
-            self.volume = Level(100)
+            self.volume = 100
             self.effectControl = EffectControl()
         }
         

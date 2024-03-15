@@ -42,17 +42,17 @@ public struct Filter {
         public var velocityToDecay1: Level
         
         public init() {
-            attackTime = Time(0)
-            decay1Time = Time(0)
-            decay1Level = Level(0)
-            decay2Time = Time(0)
-            decay2Level = Level(0)
-            releaseTime = Time(0)
-            keyScalingToAttack = Level(0)
-            keyScalingToDecay1 = Level(0)
-            velocityToEnvelope = Level(0)
-            velocityToAttack = Level(0)
-            velocityToDecay1 = Level(0)
+            attackTime = 0
+            decay1Time = 0
+            decay1Level = 0
+            decay2Time = 0
+            decay2Level = 0
+            releaseTime = 0
+            keyScalingToAttack = 0
+            keyScalingToDecay1 = 0
+            velocityToEnvelope = 0
+            velocityToAttack = 0
+            velocityToDecay1 = 0
         }
         
         public static func parse(from data: ByteArray) -> Result<Envelope, ParseError> {
@@ -111,14 +111,14 @@ public struct Filter {
     
     public init() {
         isActive = false
-        cutoff = Level(127)
-        resonance = Resonance(0)
+        cutoff = 127
+        resonance = 0
         mode = .lowPass
-        velocityCurve = VelocityCurve(1)
-        level = Level(7)
-        keyScalingToCutoff = Depth(0)
-        velocityToCutoff = Depth(0)
-        envelopeDepth = Depth(0)
+        velocityCurve = 1
+        level = 7
+        keyScalingToCutoff = 0
+        velocityToCutoff = 0
+        envelopeDepth = 0
         envelope = Envelope()
     }
     
@@ -186,6 +186,13 @@ extension Filter.Envelope.Time: RangedInt {
     }
 }
 
+extension Filter.Envelope.Time: ExpressibleByIntegerLiteral {
+    /// Initialize with an integer literal.
+    public init(integerLiteral value: Int) {
+        _value = Self.range.clamp(value)
+    }
+}
+
 extension Filter.Envelope.Level: RangedInt {
     public static let range: ClosedRange<Int> = -63...63
 
@@ -206,6 +213,12 @@ extension Filter.Envelope.Level: RangedInt {
     }
 }
 
+extension Filter.Envelope.Level: ExpressibleByIntegerLiteral {
+    /// Initialize with an integer literal.
+    public init(integerLiteral value: Int) {
+        _value = Self.range.clamp(value)
+    }
+}
 
 // MARK: - SystemExclusiveData
 

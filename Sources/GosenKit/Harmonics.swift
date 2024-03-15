@@ -29,11 +29,11 @@ public struct HarmonicCommon {
     /// Initializes default harmonic common settings.
     public init() {
         isMorfEnabled = false
-        totalGain = Gain(0x33)
+        totalGain = 0x33
         group = .low
-        keyScalingToGain = Depth(0)
-        velocityCurve = VelocityCurve(1)
-        velocityDepth = Level(0)
+        keyScalingToGain = 0
+        velocityCurve = 1
+        velocityDepth = 0
     }
     
     public static func parse(from data: ByteArray) -> Result<HarmonicCommon, ParseError> {
@@ -80,8 +80,8 @@ public struct HarmonicEnvelope {
         public var level: Level // 0~63
         
         public init() {
-            self.rate = Rate(0)
-            self.level = Level(0)
+            self.rate = 0
+            self.level = 0
         }
         
         /// Initializes the segment with rate and level.
@@ -130,10 +130,10 @@ public struct HarmonicEnvelope {
     /// Initializes the harmonic envelope with default settings.
     public init() {
         self.segments = [
-            Segment(rate: Rate(127), level: Level(63)),
-            Segment(rate: Rate(127), level: Level(63)),
-            Segment(rate: Rate(127), level: Level(63)),
-            Segment(rate: Rate(0), level: Level(0)),
+            Segment(rate: 127, level: 63),
+            Segment(rate: 127, level: 63),
+            Segment(rate: 127, level: 63),
+            Segment(rate: 0, level: 0),
         ]
 
         self.loopKind = .off
@@ -224,6 +224,13 @@ extension HarmonicEnvelope.Rate: RangedInt {
     }
 }
 
+extension HarmonicEnvelope.Rate: ExpressibleByIntegerLiteral {
+    /// Initialize with an integer literal.
+    public init(integerLiteral value: Int) {
+        _value = Self.range.clamp(value)
+    }
+}
+
 extension HarmonicEnvelope.Level: RangedInt {
     public static let range: ClosedRange<Int> = 0...63
 
@@ -244,6 +251,12 @@ extension HarmonicEnvelope.Level: RangedInt {
     }
 }
 
+extension HarmonicEnvelope.Level: ExpressibleByIntegerLiteral {
+    /// Initialize with an integer literal.
+    public init(integerLiteral value: Int) {
+        _value = Self.range.clamp(value)
+    }
+}
 
 // Harmonic levels.
 public struct HarmonicLevels {
@@ -257,13 +270,13 @@ public struct HarmonicLevels {
     /// the first level is initialized to 127 and the rest to zero.
     public init() {
         soft = [Level]()
-        soft.append(Level(127))
+        soft.append(127)
         for _ in 1..<HarmonicLevels.harmonicCount {
             soft.append(Level(0))
         }
         
         loud = [Level]()
-        loud.append(Level(127))
+        loud.append(127)
         for _ in 1..<HarmonicLevels.harmonicCount {
             loud.append(Level(0))
         }

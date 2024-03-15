@@ -245,7 +245,7 @@ public struct EffectSettings {
         b = data.next(&offset)
         temp.algorithm = Int(b + 1)  // adjust 0~3 to 1~4
         
-        var size = EffectDefinition.dataSize
+        let size = EffectDefinition.dataSize
         switch EffectDefinition.parse(from: data.slice(from: offset, length: size)) {
         case .success(let effect):
             temp.reverb = effect

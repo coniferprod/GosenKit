@@ -20,8 +20,8 @@ public struct FormantFilter {
             public var level: Level // -63(1)~+63(127)
             
             public init() {
-                self.rate = Rate(0)
-                self.level = Level(0)
+                self.rate = 0
+                self.level = 0
             }
             
             public init(rate: Int, level: Int) {
@@ -144,8 +144,8 @@ public struct FormantFilter {
         
         public init() {
             shape = .triangle
-            speed = Level(0)
-            depth = Depth(0)
+            speed = 0
+            depth = 0
         }
         
         public static func parse(from data: ByteArray) -> Result<LFO, ParseError> {
@@ -273,6 +273,13 @@ extension FormantFilter.Envelope.Rate: RangedInt {
     }
 }
 
+extension FormantFilter.Envelope.Rate: ExpressibleByIntegerLiteral {
+    /// Initialize with an integer literal.
+    public init(integerLiteral value: Int) {
+        _value = Self.range.clamp(value)
+    }
+}
+
 extension FormantFilter.Envelope.Level: RangedInt {
     public static let range: ClosedRange<Int> = -63...63
 
@@ -293,6 +300,13 @@ extension FormantFilter.Envelope.Level: RangedInt {
     }
 }
 
+extension FormantFilter.Envelope.Level: ExpressibleByIntegerLiteral {
+    /// Initialize with an integer literal.
+    public init(integerLiteral value: Int) {
+        _value = Self.range.clamp(value)
+    }
+}
+
 extension FormantFilter.LFO.Depth: RangedInt {
     public static let range: ClosedRange<Int> = 0...63
 
@@ -309,6 +323,13 @@ extension FormantFilter.LFO.Depth: RangedInt {
     }
 
     public init(_ value: Int) {
+        _value = Self.range.clamp(value)
+    }
+}
+
+extension FormantFilter.LFO.Depth: ExpressibleByIntegerLiteral {
+    /// Initialize with an integer literal.
+    public init(integerLiteral value: Int) {
         _value = Self.range.clamp(value)
     }
 }

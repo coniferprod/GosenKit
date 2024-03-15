@@ -21,7 +21,9 @@ extension String {
     /// using `with`.
     public func padded(with character: Character, to length: Int, from: PadFrom = .right) -> String {
         let padCount = length - self.count
-        guard padCount > 0 else {
+        guard 
+            padCount > 0
+        else {
             return self
         }
 
@@ -164,12 +166,12 @@ public struct Key {
 
 /// Keyboard zone with low and high keys.
 public struct Zone {
-    public var high: Key
     public var low: Key
+    public var high: Key
     
-    public init(high: Key, low: Key) {
-        self.high = high
+    public init(low: Key, high: Key) {
         self.low = low
+        self.high = high
     }
 }
 

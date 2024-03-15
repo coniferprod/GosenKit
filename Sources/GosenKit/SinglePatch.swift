@@ -76,7 +76,7 @@ public struct SinglePatch {
         /// Initializes the common part with default values.
         public init() {
             name = PatchName("NewSound")
-            volume = Volume(115)
+            volume = 115  // conforms to ExpressibleByIntegerLiteral
             polyphony = .poly
             
             sourceCount = 2
@@ -97,6 +97,7 @@ public struct SinglePatch {
             effectControl = EffectControl()
         }
         
+        /// Parse from binary data.
         public static func parse(from data: ByteArray) -> Result<Common, ParseError> {
             var offset: Int = 0
             var b: Byte = 0
@@ -262,7 +263,7 @@ public struct SinglePatch {
         temp.additiveKits = AdditiveKitDictionary()
         
         // How many additive kits should we expect then?
-        let additiveKitCount = temp.sources.filter{ $0.oscillator.wave.isAdditive }.count
+        let additiveKitCount = temp.sources.filter{ $0.oscillator.wave == .additive }.count
         var kitIndex = 0
         size = AdditiveKit.dataSize
         while kitIndex < additiveKitCount {

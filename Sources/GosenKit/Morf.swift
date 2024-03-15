@@ -46,10 +46,10 @@ public struct Morf {
         public var loopKind: HarmonicEnvelope.LoopKind
         
         public init() {
-            time1 = Level(0)
-            time2 = Level(0)
-            time3 = Level(0)
-            time4 = Level(0)
+            time1 = 0
+            time2 = 0
+            time3 = 0
+            time4 = 0
             loopKind = .off
         }
         

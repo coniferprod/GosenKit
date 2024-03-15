@@ -1,33 +1,44 @@
 import SyxPack
 
+public struct WaveNumber {
+    private var _value: Int
+}
+
+extension WaveNumber: RangedInt {
+    public static let range: ClosedRange<Int> = 1...464
+    public static let defaultValue = 1
+    
+    public init() {
+        assert(Self.range.contains(Self.defaultValue), "Default value must be in range")
+
+        _value = Self.defaultValue
+    }
+    
+    public init(_ value: Int) {
+        _value = Self.range.clamp(value)
+    }
+
+    public var value: Int {
+        return _value
+    }
+}
+
+extension WaveNumber: ExpressibleByIntegerLiteral {
+    /// Initialize with an integer literal.
+    public init(integerLiteral value: Int) {
+        _value = Self.range.clamp(value)
+    }
+}
 
 /// Wave for PCM sources, with special case for additive.
-public struct Wave: Codable {
-    private(set) var number: Int  // wave number 1~464 or 512
+public enum Wave: Equatable {
+    case additive
+    case pcm(WaveNumber)
     
     private static let additiveWaveNumber: Int = 512
-    public static let additive = Wave(number: additiveWaveNumber)
     
-    public init(number: Int) {
-        self.number = number
-    }
-    
-    public init(msb: Byte, lsb: Byte) {
-        self.number = Wave.numberFromBytes(msb, lsb)!
-    }
-    
-    public var name: String {
-        if self.isAdditive {
-            return "ADD"
-        }
-        
-        return Wave.names[Int(self.number)]
-    }
-    
-    /// Is this wave the additive wave or not.
-    public var isAdditive: Bool { self.number == Wave.additiveWaveNumber }
-    
-    public static func numberFromBytes(_ msb: Byte, _ lsb: Byte) -> Int? {
+    /// Parse from binary data.
+    public static func parse(msb: Byte, lsb: Byte) -> Result<Wave, ParseError> {
         let waveMSBString = String(msb, radix: 2).padded(with: "0", to: 3, from: .left)
         let waveLSBString = String(lsb, radix: 2).padded(with: "0", to: 7, from: .left)
         let waveString = waveMSBString + waveLSBString
@@ -35,16 +46,30 @@ public struct Wave: Codable {
         // The wave number is zero-based in the SysEx file, but treated as one-based.
         if let number = Int(waveString, radix: 2) {
             if number == Wave.additiveWaveNumber {
-                return number  // don't adjust the ADD wave number
+                return .success(.additive)
             }
-            return number + 1
+            return .success(.pcm(WaveNumber(number + 1)))
         }
-        return nil
+        return .failure(.invalidData(0))
     }
     
+    public var name: String {
+        switch self {
+        case .additive:
+            return "ADD"
+        case .pcm(let number):
+            return Wave.names[number.value]
+        }
+    }
+        
     private func asBytes() -> (msb: Byte, lsb: Byte) {
-        // Adjust wave number to 0~463 (but don't adjust ADD wave 512)
-        let num = self.isAdditive ? self.number : self.number - 1
+        var num : Int
+        switch self {
+        case .additive:
+            num = Wave.additiveWaveNumber
+        case .pcm(let number):
+            num = number.value - 1  // adjust to 0~463
+        }
         
         // Convert wave kit number to binary string with 10 digits
         // using a String extension (see Helpers.swift).
@@ -59,6 +84,17 @@ public struct Wave: Codable {
         let lsb = Byte(lsbBitString, radix: 2)!
 
         return (msb, lsb)
+    }
+    
+    public static func == (lhs: Wave, rhs: Wave) -> Bool {
+        switch (lhs, rhs) {
+        case (.additive, .additive):
+            return true
+        case (.pcm(let lhsNumber), .pcm(let rhsNumber)):
+            return lhsNumber == rhsNumber
+        default:
+            return false
+        }
     }
     
     static let names = [
@@ -570,11 +606,11 @@ extension Wave: SystemExclusiveData {
 
 extension Wave: CustomStringConvertible {
     public var description: String {
-        if self.isAdditive {
+        switch self {
+        case .additive:
             return "ADD"
-        }
-        else {
-            return "\(self.number) \(self.name)"
+        case .pcm(let number):
+            return "\(number.value) \(self.name)"
         }
     }
 }
