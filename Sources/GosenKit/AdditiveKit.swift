@@ -217,7 +217,7 @@ extension AdditiveKit: CustomStringConvertible {
         s += "Common: \(common)\n"
         s += "MORF: \(morf)\n"
         s += "Formant filter: \(formantFilter)\n"
-        s += "Harmonic levels: \(levels)\n"
+        s += "Harmonic levels:\n\(levels)\n"
         
         s += "Harmonic envelopes:\n"
         for (index, e) in envelopes.enumerated() {

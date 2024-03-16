@@ -468,7 +468,7 @@ extension FormantFilter.Envelope: CustomStringConvertible {
 
 extension FormantFilter.Envelope.Segment: CustomStringConvertible {
     public var description: String {
-        return "L\(level) R\(rate)"
+        return "L\(self.level) R\(self.rate)"
     }
 }
 
@@ -485,6 +485,13 @@ extension FormantFilter.LFO.Shape: CustomStringConvertible {
     }
 }
 
+extension FormantFilter.LFO.Depth: CustomStringConvertible {
+    // Generates a string representation of the value.
+    public var description: String {
+        return "\(self.value)"
+    }
+}
+
 extension FormantFilter.LFO: CustomStringConvertible {
     public var description: String {
         var s = ""
@@ -492,5 +499,19 @@ extension FormantFilter.LFO: CustomStringConvertible {
         s += "Shape: \(self.shape) "
         s += "Depth: \(self.depth)"
         return s
+    }
+}
+
+extension FormantFilter.Envelope.Rate: CustomStringConvertible {
+    // Generates a string representation of the value.
+    public var description: String {
+        return "\(self.value)"
+    }
+}
+
+extension FormantFilter.Envelope.Level: CustomStringConvertible {
+    // Generates a string representation of the value.
+    public var description: String {
+        return "\(self.value)"
     }
 }
