@@ -59,8 +59,8 @@ public struct FormantFilter {
             decay2 = Segment(rate: 127, level: 63)
             release = Segment(rate: 127, level: 63)
             decayLoop = .off
-            velocityDepth = Depth(0)
-            keyScalingDepth = Depth(0)
+            velocityDepth = 0
+            keyScalingDepth = 0
         }
         
         public static func parse(from data: ByteArray) -> Result<Envelope, ParseError> {
@@ -210,9 +210,9 @@ public struct FormantFilter {
     public var lfo: LFO
     
     public init() {
-        bias = Depth(-10)
+        bias = -10
         mode = .envelope
-        envelopeDepth = Depth(0)
+        envelopeDepth = 0
         envelope = Envelope()
         lfo = LFO()
     }

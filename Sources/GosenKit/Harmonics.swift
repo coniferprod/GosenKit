@@ -272,13 +272,13 @@ public struct HarmonicLevels {
         soft = [Level]()
         soft.append(127)
         for _ in 1..<HarmonicLevels.harmonicCount {
-            soft.append(Level(0))
+            soft.append(0)
         }
         
         loud = [Level]()
         loud.append(127)
         for _ in 1..<HarmonicLevels.harmonicCount {
-            loud.append(Level(0))
+            loud.append(0)
         }
     }
     
@@ -445,6 +445,20 @@ extension HarmonicEnvelope.Segment: CustomStringConvertible {
     /// Gets a printable representation of this harmonic envelope segment.
     public var description: String {
         return "L\(self.level) R\(self.rate)"
+    }
+}
+
+extension HarmonicEnvelope.Level: CustomStringConvertible {
+    // Generates a string representation of the value.
+    public var description: String {
+        return "\(self.value)"
+    }
+}
+
+extension HarmonicEnvelope.Rate: CustomStringConvertible {
+    // Generates a string representation of the value.
+    public var description: String {
+        return "\(self.value)"
     }
 }
 

@@ -59,12 +59,6 @@ extension RangedInt {
     public static func ==(lhs: Self, rhs: Self) -> Bool {
         return lhs.value == rhs.value
     }
-    
-    // Generates a string representation of the value.
-    // This is a default implementation.
-    public var description: String {
-        return "\(value)"
-    }
 }
 
 extension ClosedRange {
@@ -105,6 +99,13 @@ extension Volume: ExpressibleByIntegerLiteral {
     }
 }
 
+extension Volume: CustomStringConvertible {
+    // Generates a string representation of the value.
+    public var description: String {
+        return "\(self.value)"
+    }
+}
+
 public struct Level {
     private var _value: Int
 }
@@ -133,6 +134,13 @@ extension Level: ExpressibleByIntegerLiteral {
     /// Initialize with an integer literal.
     public init(integerLiteral value: Int) {
         _value = Self.range.clamp(value)
+    }
+}
+
+extension Level: CustomStringConvertible {
+    // Generates a string representation of the value.
+    public var description: String {
+        return "\(self.value)"
     }
 }
 
@@ -167,6 +175,13 @@ extension Depth: ExpressibleByIntegerLiteral {
     }
 }
 
+extension Depth: CustomStringConvertible {
+    // Generates a string representation of the value.
+    public var description: String {
+        return "\(self.value)"
+    }
+}
+
 public struct Pan {
     private var _value: Int
 }
@@ -198,6 +213,13 @@ extension Pan: ExpressibleByIntegerLiteral {
     }
 }
 
+extension Pan: CustomStringConvertible {
+    // Generates a string representation of the value.
+    public var description: String {
+        return "\(self.value)"
+    }
+}
+
 public struct MIDIChannel: Equatable {
     private var _value: Int
 }
@@ -218,6 +240,20 @@ extension MIDIChannel: RangedInt {
 
     public var value: Int {
         return _value
+    }
+}
+
+extension MIDIChannel: ExpressibleByIntegerLiteral {
+    /// Initialize with an integer literal.
+    public init(integerLiteral value: Int) {
+        _value = Self.range.clamp(value)
+    }
+}
+
+extension MIDIChannel: CustomStringConvertible {
+    // Generates a string representation of the value.
+    public var description: String {
+        return "\(self.value)"
     }
 }
 
@@ -251,6 +287,13 @@ extension VelocityCurve: ExpressibleByIntegerLiteral {
     }
 }
 
+extension VelocityCurve: CustomStringConvertible {
+    // Generates a string representation of the value.
+    public var description: String {
+        return "\(self.value)"
+    }
+}
+
 public struct ControlDepth {
     private var _value: Int
 }
@@ -278,6 +321,13 @@ extension ControlDepth: ExpressibleByIntegerLiteral {
     /// Initialize with an integer literal.
     public init(integerLiteral value: Int) {
         _value = Self.range.clamp(value)
+    }
+}
+
+extension ControlDepth: CustomStringConvertible {
+    // Generates a string representation of the value.
+    public var description: String {
+        return "\(self.value)"
     }
 }
 
@@ -311,6 +361,13 @@ extension Coarse: ExpressibleByIntegerLiteral {
     }
 }
 
+extension Coarse: CustomStringConvertible {
+    // Generates a string representation of the value.
+    public var description: String {
+        return "\(self.value)"
+    }
+}
+
 public struct Fine {
     private var _value: Int
 }
@@ -341,6 +398,13 @@ extension Fine: ExpressibleByIntegerLiteral {
     }
 }
 
+extension Fine: CustomStringConvertible {
+    // Generates a string representation of the value.
+    public var description: String {
+        return "\(self.value)"
+    }
+}
+
 public struct EffectDepth {
     private var _value: Int
 }
@@ -362,6 +426,13 @@ extension EffectDepth: RangedInt {
 
     public init(_ value: Int) {
         _value = Self.range.clamp(value)
+    }
+}
+
+extension EffectDepth: CustomStringConvertible {
+    // Generates a string representation of the value.
+    public var description: String {
+        return "\(self.value)"
     }
 }
 
@@ -396,6 +467,13 @@ extension EffectPath: ExpressibleByIntegerLiteral {
     }
 }
 
+extension EffectPath: CustomStringConvertible {
+    // Generates a string representation of the value.
+    public var description: String {
+        return "\(self.value)"
+    }
+}
+
 public struct Resonance {
     private var _value: Int
 }
@@ -424,6 +502,13 @@ extension Resonance: ExpressibleByIntegerLiteral {
     /// Initialize with an integer literal.
     public init(integerLiteral value: Int) {
         _value = Self.range.clamp(value)
+    }
+}
+
+extension Resonance: CustomStringConvertible {
+    // Generates a string representation of the value.
+    public var description: String {
+        return "\(self.value)"
     }
 }
 
@@ -458,6 +543,13 @@ extension Gain: ExpressibleByIntegerLiteral {
     }
 }
 
+extension Gain: CustomStringConvertible {
+    // Generates a string representation of the value.
+    public var description: String {
+        return "\(self.value)"
+    }
+}
+
 public struct BenderPitch {
     private var _value: Int
 }
@@ -486,6 +578,13 @@ extension BenderPitch: ExpressibleByIntegerLiteral {
     /// Initialize with an integer literal.
     public init(integerLiteral value: Int) {
         _value = Self.range.clamp(value)
+    }
+}
+
+extension BenderPitch: CustomStringConvertible {
+    // Generates a string representation of the value.
+    public var description: String {
+        return "\(self.value)"
     }
 }
 
@@ -520,6 +619,13 @@ extension BenderCutoff: ExpressibleByIntegerLiteral {
     }
 }
 
+extension BenderCutoff: CustomStringConvertible {
+    // Generates a string representation of the value.
+    public var description: String {
+        return "\(self.value)"
+    }
+}
+
 public struct MIDINote: Equatable {
     private var _value: Int
 }
@@ -551,6 +657,13 @@ extension MIDINote: ExpressibleByIntegerLiteral {
     }
 }
 
+extension MIDINote: CustomStringConvertible {
+    // Generates a string representation of the value.
+    public var description: String {
+        return "\(self.value)"
+    }
+}
+
 public enum FixedKey {
     case off
     case on(Key)
@@ -576,5 +689,19 @@ extension Transpose: RangedInt {
 
     public var value: Int {
         return _value
+    }
+}
+
+extension Transpose: ExpressibleByIntegerLiteral {
+    /// Initialize with an integer literal.
+    public init(integerLiteral value: Int) {
+        _value = Self.range.clamp(value)
+    }
+}
+
+extension Transpose: CustomStringConvertible {
+    // Generates a string representation of the value.
+    public var description: String {
+        return "\(self.value)"
     }
 }
