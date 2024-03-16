@@ -529,7 +529,7 @@ extension AssignableController: CustomStringConvertible {
 extension EffectControl.Source: CustomStringConvertible {
     public var description: String {
         var s = ""
-        s += "source=\(source), destination=\(destination), depth=\(depth)"
+        s += "source=\(source), destination=\(destination), depth=\(depth.value)"
         return s
     }
 }
@@ -546,8 +546,8 @@ extension EffectControl: CustomStringConvertible {
 extension MacroController: CustomStringConvertible {
     public var description: String {
         var s = ""
-        s += "destination1=\(destination1), depth1=\(depth1)\n"
-        s += "destination2=\(destination2), depth1=\(depth2)\n"
+        s += "destination1=\(destination1), depth1=\(depth1.value)\n"
+        s += "destination2=\(destination2), depth1=\(depth2.value)\n"
         return s
     }
 }

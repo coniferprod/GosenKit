@@ -286,10 +286,10 @@ extension Filter: CustomStringConvertible {
     public var description: String {
         var s = ""
         s += "Active=" + (isActive ? "YES" : "NO") + " Mode=\(mode)\n"
-        s += "Cutoff=\(cutoff) Resonance=\(resonance) Level=\(level)\n"
-        s += "Vel.Curve=\(velocityCurve) KStoCut=\(keyScalingToCutoff) VelToCut=\(velocityToCutoff)\n"
-        s += "Env.Depth=\(envelopeDepth)\n"
-        s += "Filter Envelope:\n\(envelope)\n"
+        s += "Cutoff=\(cutoff.value) Resonance=\(resonance.value) Level=\(level.value)\n"
+        s += "Vel.Curve=\(velocityCurve.value) KStoCut=\(keyScalingToCutoff.value) VelToCut=\(velocityToCutoff.value)\n"
+        s += "Env.Depth=\(envelopeDepth.value)\n"
+        s += "\nFilter Envelope:\n\(envelope)\n"
         return s
     }
 }
@@ -310,10 +310,10 @@ extension Filter.Mode: CustomStringConvertible {
 extension Filter.Envelope: CustomStringConvertible {
     public var description: String {
         var s = ""
-        s += "attackTime=\(attackTime) decay1Time=\(decay1Time) decay1Level=\(decay1Level)\n"
-        s += "decay2Time=\(decay2Time) decay2Level=\(decay2Level) releaseTime=\(releaseTime)\n"
-        s += "KSToAttack=\(keyScalingToAttack) KSToDecay=\(keyScalingToDecay1)\n"
-        s += "VelToEnv=\(velocityToEnvelope) VelToAttack=\(velocityToAttack) VelToDecay1=\(velocityToDecay1)\n"
+        s += "attackTime=\(attackTime.value) decay1Time=\(decay1Time.value) decay1Level=\(decay1Level.value)\n"
+        s += "decay2Time=\(decay2Time.value) decay2Level=\(decay2Level.value) releaseTime=\(releaseTime.value)\n"
+        s += "KSToAttack=\(keyScalingToAttack.value) KSToDecay=\(keyScalingToDecay1.value)\n"
+        s += "VelToEnv=\(velocityToEnvelope.value) VelToAttack=\(velocityToAttack.value) VelToDecay1=\(velocityToDecay1.value)"
         return s
     }
 }

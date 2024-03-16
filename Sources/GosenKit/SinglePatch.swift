@@ -349,16 +349,16 @@ extension SinglePatch: SystemExclusiveData {
         
         data.append(checksum)
 
-        let commonData = common.asData()
+        let commonData = self.common.asData()
         data.append(contentsOf: commonData)
 
-        for (_, source) in sources.enumerated() {
+        for (_, source) in self.sources.enumerated() {
             let sourceData = source.asData()
             data.append(contentsOf: sourceData)
         }
         
         // Sort the additive kits by source
-        let sortedKits = additiveKits.sorted(by: { $0.0 < $1.0 })
+        let sortedKits = self.additiveKits.sorted(by: { $0.0 < $1.0 })
         
         for kit in sortedKits {
             let kitData = kit.1.asData()
@@ -444,7 +444,7 @@ extension SinglePatch: CustomStringConvertible {
     public var description: String {
         var s = ""
         
-        s += "\(common)\n"
+        s += "\(self.common)\n"
         for (index, element) in sources.enumerated() {
             let sourceNumber = index + 1
             s += "SOURCE \(sourceNumber):\n\(element)\n"
@@ -468,7 +468,7 @@ extension SinglePatch.Common: CustomStringConvertible {
     /// Printable description of the patch common settings.
     public var description: String {
         var s = ""
-        s += "Name = '\(name.value)' Volume = \(volume) Polyphony = \(polyphony)\n"
+        s += "Name = '\(name.value)' Volume = \(volume.value) Polyphony = \(polyphony)\n"
         
         s += "Portamento: "
         switch portamento {
@@ -477,6 +477,7 @@ extension SinglePatch.Common: CustomStringConvertible {
         case .off:
             s += "off"
         }
+        s += " "
         
         s += "AM = \(amplitudeModulation)\n"
         s += "\(effects)\n"
@@ -487,7 +488,7 @@ extension SinglePatch.Common: CustomStringConvertible {
         }
         s += "\n"
         
-        s += "\(effectControl)"
+        s += "Effect control:\n\(effectControl)"
         
         for (index, element) in macros.enumerated() {
             s += "User \(index + 1):\n\(element)\n"

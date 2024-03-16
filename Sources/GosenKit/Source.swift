@@ -379,10 +379,10 @@ extension Source.Control: CustomStringConvertible {
         var s = ""
         s += "Zone = \(zone.low.name) ... \(zone.high.name)\n"
         s += "Velocity Switch: \(velocitySwitch)\n"
-        s += "Effect Path = \(effectPath)\n"
-        s += "Volume = \(volume)\n"
-        s += "Bender: pitch = \(benderPitch), cutoff = \(benderCutoff)\n"
-        s += "Modulation = \(modulation)\n"
+        s += "Effect Path = \(effectPath.value)\n"
+        s += "Volume = \(volume.value)\n"
+        s += "Bender: pitch = \(benderPitch.value), cutoff = \(benderCutoff.value)\n"
+        s += "Modulation:\n\(modulation)\n"
         s += "Key On Delay = \(keyOnDelay)\n"
         s += "Pan Settings: \(pan)\n"
         return s
@@ -400,7 +400,7 @@ extension Source.Control.Modulation: CustomStringConvertible {
 extension Source.Control.PanSettings: CustomStringConvertible {
     public var description: String {
         var s = ""
-        s += "kind=\(kind), value=\(value)"
+        s += "kind=\(kind), value=\(value.value)"
         return s
     }
 }

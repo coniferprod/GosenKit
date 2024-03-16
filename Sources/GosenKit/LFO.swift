@@ -150,8 +150,8 @@ extension LFO.Control: SystemExclusiveData {
 extension LFO: CustomStringConvertible {
     public var description: String {
         var result = ""
-        result += "Waveform=\(self.waveform) Speed=\(self.speed) FadeInTime=\(self.fadeInTime) FadeInToSpeed=\(self.fadeInToSpeed) DelayOnset=\(self.delayOnset)\n"
-        result += "Vibrato: \(self.vibrato) Growl: \(self.growl) Tremolo: \(self.tremolo)"
+        result += "Waveform=\(self.waveform) Speed=\(self.speed.value) FadeInTime=\(self.fadeInTime.value) FadeInToSpeed=\(self.fadeInToSpeed.value) DelayOnset=\(self.delayOnset.value)\n"
+        result += "Vibrato: \(self.vibrato)\nGrowl: \(self.growl)\nTremolo: \(self.tremolo)"
         return result
     }
 }
@@ -178,7 +178,7 @@ extension LFO.Waveform: CustomStringConvertible {
 extension LFO.Control: CustomStringConvertible {
     public var description: String {
         var result = ""
-        result += "Depth=\(self.depth) KeyScaling=\(self.keyScaling)"
+        result += "Depth=\(self.depth.value) KeyScaling=\(self.keyScaling.value)"
         return result
     }
 }

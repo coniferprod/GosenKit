@@ -212,8 +212,8 @@ extension Oscillator: CustomStringConvertible {
     /// Gets a text representation of the oscillator.
     public var description: String {
         var s = "Wave: '\(wave)' "
-        s += "Coarse=\(coarse) Fine=\(fine) KStoPitch=\(keyScalingToPitch.rawValue) FixedKey=\(fixedKey)\n"
-        s += "Pitch Envelope = \(pitchEnvelope)\n"
+        s += "Coarse=\(coarse.value) Fine=\(fine.value) KStoPitch=\(keyScalingToPitch.rawValue) FixedKey=\(fixedKey)\n"
+        s += "Pitch Envelope = \(pitchEnvelope)"
         return s
     }
 }
@@ -222,8 +222,8 @@ extension Oscillator.PitchEnvelope: CustomStringConvertible {
     /// Gets a text representation of the pitch envelope.
     public var description: String {
         var s = ""
-        s += "start=\(start), attackTime=\(attackTime), attackLevel=\(attackLevel), decayTime=\(decayTime)\n"
-        s += "timeVelSens=\(timeVelocitySensitivity) levelVelSens=\(levelVelocitySensitivity)\n"
+        s += "start=\(start.value), attackTime=\(attackTime.value), attackLevel=\(attackLevel.value), decayTime=\(decayTime.value)\n"
+        s += "timeVelSens=\(timeVelocitySensitivity.value) levelVelSens=\(levelVelocitySensitivity.value)\n"
         return s
     }
 }

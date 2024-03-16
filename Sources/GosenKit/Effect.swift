@@ -358,22 +358,22 @@ extension EffectSettings: CustomStringConvertible {
         else {
             result += " Depth"
         }
-        result += "=\(effectDefinition.depth) "
+        result += "=\(effectDefinition.depth.value) "
         
         if effectName.parameterNames[0] != "?" {
-            result += "\(effectName.parameterNames[0])=\(effectDefinition.parameter1) "
+            result += "\(effectName.parameterNames[0])=\(effectDefinition.parameter1.value) "
         }
         
         if effectName.parameterNames[1] != "?" {
-            result += "\(effectName.parameterNames[1])=\(effectDefinition.parameter2) "
+            result += "\(effectName.parameterNames[1])=\(effectDefinition.parameter2.value) "
         }
 
         if effectName.parameterNames[2] != "?" {
-            result += "\(effectName.parameterNames[2])=\(effectDefinition.parameter3) "
+            result += "\(effectName.parameterNames[2])=\(effectDefinition.parameter3.value) "
         }
         
         if effectName.parameterNames[3] != "?" {
-            result += "\(effectName.parameterNames[3])=\(effectDefinition.parameter4)"
+            result += "\(effectName.parameterNames[3])=\(effectDefinition.parameter4.value)"
         }
 
         result += "\n"

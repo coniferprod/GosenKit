@@ -191,3 +191,38 @@ extension Morf.Envelope: SystemExclusiveData {
     
     public static let dataSize = 5
 }
+
+// MARK: - CustomStringConvertible
+
+extension Morf: CustomStringConvertible {
+    public var description: String {
+        var s = ""
+        s += "Copy1 = \(self.copy1)\n"
+        s += "Copy2 = \(self.copy2)\n"
+        s += "Copy3 = \(self.copy3)\n"
+        s += "Copy4 = \(self.copy4)\n"
+        s += "Envelope = \(self.envelope)"
+        return s
+    }
+}
+
+extension Morf.Envelope: CustomStringConvertible {
+    public var description: String {
+        var s = ""
+        s += "Time1 = \(self.time1) "
+        s += "Time2 = \(self.time2) "
+        s += "Time3 = \(self.time3) "
+        s += "Time4 = \(self.time4) "
+        s += "Loop = \(self.loopKind)"
+        return s
+    }
+}
+
+extension Morf.CopyParameters: CustomStringConvertible {
+    public var description: String {
+        var s = ""
+        s += "Patch = \(self.patchNumber) "
+        s += "Source = \(self.sourceNumber)"
+        return s
+    }
+}

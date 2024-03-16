@@ -429,8 +429,68 @@ extension FormantFilter.LFO: SystemExclusiveData {
 
 // MARK: - CustomStringConvertible
 
+extension FormantFilter: CustomStringConvertible {
+    public var description: String {
+        var s = ""
+        s += "Bias: \(self.bias) "
+        s += "Mode: \(self.mode) "
+        s += "Env Depth: \(self.envelopeDepth) "
+        s += "Envelope: \(self.envelope) "
+        s += "LFO: \(self.lfo)"
+        return s
+    }
+}
+
+extension FormantFilter.Mode: CustomStringConvertible {
+    public var description: String {
+        switch self {
+        case .envelope:
+            return "ENV"
+        case .lfo:
+            return "LFO"
+        }
+    }
+}
+
+extension FormantFilter.Envelope: CustomStringConvertible {
+    public var description: String {
+        var s = ""
+        s += "Attack = \(self.attack) "
+        s += "Decay1: \(self.decay1) "
+        s += "Decay2: \(self.decay2) "
+        s += "Release: \(self.release) "
+        s += "Decay Loop: \(self.decayLoop) "
+        s += "Vel Depth: \(self.velocityDepth) "
+        s += "KS Depth: \(self.keyScalingDepth)"
+        return s
+    }
+}
+
 extension FormantFilter.Envelope.Segment: CustomStringConvertible {
     public var description: String {
         return "L\(level) R\(rate)"
+    }
+}
+
+extension FormantFilter.LFO.Shape: CustomStringConvertible {
+    public var description: String {
+        switch self {
+        case .triangle:
+            return "TRI"
+        case .sawtooth:
+            return "SAW"
+        case .random:
+            return "RND"
+        }
+    }
+}
+
+extension FormantFilter.LFO: CustomStringConvertible {
+    public var description: String {
+        var s = ""
+        s += "Speed: \(self.speed) "
+        s += "Shape: \(self.shape) "
+        s += "Depth: \(self.depth)"
+        return s
     }
 }

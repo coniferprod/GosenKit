@@ -366,9 +366,9 @@ extension Amplifier: CustomStringConvertible {
     public var description: String {
         var result = ""
         
-        result += "Velocity Curve = \(self.velocityCurve)\n"
+        result += "Velocity Curve = \(self.velocityCurve.value)\n"
         result += "Envelope = \(self.envelope)\n"
-        result += "Modulation = \(self.modulation)"
+        result += "Modulation:\n\(self.modulation)"
         
         return result
     }
@@ -377,8 +377,8 @@ extension Amplifier: CustomStringConvertible {
 extension Amplifier.Envelope: CustomStringConvertible {
     public var description: String {
         var s = ""
-        s += "AttackTime=\(attackTime) Decay1Time=\(decay1Time) Decay1Level=\(decay1Level)\n"
-        s += "Decay2Time=\(decay2Time) Decay2Level=\(decay2Level) ReleaseTime=\(releaseTime)\n"
+        s += "AttackTime=\(attackTime.value) Decay1Time=\(decay1Time.value) Decay1Level=\(decay1Level.value)\n"
+        s += "Decay2Time=\(decay2Time.value) Decay2Level=\(decay2Level.value) ReleaseTime=\(releaseTime.value)\n"
         return s
     }
 }
@@ -387,8 +387,8 @@ extension Amplifier.Modulation: CustomStringConvertible {
     public var description: String {
         var result = ""
         
-        result += "Key Scaling To Env = \(self.keyScalingToEnvelope)\n"
-        result += "Velocity To Env = \(self.velocityToEnvelope)\n"
+        result += "KS To Env = \(self.keyScalingToEnvelope)\n"
+        result += "Vel To Env = \(self.velocityToEnvelope)\n"
         
         return result
     }
@@ -398,7 +398,7 @@ extension Amplifier.Modulation.KeyScalingControl: CustomStringConvertible {
     public var description: String {
         var result = ""
         
-        result += "Level=\(self.level) AttackTime=\(self.attackTime) Decay1Time=\(self.decay1Time) Release=\(self.release)"
+        result += "Level=\(self.level.value) AttackTime=\(self.attackTime.value) Decay1Time=\(self.decay1Time.value) Release=\(self.release.value)"
         
         return result
     }
@@ -408,7 +408,7 @@ extension Amplifier.Modulation.VelocityControl: CustomStringConvertible {
     public var description: String {
         var result = ""
         
-        result += "Level=\(self.level) AttackTime=\(self.attackTime) Decay1Time=\(self.decay1Time) Release=\(self.release)"
+        result += "Level=\(self.level.value) AttackTime=\(self.attackTime.value) Decay1Time=\(self.decay1Time.value) Release=\(self.release.value)"
         
         return result
     }

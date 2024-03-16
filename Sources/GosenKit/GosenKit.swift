@@ -59,6 +59,12 @@ extension RangedInt {
     public static func ==(lhs: Self, rhs: Self) -> Bool {
         return lhs.value == rhs.value
     }
+    
+    // Generates a string representation of the value.
+    // This is a default implementation.
+    public var description: String {
+        return "\(value)"
+    }
 }
 
 extension ClosedRange {

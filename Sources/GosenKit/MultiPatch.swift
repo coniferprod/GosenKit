@@ -297,16 +297,16 @@ extension MultiPatch.Common: CustomStringConvertible {
         var result = ""
         
         result += "Name: \(self.name.value)\n"
-        result += "Volume: \(self.volume)\n"
+        result += "Volume: \(self.volume.value)\n"
         result += "\(self.effects)\n"
         
         result += "GEQ: "
         for band in geq.levels {
-            result += "\(band) "
+            result += "\(band.value) "
         }
         result += "\n"
         
-        result += "Effect Control: \(self.effectControl)\n"
+        result += "Effect Control:\n\(self.effectControl)\n"
 
         var muteValues = ["-", "-", "-", "-"]
         for (index, mute) in self.sectionMutes.enumerated() {
@@ -324,14 +324,14 @@ extension MultiPatch.Section: CustomStringConvertible {
         var result = ""
         
         result += "Instrument: \(self.single)\n"
-        result += "Volume: \(self.volume)\n"
+        result += "Volume: \(self.volume.value)\n"
         result += "Pan: \(self.pan)\n"
-        result += "Effect path: \(self.effectPath)\n"
-        result += "Transpose: \(self.transpose)\n"
+        result += "Effect path: \(self.effectPath.value)\n"
+        result += "Transpose: \(self.transpose.value)\n"
         result += "Tune: \(self.tune)\n"
         result += "Zone: \(self.zone)\n"
         result += "Vel SW: \(self.velocitySwitch)\n"
-        result += "Receive Ch: \(self.receiveChannel)"
+        result += "Receive Ch: \(self.receiveChannel.value)"
         
         return result
     }

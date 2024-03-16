@@ -430,6 +430,19 @@ extension HarmonicEnvelope.Segment: CustomStringConvertible {
     }
 }
 
+extension HarmonicEnvelope.LoopKind: CustomStringConvertible {
+    public var description: String {
+        switch self {
+        case .off:
+            return "OFF"
+        case .loop1:
+            return "LOOP1"
+        case .loop2:
+            return "LOOP2"
+        }
+    }
+}
+
 extension HarmonicEnvelope: CustomStringConvertible {
     /// Gets a printable representation of this harmonic envelope.
     public var description: String {
@@ -450,5 +463,29 @@ extension HarmonicEnvelope: CustomStringConvertible {
         s += "   Decay Loop: \(loopKind)\n"
         
         return s
+    }
+}
+
+extension HarmonicCommon: CustomStringConvertible {
+    /// Gets a printable representation of the harmonic common settings.
+    public var description: String {
+        var s = "MORF enabled = " + (self.isMorfEnabled ? "yes" : "no") + "\n"
+        s += "Total gain = \(self.totalGain) "
+        s += "Group = \(self.group) "
+        s += "KStoGain = \(self.keyScalingToGain) "
+        s += "Velocity curve = \(self.velocityCurve) "
+        s += "Velocity depth = \(self.velocityDepth) "
+        return s
+    }
+}
+
+extension HarmonicCommon.Group: CustomStringConvertible {
+    public var description: String {
+        switch self {
+        case .low:
+            return "LO"
+        case .high:
+            return "HI"
+        }
     }
 }
