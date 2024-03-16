@@ -423,10 +423,28 @@ extension HarmonicEnvelope.Segment: SystemExclusiveData {
 
 // MARK: - CustomStringConvertible
 
+extension HarmonicLevels: CustomStringConvertible {
+    public var description: String {
+        var s = ""
+        
+        s += "Soft: "
+        for level in self.soft {
+            s += "\(level) "
+        }
+        
+        s += "\nLoud: "
+        for level in self.loud {
+            s += "\(level) "
+        }
+            
+        return s
+    }
+}
+
 extension HarmonicEnvelope.Segment: CustomStringConvertible {
     /// Gets a printable representation of this harmonic envelope segment.
     public var description: String {
-        return "L\(level) R\(rate)"
+        return "L\(self.level) R\(self.rate)"
     }
 }
 
