@@ -1,6 +1,7 @@
 import Foundation
 
 import SyxPack
+import ByteKit
 
 
 /// A Kawai K5000 multi patch (combi on the K5000W).

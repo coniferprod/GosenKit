@@ -1,4 +1,5 @@
 import SyxPack
+import ByteKit
 
 /// Amplifier (DCA)
 public struct Amplifier {

@@ -1,6 +1,7 @@
 import Foundation
 
 import SyxPack
+import ByteKit
 
 
 extension CaseIterable where Self: Equatable {
@@ -71,7 +72,7 @@ extension ByteArray {
     /// Returns a new byte array with `length` bytes starting from `offset`.
     public func slice(from offset: Int, length: Int) -> ByteArray {
         return ByteArray(self[offset ..< offset + length])
-    }
+    }    
 }
 
 extension Double {

@@ -1,6 +1,7 @@
 import Foundation
 
 import SyxPack
+import ByteKit
 
 
 /// Represents a source in a singe patch.

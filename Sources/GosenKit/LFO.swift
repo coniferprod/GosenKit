@@ -1,4 +1,5 @@
 import SyxPack
+import ByteKit
 
 public struct LFO {
     public enum Waveform: Int, CaseIterable {

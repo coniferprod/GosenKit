@@ -1,4 +1,5 @@
 import SyxPack
+import ByteKit
 
 /// Represents the set of included patches in a bank.
 public class ToneMap {

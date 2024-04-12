@@ -1,4 +1,5 @@
 import SyxPack
+import ByteKit
 
 /// Drum waveform.
 public struct DrumWave {

@@ -1,4 +1,5 @@
 import SyxPack
+import ByteKit
 
 /// Common settings for harmonics.
 public struct HarmonicCommon {

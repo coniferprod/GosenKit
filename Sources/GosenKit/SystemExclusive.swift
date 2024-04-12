@@ -1,4 +1,5 @@
 import SyxPack
+import ByteKit
 
 /// K5000S/R/W MIDI System Exclusive message.
 public enum SystemExclusive {
@@ -381,7 +382,7 @@ extension DumpCommand: CustomStringConvertible {
     public var description: String {
         var s = "Channel: \(self.channel)  \(self.cardinality)  \(self.kind)  Bank: \(self.bank)"
         if self.subBytes.count != 0 {
-            s += " Sub-bytes: \(self.subBytes.hexDump(config: .plainConfig))"
+            s += " Sub-bytes: \(self.subBytes.hexDump())"
         }
         return s
     }

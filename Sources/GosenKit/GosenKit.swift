@@ -1,9 +1,16 @@
 import SyxPack
+import ByteKit
 
 public struct GosenKit {
     public private(set) var text = "GosenKit"
     
     public init() { }
+}
+
+extension Byte {
+    public func toHex() -> String {
+        return String(format:"%02X", self)
+    }
 }
 
 /// Error type for parsing data from MIDI System Exclusive bytes.

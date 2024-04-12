@@ -1,4 +1,5 @@
 import SyxPack
+import ByteKit
 
 public struct WaveNumber {
     private var _value: Int

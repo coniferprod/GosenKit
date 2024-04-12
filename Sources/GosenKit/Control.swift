@@ -1,6 +1,7 @@
 import Foundation
 
 import SyxPack
+import ByteKit
 
 
 /// Velocity switch settings.

@@ -1,4 +1,5 @@
 import SyxPack
+import ByteKit
 
 /// Represents an oscillator in a source of a single patch.
 public struct Oscillator {

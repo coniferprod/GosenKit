@@ -1,4 +1,5 @@
 import SyxPack
+import ByteKit
 
 /// Represents a formant filter.
 public struct FormantFilter {

@@ -1,6 +1,7 @@
 import Foundation
 
 import SyxPack
+import ByteKit
 
 
 // Kawai K5000 banks contain either single patches (up to 128 of them)

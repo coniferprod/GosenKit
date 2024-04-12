@@ -1,4 +1,5 @@
 import SyxPack
+import ByteKit
 
 /// Filter (DCF).
 public struct Filter {
