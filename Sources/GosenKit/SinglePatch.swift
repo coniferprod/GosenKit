@@ -474,13 +474,12 @@ extension SinglePatch.Common: CustomStringConvertible {
         s += "Portamento: "
         switch portamento {
         case .on(let speed):
-            s += "on, speed \(speed.value)"
+            s += "ON, speed \(speed.value)"
         case .off:
-            s += "off"
+            s += "OFF"
         }
-        s += " "
         
-        s += "AM = \(amplitudeModulation)\n"
+        s += "\nAM = \(amplitudeModulation)\n"
         s += "\(effects)\n"
         
         s += "GEQ: "
@@ -489,7 +488,7 @@ extension SinglePatch.Common: CustomStringConvertible {
         }
         s += "\n"
         
-        s += "Effect control:\n\(effectControl)"
+        s += "Effect control:\n\(effectControl)\n"
         
         for (index, element) in macros.enumerated() {
             s += "User \(index + 1):\n\(element)\n"

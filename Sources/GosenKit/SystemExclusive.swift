@@ -380,9 +380,9 @@ public struct DumpCommand {
 extension DumpCommand: CustomStringConvertible {
     /// Returns a string representation of the dump command.
     public var description: String {
-        var s = "Channel: \(self.channel)  \(self.cardinality)  \(self.kind)  Bank: \(self.bank)"
+        var s = "Channel=\(self.channel)  Cardinality=\(self.cardinality)  Kind=\(self.kind)  Bank=\(self.bank)"
         if self.subBytes.count != 0 {
-            s += " Sub-bytes: \(self.subBytes.hexDump())"
+            s += " Sub-bytes=\(self.subBytes.hexDump(configuration: .simple))"
         }
         return s
     }

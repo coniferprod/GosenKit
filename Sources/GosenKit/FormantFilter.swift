@@ -433,11 +433,11 @@ extension FormantFilter.LFO: SystemExclusiveData {
 extension FormantFilter: CustomStringConvertible {
     public var description: String {
         var s = ""
-        s += "Bias: \(self.bias) "
-        s += "Mode: \(self.mode) "
-        s += "Env Depth: \(self.envelopeDepth) "
-        s += "Envelope: \(self.envelope) "
-        s += "LFO: \(self.lfo)"
+        s += "  Bias: \(self.bias)\n"
+        s += "  Mode: \(self.mode)\n"
+        s += "  Env Depth: \(self.envelopeDepth)\n"
+        s += "  Envelope: \(self.envelope)\n"
+        s += "  LFO: \(self.lfo)"
         return s
     }
 }

@@ -215,8 +215,8 @@ extension AdditiveKit: SystemExclusiveData {
 extension AdditiveKit: CustomStringConvertible {
     public var description: String {
         var s = ""
-        s += "Common: \(common)\n"
-        s += "MORF: \(morf)\n"
+        s += "Common:\n\(common)\n"
+        s += "MORF:\n\(morf)\n"
         s += "Formant filter: \(formantFilter)\n"
         s += "Harmonic levels:\n\(levels)\n"
         

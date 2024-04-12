@@ -197,11 +197,11 @@ extension Morf.Envelope: SystemExclusiveData {
 extension Morf: CustomStringConvertible {
     public var description: String {
         var s = ""
-        s += "Copy1 = \(self.copy1)\n"
-        s += "Copy2 = \(self.copy2)\n"
-        s += "Copy3 = \(self.copy3)\n"
-        s += "Copy4 = \(self.copy4)\n"
-        s += "Envelope = \(self.envelope)"
+        s += "  Copy1: \(self.copy1)\n"
+        s += "  Copy2: \(self.copy2)\n"
+        s += "  Copy3: \(self.copy3)\n"
+        s += "  Copy4: \(self.copy4)\n"
+        s += "  Envelope: \(self.envelope)"
         return s
     }
 }

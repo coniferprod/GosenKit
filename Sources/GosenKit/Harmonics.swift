@@ -502,12 +502,12 @@ extension HarmonicEnvelope: CustomStringConvertible {
 extension HarmonicCommon: CustomStringConvertible {
     /// Gets a printable representation of the harmonic common settings.
     public var description: String {
-        var s = "MORF enabled = " + (self.isMorfEnabled ? "yes" : "no") + "\n"
-        s += "Total gain = \(self.totalGain) "
-        s += "Group = \(self.group) "
-        s += "KStoGain = \(self.keyScalingToGain) "
-        s += "Velocity curve = \(self.velocityCurve) "
-        s += "Velocity depth = \(self.velocityDepth) "
+        var s = "  MORF enabled = " + (self.isMorfEnabled ? "yes" : "no") + "\n"
+        s += "  Total gain = \(self.totalGain)\n"
+        s += "  Group = \(self.group)\n"
+        s += "  KStoGain = \(self.keyScalingToGain)\n"
+        s += "  Velocity curve = \(self.velocityCurve)\n"
+        s += "  Velocity depth = \(self.velocityDepth)"
         return s
     }
 }

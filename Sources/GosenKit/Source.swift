@@ -393,7 +393,11 @@ extension Source.Control: CustomStringConvertible {
 extension Source.Control.Modulation: CustomStringConvertible {
     public var description: String {
         var s = ""
-        s += "pressure: \(pressure), wheel: \(wheel), expression: \(expression), assignable1: \(assignable1), assignable2: \(assignable2)"
+        s += "pressure: \(pressure)\n"
+        s += "wheel: \(wheel)\n"
+        s += "expression: \(expression)\n"
+        s += "assignable1: \(assignable1)\n"
+        s += "assignable2: \(assignable2)"
         return s
     }
 }
