@@ -10,6 +10,27 @@ public class ToneMap {
         self.included = [Bool](repeating: false, count: maxCount)
     }
     
+    /// Parse from binary data.
+    public static func parse(from data: ByteArray) -> Result<ToneMap, ParseError> {
+        guard
+            data.count == ToneMap.dataSize
+        else {
+            return .failure(.invalidLength(data.count, ToneMap.dataSize))
+        }
+
+        let temp = ToneMap()  // initialize with defaults, then fill in
+
+        temp.included = [Bool]()
+        for (_, byte) in data.enumerated() {
+            // Take the bottom seven bits of each byte
+            for bit in 0..<7 {
+                temp.included.append(byte.isBitSet(bit))
+            }
+        }
+
+        return .success(temp)
+    }
+    
     /// Initializes a tone map from System Exclusive data.
     public init?(data: ByteArray) {
         guard 

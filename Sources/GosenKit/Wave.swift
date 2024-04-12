@@ -37,7 +37,7 @@ public enum Wave: Equatable {
     
     private static let additiveWaveNumber: Int = 512
     
-    /// Parse from binary data.
+    /// Parse wave number from binary data.
     public static func parse(msb: Byte, lsb: Byte) -> Result<Wave, ParseError> {
         let waveMSBString = String(msb, radix: 2).padded(with: "0", to: 3, from: .left)
         let waveLSBString = String(lsb, radix: 2).padded(with: "0", to: 7, from: .left)
