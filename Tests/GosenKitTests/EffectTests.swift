@@ -2,6 +2,7 @@ import XCTest
 @testable import GosenKit
 
 import SyxPack
+import ByteKit
 
 
 final class EffectTests: XCTestCase {

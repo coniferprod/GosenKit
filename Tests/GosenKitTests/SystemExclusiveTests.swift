@@ -32,6 +32,7 @@
 import XCTest
 @testable import GosenKit
 import SyxPack
+import ByteKit
 
 final class SystemExclusiveTests: XCTestCase {
     func testSystemExclusive_header() {

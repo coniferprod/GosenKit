@@ -1,6 +1,7 @@
 import XCTest
 @testable import GosenKit
 import SyxPack
+import ByteKit
 
 final class MultiPatchTests: XCTestCase {
     // Data for Combi C01 "Evening3" from K5000W.

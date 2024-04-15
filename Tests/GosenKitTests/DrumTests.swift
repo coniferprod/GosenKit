@@ -1,5 +1,6 @@
 import XCTest
 import SyxPack
+import ByteKit
 @testable import GosenKit
 
 final class DrumTests: XCTestCase {

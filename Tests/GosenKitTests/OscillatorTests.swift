@@ -1,6 +1,7 @@
 import XCTest
 @testable import GosenKit
 import SyxPack
+import ByteKit
 
 final class OscillatorTests: XCTestCase {
     func testOscillator_waveNumberFromBytes() {

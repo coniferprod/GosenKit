@@ -5,7 +5,7 @@ import PackageDescription
 let package = Package(
     name: "GosenKit",
     platforms: [
-        .macOS(.v11),
+        .macOS(.v10_13),
         .iOS(.v13),
     ],
     products: [
