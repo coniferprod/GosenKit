@@ -50,7 +50,7 @@ public class ToneMap {
     }
     
     /// Sets or resets the included status of the tone at `index`.
-    subscript(index: Int) -> Bool {
+    public subscript(index: Int) -> Bool {
         get {
             return self.included[index]
         }
