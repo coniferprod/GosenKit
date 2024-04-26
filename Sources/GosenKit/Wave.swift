@@ -1,6 +1,7 @@
 import SyxPack
 import ByteKit
 
+/// Wave number for DCO.
 public struct WaveNumber {
     private var _value: Int
 }
@@ -25,7 +26,7 @@ extension WaveNumber: RangedInt {
 }
 
 extension WaveNumber: ExpressibleByIntegerLiteral {
-    /// Initialize with an integer literal.
+    /// Initialize wave number with an integer literal.
     public init(integerLiteral value: Int) {
         _value = Self.range.clamp(value)
     }
@@ -54,6 +55,7 @@ public enum Wave: Equatable {
         return .failure(.invalidData(0))
     }
     
+    /// Gets the name for this wave.
     public var name: String {
         switch self {
         case .additive:
@@ -86,7 +88,8 @@ public enum Wave: Equatable {
 
         return (msb, lsb)
     }
-    
+
+    /// Tests the equality of two waves.
     public static func == (lhs: Wave, rhs: Wave) -> Bool {
         switch (lhs, rhs) {
         case (.additive, .additive):
@@ -590,6 +593,7 @@ public enum Wave: Equatable {
 // MARK: - SystemExclusiveData
 
 extension Wave: SystemExclusiveData {
+    /// Gets the wave data as MIDI System Exclusive bytes.
     public func asData() -> ByteArray {
         var data = ByteArray()
         
@@ -600,12 +604,14 @@ extension Wave: SystemExclusiveData {
         return data
     }
     
+    /// Gets the length of the wave System Exclusive data.
     public var dataLength: Int { 2 }
 }
 
 // MARK: - CustomStringConvertible
 
 extension Wave: CustomStringConvertible {
+    /// Gets a printable representation of this wave.
     public var description: String {
         switch self {
         case .additive:
