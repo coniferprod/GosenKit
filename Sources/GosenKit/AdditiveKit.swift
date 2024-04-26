@@ -36,6 +36,8 @@ public struct AdditiveKit {
         }
     }
     
+    /// Parses an additive kit from MIDI System Exclusive data.
+    /// Returns `AdditiveKit` if parsing succeeds, `ParseError` if it fails.
     public static func parse(from data: ByteArray) -> Result<AdditiveKit, ParseError> {
         var offset: Int = 0
 
@@ -178,6 +180,7 @@ public struct AdditiveKit {
 // MARK: - SystemExclusiveData
 
 extension AdditiveKit: SystemExclusiveData {
+    /// Gets the additive kit as MIDI System Exclusive data.
     public func asData() -> ByteArray {
         var data = ByteArray()
         
@@ -205,6 +208,7 @@ extension AdditiveKit: SystemExclusiveData {
         return data
     }
     
+    /// Gets the MIDI System Exclusive data length of the additive kit.
     public var dataLength: Int { AdditiveKit.dataSize }
     
     public static let dataSize = 806
@@ -213,6 +217,7 @@ extension AdditiveKit: SystemExclusiveData {
 // MARK: - CustomStringComvertible
 
 extension AdditiveKit: CustomStringConvertible {
+    /// Gets a printable representation of this additive kit.
     public var description: String {
         var s = ""
         s += "Common:\n\(common)\n"
