@@ -36,7 +36,8 @@ public struct HarmonicCommon {
         velocityCurve = 1
         velocityDepth = 0
     }
-    
+
+    /// Parse the harmonic common settings from MIDI System Exclusive data.
     public static func parse(from data: ByteArray) -> Result<HarmonicCommon, ParseError> {
         var offset: Int = 0
         var b: Byte = 0
@@ -67,19 +68,22 @@ public struct HarmonicCommon {
 
 /// Harmonic envelope.
 public struct HarmonicEnvelope {
+    /// Harmonic envelope rate (0~127).
     public struct Rate {
         private var _value: Int
     }
     
+    /// Harmonic envelope level (0~63).
     public struct Level {
         private var _value: Int
     }
     
     /// One segment of harmonic envelope.
     public struct Segment {
-        public var rate: Rate  // 0~127
-        public var level: Level // 0~63
-        
+        public var rate: Rate
+        public var level: Level
+
+        /// Initialize the harmonic envelope segment with default values.
         public init() {
             self.rate = 0
             self.level = 0
@@ -91,6 +95,7 @@ public struct HarmonicEnvelope {
             self.level = level
         }
         
+        /// Parse the harmonic envelope segment from MIDI System Exclusive data.
         public static func parse(from data: ByteArray) -> Result<Segment, ParseError> {
             var offset: Int = 0
             var b: Byte = 0
@@ -109,7 +114,8 @@ public struct HarmonicEnvelope {
 
     public var segments: [Segment]
     
-    /// The loop kind of the harmonic envelope. Used in formant filter, harmonic, and MORF envelopes.
+    /// The loop kind of the harmonic envelope. 
+    /// Used in formant filter, harmonic, and MORF envelopes.
     public enum LoopKind: String, Codable, CaseIterable {
         case off
         case loop1
@@ -206,6 +212,8 @@ public struct HarmonicEnvelope {
     }
 }
 
+// MARK: - RangedInt protocol conformance
+
 extension HarmonicEnvelope.Rate: RangedInt {
     public static let range: ClosedRange<Int> = 0...127
 
@@ -260,12 +268,13 @@ extension HarmonicEnvelope.Level: ExpressibleByIntegerLiteral {
     }
 }
 
-// Harmonic levels.
+/// Harmonic levels.
 public struct HarmonicLevels {
     public var soft: [Level]  // 1~64
     public var loud: [Level]  // 65~128
     // all values are 0~127
     
+    /// Number of harmonics in a set.
     public static let harmonicCount = 64
     
     /// Initializes default harmonic levels. For both soft and loud,
@@ -297,12 +306,13 @@ public struct HarmonicLevels {
         }
     }
 
+    /// Initialize harmonic levels with actual level values.
     public init(soft: [Level], loud: [Level]) {
         self.soft = soft
         self.loud = loud
     }
     
-    /// Parses the harmonic levels from MIDI System Exclusive data bytes.
+    /// Parse the harmonic levels from MIDI System Exclusive data bytes.
     public static func parse(from data: ByteArray) -> Result<HarmonicLevels, ParseError> {
         var temp = HarmonicLevels()
 
@@ -437,6 +447,7 @@ extension HarmonicEnvelope.Segment: SystemExclusiveData {
 // MARK: - CustomStringConvertible
 
 extension HarmonicLevels: CustomStringConvertible {
+    /// Gets a printable representation of the harmonic levels.
     public var description: String {
         var s = ""
         
@@ -462,20 +473,21 @@ extension HarmonicEnvelope.Segment: CustomStringConvertible {
 }
 
 extension HarmonicEnvelope.Level: CustomStringConvertible {
-    // Generates a string representation of the value.
+    /// Generates a string representation of the value.
     public var description: String {
         return "\(self.value)"
     }
 }
 
 extension HarmonicEnvelope.Rate: CustomStringConvertible {
-    // Generates a string representation of the value.
+    /// Generates a string representation of the value.
     public var description: String {
         return "\(self.value)"
     }
 }
 
 extension HarmonicEnvelope.LoopKind: CustomStringConvertible {
+    /// Generates a string representation of the value.
     public var description: String {
         switch self {
         case .off:
@@ -525,6 +537,7 @@ extension HarmonicCommon: CustomStringConvertible {
 }
 
 extension HarmonicCommon.Group: CustomStringConvertible {
+    /// Generates a string representation of the value.
     public var description: String {
         switch self {
         case .low:

@@ -51,12 +51,6 @@ extension String {
     }
 }
 
-extension Byte {
-    public func toBinary() -> String {
-        return String(self, radix: 2)
-    }
-}
-
 extension ByteArray {
     /// Returns the byte at the given offset, then increases the offset by one.
     public func next(_ offset: inout Int) -> Byte {
@@ -69,14 +63,6 @@ extension ByteArray {
     public func slice(from offset: Int, length: Int) -> ByteArray {
         return ByteArray(self[offset ..< offset + length])
     }    
-}
-
-extension Double {
-    /// Rounds the double to decimal places value
-    public func rounded(to places: Int) -> Double {
-        let divisor = pow(10.0, Double(places))
-        return (self * divisor).rounded() / divisor
-    }
 }
 
 extension String {
@@ -113,16 +99,19 @@ public struct Key {
     
     public var note: MIDINote
     
+    /// Gets the note name of this key.
     public var name: String {
         let octave = self.note.value / 12 + self.octave.rawValue
         let name = self.noteNames[self.note.value % 12]
         return "\(name)\(octave)"
     }
     
+    /// Initialize this key with a MIDI note.
     public init(note: MIDINote) {
         self.note = note
     }
     
+    /// Initialize this key with a MIDI note name.
     public init(name: String) {
         let notes = CharacterSet(charactersIn: "CDEFGAB")
         
@@ -166,12 +155,14 @@ public struct Zone {
     public var low: Key
     public var high: Key
     
+    /// Initialize this zone with low and high keys
     public init(low: Key, high: Key) {
         self.low = low
         self.high = high
     }
 }
 
+/// Patch name.
 public struct PatchName: Equatable, Codable {
     /// Length of patch name in characters.
     public static let length = 8
@@ -213,6 +204,7 @@ public struct PatchName: Equatable, Codable {
     }
 }
 
+/// Instrument number.
 public struct InstrumentNumber: Codable {
     /// Read-only property to get the value.
     public var value: UInt {
@@ -241,7 +233,7 @@ public struct InstrumentNumber: Codable {
     }
 }
 
-// MARK: - CustomStringConvertible
+// MARK: - CustomStringConvertible protocol conformance
 
 extension InstrumentNumber: CustomStringConvertible {
     public var description: String {
@@ -255,14 +247,19 @@ extension Zone: CustomStringConvertible {
     }
 }
 
-// MARK: - SystemExclusiveData
+// MARK: - SystemExclusiveData protocol conformance
 
 extension PatchName: SystemExclusiveData {
-    public func asData() -> ByteArray { ByteArray(self.value.utf8) }
+    /// Gets the MIDI System Exclusive data for the name.
+    public func asData() -> ByteArray {
+        ByteArray(self.value.utf8)
+    }
+    
     public var dataLength: Int { PatchName.length }
 }
 
 extension InstrumentNumber: SystemExclusiveData {
+    /// Gets the MIDI System Exclusive data for this instrument number.
     public func asData() -> ByteArray {
         // Convert instrument number to binary string with 9 digits
         // using a String extension (see Helpers.swift).
@@ -279,5 +276,6 @@ extension InstrumentNumber: SystemExclusiveData {
         return ByteArray(arrayLiteral: msb, lsb)
     }
     
+    /// Gets the MIDI System Exclusive data length for this instrument number.
     public var dataLength: Int { 2 }
 }

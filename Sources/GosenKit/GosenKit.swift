@@ -15,6 +15,7 @@ public enum ParseError: Error {
 }
 
 extension ParseError: CustomStringConvertible {
+    /// Gets a printable representation of this parse error.
     public var description: String {
         switch self {
         case .invalidLength(let actual, let expected):
@@ -27,36 +28,40 @@ extension ParseError: CustomStringConvertible {
     }
 }
 
-// Protocol to wrap an Int guaranteed to be contained in the given closed range.
+/// Protocol to wrap an Int guaranteed to be contained
+/// in the given closed range.
 protocol RangedInt {
-    // The current value of the wrapped Int
+    /// The current value of the wrapped Int
     var value: Int { get }
     
-    // The range where the Int must be in.
+    /// The range where the Int must be in.
     static var range: ClosedRange<Int> { get }
     
-    // The default value for the Int.
+    /// The default value for the Int.
     static var defaultValue: Int { get }
 
-    init()  // initialization with the default value
-    init(_ value: Int)  // initialization with a value (will be clamped)
+    /// Initialization with the default value.
+    init()
+    
+    /// Initialization with a value (will be clamped).
+    init(_ value: Int)
 }
 
 extension RangedInt {
-    // Gets a random Int value that is inside the range.
-    // This is a default implementation.
+    /// Gets a random Int value that is inside the range.
+    /// This is a default implementation.
     static var randomValue: Int {
         return Int.random(in: Self.range)
     }
     
-    // Predicate for checking if a potential value would be inside the range.
-    // This is a default implementation.
+    /// Predicate for checking if a potential value would
+    /// be inside the range. This is a default implementation.
     static func isValid(value: Int) -> Bool {
         return Self.range.contains(value)
     }
 
-    // Satisfies Equatable conformance.
-    // This is a default implementation.
+    /// Satisfies Equatable conformance.
+    /// This is a default implementation.
     public static func ==(lhs: Self, rhs: Self) -> Bool {
         return lhs.value == rhs.value
     }
@@ -70,6 +75,7 @@ extension ClosedRange {
     }
 }
 
+/// Volume (0...127).
 public struct Volume {
     private var _value: Int
 }
@@ -107,6 +113,7 @@ extension Volume: CustomStringConvertible {
     }
 }
 
+/// Level (0...127)
 public struct Level {
     private var _value: Int
 }
@@ -145,6 +152,7 @@ extension Level: CustomStringConvertible {
     }
 }
 
+/// Depth (-63...+63).
 public struct Depth {
     private var _value: Int
 }
@@ -177,12 +185,13 @@ extension Depth: ExpressibleByIntegerLiteral {
 }
 
 extension Depth: CustomStringConvertible {
-    // Generates a string representation of the value.
+    /// Generates a string representation of the value.
     public var description: String {
         return "\(self.value)"
     }
 }
 
+/// Pan (-63...+63).
 public struct Pan {
     private var _value: Int
 }
@@ -215,12 +224,13 @@ extension Pan: ExpressibleByIntegerLiteral {
 }
 
 extension Pan: CustomStringConvertible {
-    // Generates a string representation of the value.
+    /// Generates a string representation of the value.
     public var description: String {
         return "\(self.value)"
     }
 }
 
+/// MIDI channel (1...16).
 public struct MIDIChannel: Equatable {
     private var _value: Int
 }
@@ -252,12 +262,13 @@ extension MIDIChannel: ExpressibleByIntegerLiteral {
 }
 
 extension MIDIChannel: CustomStringConvertible {
-    // Generates a string representation of the value.
+    /// Generates a string representation of the value.
     public var description: String {
         return "\(self.value)"
     }
 }
 
+/// Velocity curve (1...12).
 public struct VelocityCurve {
     private var _value: Int
 }
@@ -289,12 +300,13 @@ extension VelocityCurve: ExpressibleByIntegerLiteral {
 }
 
 extension VelocityCurve: CustomStringConvertible {
-    // Generates a string representation of the value.
+    /// Generates a string representation of the value.
     public var description: String {
         return "\(self.value)"
     }
 }
 
+/// Control depth (-63...+63).
 public struct ControlDepth {
     private var _value: Int
 }
@@ -326,12 +338,13 @@ extension ControlDepth: ExpressibleByIntegerLiteral {
 }
 
 extension ControlDepth: CustomStringConvertible {
-    // Generates a string representation of the value.
+    /// Generates a string representation of the value.
     public var description: String {
         return "\(self.value)"
     }
 }
 
+/// Coarse tuning (-24...+24).
 public struct Coarse {
     private var _value: Int
 }
@@ -363,12 +376,13 @@ extension Coarse: ExpressibleByIntegerLiteral {
 }
 
 extension Coarse: CustomStringConvertible {
-    // Generates a string representation of the value.
+    /// Generates a string representation of the value.
     public var description: String {
         return "\(self.value)"
     }
 }
 
+/// Fine tuning (-63...+63).
 public struct Fine {
     private var _value: Int
 }
@@ -400,12 +414,13 @@ extension Fine: ExpressibleByIntegerLiteral {
 }
 
 extension Fine: CustomStringConvertible {
-    // Generates a string representation of the value.
+    /// Generates a string representation of the value.
     public var description: String {
         return "\(self.value)"
     }
 }
 
+/// Effect depth (0...100).
 public struct EffectDepth {
     private var _value: Int
 }
@@ -431,12 +446,13 @@ extension EffectDepth: RangedInt {
 }
 
 extension EffectDepth: CustomStringConvertible {
-    // Generates a string representation of the value.
+    /// Generates a string representation of the value.
     public var description: String {
         return "\(self.value)"
     }
 }
 
+/// Effect path (1...4).
 public struct EffectPath {
     private var _value: Int
 }
@@ -469,12 +485,13 @@ extension EffectPath: ExpressibleByIntegerLiteral {
 }
 
 extension EffectPath: CustomStringConvertible {
-    // Generates a string representation of the value.
+    /// Generates a string representation of the value.
     public var description: String {
         return "\(self.value)"
     }
 }
 
+/// Resonance (0...31).
 public struct Resonance {
     private var _value: Int
 }
@@ -507,12 +524,13 @@ extension Resonance: ExpressibleByIntegerLiteral {
 }
 
 extension Resonance: CustomStringConvertible {
-    // Generates a string representation of the value.
+    /// Generates a string representation of the value.
     public var description: String {
         return "\(self.value)"
     }
 }
 
+/// Gain setting (1...63).
 public struct Gain {
     private var _value: Int
 }
@@ -545,12 +563,13 @@ extension Gain: ExpressibleByIntegerLiteral {
 }
 
 extension Gain: CustomStringConvertible {
-    // Generates a string representation of the value.
+    /// Generates a string representation of the value.
     public var description: String {
         return "\(self.value)"
     }
 }
 
+/// Bender pitch amount (-12...+12).
 public struct BenderPitch {
     private var _value: Int
 }
@@ -583,12 +602,13 @@ extension BenderPitch: ExpressibleByIntegerLiteral {
 }
 
 extension BenderPitch: CustomStringConvertible {
-    // Generates a string representation of the value.
+    /// Generates a string representation of the value.
     public var description: String {
         return "\(self.value)"
     }
 }
 
+/// Bender cutoff (0...31).
 public struct BenderCutoff {
     private var _value: Int
 }
@@ -621,12 +641,13 @@ extension BenderCutoff: ExpressibleByIntegerLiteral {
 }
 
 extension BenderCutoff: CustomStringConvertible {
-    // Generates a string representation of the value.
+    /// Generates a string representation of the value.
     public var description: String {
         return "\(self.value)"
     }
 }
 
+/// MIDI note number (0...127).
 public struct MIDINote: Equatable {
     private var _value: Int
 }
@@ -659,17 +680,23 @@ extension MIDINote: ExpressibleByIntegerLiteral {
 }
 
 extension MIDINote: CustomStringConvertible {
-    // Generates a string representation of the value.
+    /// Generates a string representation of the value.
     public var description: String {
-        return "\(self.value)"
+        let noteNames = ["C", "C#", "D", "D#", "E", "F",
+                         "F#", "G", "G#", "A", "A#", "B"]
+        let octave = self.value / 12 - 2  // use Yamaha convention
+        let name = noteNames[self.value % 12]
+        return "\(name)\(octave)"
     }
 }
 
+/// Fixed key setting.
 public enum FixedKey {
     case off
     case on(Key)
 }
 
+/// Patch number in a bank.
 public struct PatchNumber {
     private var _value: Int
 }
@@ -701,12 +728,13 @@ extension PatchNumber: ExpressibleByIntegerLiteral {
 }
 
 extension PatchNumber: CustomStringConvertible {
-    // Generates a string representation of the value.
+    /// Generates a string representation of the value.
     public var description: String {
         return "\(self.value)"
     }
 }
 
+/// Transpose amount (-24...+24).
 public struct Transpose {
     private var _value: Int
 }
@@ -738,7 +766,7 @@ extension Transpose: ExpressibleByIntegerLiteral {
 }
 
 extension Transpose: CustomStringConvertible {
-    // Generates a string representation of the value.
+    /// Generates a string representation of the value.
     public var description: String {
         return "\(self.value)"
     }

@@ -6,7 +6,7 @@ public class ToneMap {
     private let maxCount = 128
     private var included: [Bool]  // true if patch is included, false if not
     
-    /// Initializes an empty tone map.
+    /// Initialize an empty tone map.
     public init() {
         self.included = [Bool](repeating: false, count: maxCount)
     }
@@ -82,7 +82,7 @@ public class ToneMap {
 // MARK: - SystemExclusiveData
 
 extension ToneMap: SystemExclusiveData {
-    /// Byte array representation for SysEx.
+    /// Gets the MIDI System Exclusive data for the tone map.
     public func asData() -> ByteArray {
         var data = ByteArray()
         

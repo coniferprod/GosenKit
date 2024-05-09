@@ -16,7 +16,7 @@ public struct Source {
             public var assignable1: AssignableController
             public var assignable2: AssignableController
             
-            /// Initializes default modulation settings.
+            /// Initialize the modulation with default settings.
             public init() {
                 pressure = MacroController()
                 wheel = MacroController()
@@ -25,6 +25,7 @@ public struct Source {
                 assignable2 = AssignableController()
             }
             
+            /// Parse this modulation from MIDI System Exclusive data.
             public static func parse(from data: ByteArray) -> Result<Modulation, ParseError> {
                 var offset: Int = 0
 
@@ -112,6 +113,7 @@ public struct Source {
                 self.value = value
             }
             
+            /// Parse the pan settings from MIDI System Exclusive data.
             public static func parse(from data: ByteArray) -> Result<PanSettings, ParseError> {
                 var offset: Int = 0
                 var b: Byte = 0
@@ -152,6 +154,7 @@ public struct Source {
             pan = PanSettings(kind: .normal, value: Pan(0))
         }
         
+        /// Parse the control settings from MIDI System Exclusive data.
         public static func parse(from data: ByteArray) -> Result<Control, ParseError> {
             var offset: Int = 0
             var b: Byte = 0
@@ -223,6 +226,7 @@ public struct Source {
         control = Control()
     }
     
+    /// Parse the source from MIDI System Exclusive data.
     public static func parse(from data: ByteArray) -> Result<Source, ParseError> {
         var offset: Int = 0
 
@@ -276,9 +280,10 @@ public struct Source {
     }
 }
 
-// MARK: - SystemExclusiveData
+// MARK: - SystemExclusiveData protocol conformance
 
 extension Source.Control.Modulation: SystemExclusiveData {
+    /// Gets the MIDI System Exclusive data for this source control modulation.
     public func asData() -> ByteArray {
         var data = ByteArray()
         
@@ -297,6 +302,7 @@ extension Source.Control.Modulation: SystemExclusiveData {
 }
 
 extension Source.Control.PanSettings: SystemExclusiveData {
+    /// Gets the MIDI System Exclusive data for the source control pan settings.
     public func asData() -> ByteArray {
         var data = ByteArray()
         
@@ -312,6 +318,7 @@ extension Source.Control.PanSettings: SystemExclusiveData {
 }
 
 extension Source.Control: SystemExclusiveData {
+    /// Gets the MIDI System Exclusive data for this source control.
     public func asData() -> ByteArray {
         var data = ByteArray()
         
@@ -335,6 +342,7 @@ extension Source.Control: SystemExclusiveData {
 }
 
 extension Source: SystemExclusiveData {
+    /// Gets the MIDI System Exclusive data for this source.
     public func asData() -> ByteArray {
         var data = ByteArray()
         
@@ -352,7 +360,7 @@ extension Source: SystemExclusiveData {
     public static let dataSize = 86
 }
 
-// MARK: - CustomStringConvertible
+// MARK: - CustomStringConvertible protocol conformance
 
 extension Source: CustomStringConvertible {
     public var description: String {

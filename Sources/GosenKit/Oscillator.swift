@@ -5,7 +5,7 @@ import ByteKit
 public struct Oscillator {
     /// Pitch envelope of an oscillator.
     public struct PitchEnvelope {
-        // Pitch envelope time 0~127
+        /// Pitch envelope time 0~127
         public struct Time {
             private var _value: Int
         }
@@ -32,6 +32,7 @@ public struct Oscillator {
             levelVelocitySensitivity = Level(0)
         }
         
+        /// Parse the pitch envelope from MIDI System Exclusive data.
         public static func parse(from data: ByteArray) -> Result<PitchEnvelope, ParseError> {
             var offset: Int = 0
             var b: Byte = 0
@@ -95,7 +96,8 @@ public struct Oscillator {
         fixedKey = .off
         pitchEnvelope = PitchEnvelope()
     }
-    
+
+    /// Parse the oscillator from MIDI System Exclusive data.
     public static func parse(from data: ByteArray) -> Result<Oscillator, ParseError> {
         var offset: Int = 0
         var b: Byte = 0
@@ -146,7 +148,7 @@ public struct Oscillator {
     }
 }
 
-// MARK: - SystemExclusiveData
+// MARK: - SystemExclusiveData protocol conformance
 
 extension Oscillator.PitchEnvelope: SystemExclusiveData {
     /// Gets the MIDI System Excusive data bytes for the pitch envelope.
@@ -207,7 +209,7 @@ extension Oscillator: SystemExclusiveData {
     public static let dataSize = 12
 }
 
-// MARK: - CustomStringConvertible
+// MARK: - CustomStringConvertible protocol conformance
 
 extension Oscillator: CustomStringConvertible {
     /// Gets a text representation of the oscillator.
@@ -230,6 +232,7 @@ extension Oscillator.PitchEnvelope: CustomStringConvertible {
 }
 
 extension Oscillator.KeyScaling: CustomStringConvertible {
+    /// Gets a text representation of the oscillator key scaling.
     public var description: String {
         var result = ""
         switch self {
@@ -245,6 +248,8 @@ extension Oscillator.KeyScaling: CustomStringConvertible {
         return result
     }
 }
+
+// MARK: - RangedInt protocol conformance
 
 extension Oscillator.PitchEnvelope.Time: RangedInt {
     public static let range: ClosedRange<Int> = 0...127

@@ -1,7 +1,9 @@
 import SyxPack
 import ByteKit
 
+/// LFO (Low Frequency Oscillator) settings.
 public struct LFO {
+    /// LFO waveform.
     public enum Waveform: Int, CaseIterable {
         case triangle
         case square
@@ -9,6 +11,7 @@ public struct LFO {
         case sine
         case random
         
+        /// Initialize the LFO waveform from an integer.
         public init?(index: Int) {
             switch index {
             case 0: self = .triangle
@@ -21,18 +24,37 @@ public struct LFO {
         }
     }
 
+    /// LFO control settings.
     public struct Control {
         public var depth: Depth
         public var keyScaling: Depth
         
+        /// Initialize the LFO control settings with default values.
         public init() {
             self.depth = 0
             self.keyScaling = 0
         }
         
+        /// Initialize the LFO control settings from given values.
         public init(depth: Depth, keyScaling: Depth) {
             self.depth = depth
             self.keyScaling = keyScaling
+        }
+        
+        /// Parse the LFO control settings from MIDI System Exclusive data.
+        public static func parse(from data: ByteArray) -> Result<Control, ParseError> {
+            var offset: Int = 0
+            var b: Byte = 0
+
+            var temp = Control()
+            
+            b = data.next(&offset)
+            temp.depth = Depth(Int(b))
+
+            b = data.next(&offset)
+            temp.keyScaling = Depth(Int(b) - 64)
+
+            return .success(temp)
         }
     }
     
@@ -45,7 +67,8 @@ public struct LFO {
     public var vibrato: Control
     public var growl: Control
     public var tremolo: Control
-    
+
+    /// Initialize the LFO with default values.
     public init() {
         waveform = .square
         speed = 0
@@ -53,11 +76,13 @@ public struct LFO {
         fadeInToSpeed = 0
         delayOnset = 0
         
-        vibrato = Control(depth: 0, keyScaling: 0)
-        growl = Control(depth: 0, keyScaling: 0)
-        tremolo = Control(depth: 0, keyScaling: 0)
+        // Initialize controls with default values
+        vibrato = Control()
+        growl = Control()
+        tremolo = Control()
     }
     
+    /// Parse the LFO from MIDI System Exclusive data.
     public static func parse(from data: ByteArray) -> Result<LFO, ParseError> {
         var offset: Int = 0
         var b: Byte = 0
@@ -79,35 +104,36 @@ public struct LFO {
         b = data.next(&offset)
         temp.fadeInToSpeed = Depth(Int(b))
 
-        b = data.next(&offset)
-        let vibratoDepth = Depth(Int(b))
-
-        b = data.next(&offset)
-        let vibratoKeyScaling = Depth(Int(b) - 64)
-
-        temp.vibrato = Control(depth: vibratoDepth, keyScaling: vibratoKeyScaling)
+        let size = Control.dataSize
+        switch Control.parse(from: data.slice(from: offset, length: size)) {
+        case .success(let vibrato):
+            temp.vibrato = vibrato
+        case .failure(let error):
+            return .failure(error)
+        }
+        offset += size
         
-        b = data.next(&offset)
-        let growlDepth = Depth(Int(b))
+        switch Control.parse(from: data.slice(from: offset, length: size)) {
+        case .success(let growl):
+            temp.growl = growl
+        case .failure(let error):
+            return .failure(error)
+        }
+        offset += size
 
-        b = data.next(&offset)
-        let growlKeyScaling = Depth(Int(b) - 64)
-
-        temp.growl = Control(depth: growlDepth, keyScaling: growlKeyScaling)
-        
-        b = data.next(&offset)
-        let tremoloDepth = Depth(Int(b))
-
-        b = data.next(&offset)
-        let tremoloKeyScaling = Depth(Int(b) - 64)
-        
-        temp.tremolo = Control(depth: tremoloDepth, keyScaling: tremoloKeyScaling)
+        switch Control.parse(from: data.slice(from: offset, length: size)) {
+        case .success(let tremolo):
+            temp.tremolo = tremolo
+        case .failure(let error):
+            return .failure(error)
+        }
+        offset += size
 
         return .success(temp)
     }
 }
 
-// MARK: - SystemExclusiveData
+// MARK: - SystemExclusiveData protocol conformance
 
 extension LFO: SystemExclusiveData {
     public func asData() -> ByteArray {
@@ -123,10 +149,15 @@ extension LFO: SystemExclusiveData {
         .forEach {
             data.append(Byte($0))
         }
-
-        data.append(contentsOf: vibrato.asData())
-        data.append(contentsOf: growl.asData())
-        data.append(contentsOf: tremolo.asData())
+        
+        [
+            vibrato,
+            growl,
+            tremolo
+        ]
+        .forEach {
+            data.append(contentsOf: $0.asData())
+        }
 
         return data
     }
@@ -146,7 +177,7 @@ extension LFO.Control: SystemExclusiveData {
     public static let dataSize = 2
 }
 
-// MARK: - CustomStringConvertible
+// MARK: - CustomStringConvertible protocol conformance
 
 extension LFO: CustomStringConvertible {
     public var description: String {
