@@ -115,14 +115,14 @@ public struct SinglePatch {
             }
             offset += size
 
-            var levels = [Int]()
-            for _ in 0..<GEQ.bandCount {
-                b = data.next(&offset)
-                let v: Int = Int(b) - 64  // 58(-6) ~ 70(+6), so 64 is zero
-                //print("GEQ band \(i + 1): \(b) --> \(v)")
-                levels.append(v)
+            size = GEQ.bandCount
+            switch GEQ.parse(from: data.slice(from: offset, length: size)) {
+            case .success(let geq):
+                temp.geq = geq
+            case .failure(let error):
+                return .failure(error)
             }
-            temp.geq = GEQ(levels: levels)
+            offset += size
             
             // Eat the drum mark (39)
             offset += 1
@@ -388,12 +388,9 @@ extension SinglePatch.Common: SystemExclusiveData {
         
         // The MIDI System Exclusive specification determines the order and format.
         
-        data.append(contentsOf: self.effects.asData())
-        
-        geq.levels.forEach { data.append(Byte($0.value + 64)) } // 58(-6)~70(+6)
-        
+        data.append(contentsOf: effects.asData())
+        data.append(contentsOf: geq.asData())
         data.append(0)  // drum_mark
-
         data.append(contentsOf: name.asData())
 
         [volume.value, polyphony.index, 0, sourceCount].forEach {

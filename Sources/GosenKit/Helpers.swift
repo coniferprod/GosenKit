@@ -202,7 +202,7 @@ public struct PatchName: Equatable, Codable {
     /// Parses the patch name from MIDI System Exclusive data bytes.
     public static func parse(from data: ByteArray) -> Result<PatchName, ParseError> {
         guard
-            data.count > PatchName.length
+            data.count == PatchName.length
         else {
             return .failure(.invalidLength(data.count, PatchName.length))
         }

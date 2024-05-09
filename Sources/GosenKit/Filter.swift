@@ -56,6 +56,7 @@ public struct Filter {
             velocityToDecay1 = 0
         }
         
+        /// Parse the filter envelope from MIDI System Exclusive data.
         public static func parse(from data: ByteArray) -> Result<Envelope, ParseError> {
             var offset: Int = 0
             var b: Byte = 0
@@ -123,6 +124,7 @@ public struct Filter {
         envelope = Envelope()
     }
     
+    /// Parse the filter from MIDI System Exclusive data.
     public static func parse(from data: ByteArray) -> Result<Filter, ParseError> {
         var offset: Int = 0
         var b: Byte = 0
@@ -166,6 +168,8 @@ public struct Filter {
         return .success(temp)
     }
 }
+
+// MARK: - RangedInt protocol conformance
 
 extension Filter.Envelope.Time: RangedInt {
     public static let range: ClosedRange<Int> = 0...127

@@ -833,14 +833,15 @@ public struct DrumKit {
             offset += size
 
             print("Next: Drum Kit Common, GEQ, offset = \(offset)")
-            var levels = [Int]()
-            for _ in 0..<GEQ.bandCount {
-                b = data.next(&offset)
-                let v: Int = Int(b) - 64  // 58(-6) ~ 70(+6), so 64 is zero
-                //print("GEQ band \(i + 1): \(b) --> \(v)")
-                levels.append(v)
+            
+            size = GEQ.bandCount
+            switch GEQ.parse(from: data.slice(from: offset, length: size)) {
+            case .success(let geq):
+                temp.geq = geq
+            case .failure(let error):
+                return .failure(error)
             }
-            temp.geq = GEQ(levels: levels)
+            offset += size
 
             print("Next: Drum Kit Common, Drum mark, offset = \(offset)")
             // Eat the drum mark (39)
@@ -1097,7 +1098,7 @@ extension DrumKit.Common: SystemExclusiveData {
         var data = ByteArray()
         
         data.append(contentsOf: self.effects.asData())
-        self.geq.levels.forEach { data.append(Byte($0.value + 64)) } // 58(-6)~70(+6)
+        data.append(contentsOf: self.geq.asData())
         data.append(1)  // drum_mark
         data.append(contentsOf: self.name.asData())
         data.append(contentsOf: self.effectControl.asData())

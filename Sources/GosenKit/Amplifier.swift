@@ -43,7 +43,7 @@ public struct Amplifier {
             self.releaseTime = Time(releaseTime)
         }
         
-        /// Parse from binary data.
+        /// Parse the amplifier envelope from MIDI System Exclusive data.
         public static func parse(from data: ByteArray) -> Result<Envelope, ParseError> {
             var offset: Int = 0
             var b: Byte = 0
@@ -71,13 +71,15 @@ public struct Amplifier {
             return .success(temp)
         }
         
+        /// Compares two amplifier envelopes.
         public static func == (lhs: Amplifier.Envelope, rhs: Amplifier.Envelope) -> Bool {
-            return lhs.attackTime == rhs.attackTime &&
-            lhs.decay1Time == rhs.decay1Time
-            && lhs.decay1Level == rhs.decay1Level
-            && lhs.decay2Time == rhs.decay2Time
-            && lhs.decay2Level == rhs.decay2Level
-            && lhs.releaseTime == rhs.releaseTime
+            return 
+                lhs.attackTime == rhs.attackTime
+                && lhs.decay1Time == rhs.decay1Time
+                && lhs.decay1Level == rhs.decay1Level
+                && lhs.decay2Time == rhs.decay2Time
+                && lhs.decay2Level == rhs.decay2Level
+                && lhs.releaseTime == rhs.releaseTime
         }
     }
 
@@ -113,6 +115,7 @@ public struct Amplifier {
                 self.release = Time(release)
             }
             
+            /// Parse the key scaling control value from MIDI System Exclusive data.
             public static func parse(from data: ByteArray) -> Result<KeyScalingControl, ParseError> {
                 var offset: Int = 0
                 var b: Byte = 0
@@ -145,8 +148,10 @@ public struct Amplifier {
                 private var _value: Int
             }
 
-            // Almost the same as KeyScalingControl, but level is positive only (0...63),
-            // others are -63...+63.
+            // Almost the same as KeyScalingControl, but the level
+            // is positive only (0...63), others are -63...+63.
+            // So these are types defined inside this struct,
+            // not top-level package types.
             public var level: Level
             public var attackTime: Time
             public var decay1Time: Time
@@ -166,6 +171,7 @@ public struct Amplifier {
                 self.release = Time(release)
             }
             
+            /// Parse the velocity control from MIDI System Exclusive data.
             public static func parse(from data: ByteArray) -> Result<VelocityControl, ParseError> {
                 var offset: Int = 0
                 var b: Byte = 0
@@ -196,6 +202,7 @@ public struct Amplifier {
             velocityToEnvelope = VelocityControl()
         }
         
+        /// Parse the modulation from MIDI System Exclusive data.
         public static func parse(from data: ByteArray) -> Result<Modulation, ParseError> {
             var offset: Int = 0
             
@@ -223,7 +230,7 @@ public struct Amplifier {
         }
     }
 
-    public var velocityCurve: VelocityCurve  // store as 1~12
+    public var velocityCurve: VelocityCurve
     public var envelope: Envelope
     public var modulation: Modulation
     
@@ -233,7 +240,7 @@ public struct Amplifier {
         modulation = Modulation()
     }
 
-    /// Parse from binary data.
+    /// Parse the amplifier from MIDI System Exclusive data.
     public static func parse(from data: ByteArray) -> Result<Amplifier, ParseError> {
         var offset: Int = 0
         var b: Byte = 0
@@ -264,9 +271,10 @@ public struct Amplifier {
     }
 }
 
-// MARK: - SystemExclusiveData
+// MARK: - SystemExclusiveData conformance
 
 extension Amplifier.Envelope: SystemExclusiveData {
+    /// Gets the MIDI System Exclusive data for this amplifier envelope.
     public func asData() -> ByteArray {
         var data = ByteArray()
         
@@ -291,6 +299,7 @@ extension Amplifier.Envelope: SystemExclusiveData {
 }
 
 extension Amplifier: SystemExclusiveData {
+    /// Gets the MIDI System Exclusive data for this amplifier.
     public func asData() -> ByteArray {
         var data = ByteArray()
         
@@ -307,6 +316,7 @@ extension Amplifier: SystemExclusiveData {
 }
 
 extension Amplifier.Modulation: SystemExclusiveData {
+    /// Gets the MIDI System Exclusive data for this modulation.
     public func asData() -> ByteArray {
         var data = ByteArray()
         
@@ -322,6 +332,7 @@ extension Amplifier.Modulation: SystemExclusiveData {
 }
 
 extension Amplifier.Modulation.KeyScalingControl: SystemExclusiveData {
+    /// Gets the MIDI System Exclusive data for this modulation key scaling control.
     public func asData() -> ByteArray {
         var data = ByteArray()
         [
@@ -342,6 +353,7 @@ extension Amplifier.Modulation.KeyScalingControl: SystemExclusiveData {
 }
 
 extension Amplifier.Modulation.VelocityControl: SystemExclusiveData {
+    /// Gets the MIDI System Exclusive data for this modulation velocity control.
     public func asData() -> ByteArray {
         var data = ByteArray()
         [
@@ -361,9 +373,10 @@ extension Amplifier.Modulation.VelocityControl: SystemExclusiveData {
     public static let dataSize = 4
 }
 
-// MARK: - CustomStringConvertible
+// MARK: - CustomStringConvertible conformance
 
 extension Amplifier: CustomStringConvertible {
+    /// Gets a printable description of this amplifier.
     public var description: String {
         var result = ""
         
@@ -376,6 +389,7 @@ extension Amplifier: CustomStringConvertible {
 }
 
 extension Amplifier.Envelope: CustomStringConvertible {
+    /// Gets a printable description of this amplifier envelope.
     public var description: String {
         var s = ""
         s += "AttackTime=\(attackTime.value) Decay1Time=\(decay1Time.value) Decay1Level=\(decay1Level.value)\n"
@@ -385,6 +399,7 @@ extension Amplifier.Envelope: CustomStringConvertible {
 }
 
 extension Amplifier.Modulation: CustomStringConvertible {
+    /// Gets a printable description of this amplifier modulation.
     public var description: String {
         var result = ""
         
@@ -396,6 +411,7 @@ extension Amplifier.Modulation: CustomStringConvertible {
 }
 
 extension Amplifier.Modulation.KeyScalingControl: CustomStringConvertible {
+    /// Gets a printable description of this amplifier modulation key scaling control.
     public var description: String {
         var result = ""
         
@@ -406,6 +422,7 @@ extension Amplifier.Modulation.KeyScalingControl: CustomStringConvertible {
 }
 
 extension Amplifier.Modulation.VelocityControl: CustomStringConvertible {
+    /// Gets a printable description of this amplifier modulation velocity control.
     public var description: String {
         var result = ""
         
@@ -414,6 +431,8 @@ extension Amplifier.Modulation.VelocityControl: CustomStringConvertible {
         return result
     }
 }
+
+// MARK: - RangedInt conformance
 
 extension Amplifier.Envelope.Time: RangedInt {
     public static let range: ClosedRange<Int> = 0...127

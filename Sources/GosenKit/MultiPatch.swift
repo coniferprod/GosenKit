@@ -50,21 +50,23 @@ public struct MultiPatch {
 
             //print("After effects parsed, offset = \(String(format: "%d", offset)) (data length = \(data.count))")
 
-            var levels = [Int]()
-            for _ in 0..<GEQ.bandCount {
-                b = data.next(&offset)
-                let v: Int = Int(b) - 64  // 58(-6) ~ 70(+6), so 64 is zero
-                //print("GEQ band \(i + 1): \(b) --> \(v)")
-                levels.append(v)
+            size = GEQ.bandCount
+            switch GEQ.parse(from: data.slice(from: offset, length: size)) {
+            case .success(let geq):
+                temp.geq = geq
+            case .failure(let error):
+                return .failure(error)
             }
-            temp.geq = GEQ(levels: levels)
+            offset += size
 
             // Don't adjust offset, it has already been adjusted in the loop above.
 
             //print("After GEQ parsed, offset = \(String(format: "%d", offset)) (data length = \(data.count))")
 
             size = PatchName.length
-            switch PatchName.parse(from: data.slice(from: offset, length: size)) {
+            let patchNameData = data.slice(from: offset, length: size)
+            //print("patch name data (\(size) bytes): \(patchNameData.hexDump())")
+            switch PatchName.parse(from: patchNameData) {
             case .success(let name):
                 temp.name = name
             case .failure(let error):
@@ -376,7 +378,7 @@ extension MultiPatch.Common: SystemExclusiveData {
         var data = ByteArray()
         
         data.append(contentsOf: effects.asData())
-        geq.levels.forEach { data.append(Byte($0.value + 64)) } // 58(-6)~70(+6)
+        data.append(contentsOf: geq.asData())
         data.append(contentsOf: name.asData())
         data.append(Byte(volume.value))
                 

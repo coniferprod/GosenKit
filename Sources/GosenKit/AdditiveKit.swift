@@ -20,19 +20,11 @@ public struct AdditiveKit {
         formantFilter = FormantFilter()
         levels = HarmonicLevels()
         bands = FormantFilter.Bands()
+        
+        // Initialize the envelopes with default values.
         envelopes = [HarmonicEnvelope]()
         for _ in 0..<AdditiveKit.harmonicCount {
-            envelopes.append(
-                HarmonicEnvelope(
-                    segments: [
-                        HarmonicEnvelope.Segment(rate: HarmonicEnvelope.Rate(127), level: HarmonicEnvelope.Level(63)),
-                        HarmonicEnvelope.Segment(rate: HarmonicEnvelope.Rate(127), level: HarmonicEnvelope.Level(63)),
-                        HarmonicEnvelope.Segment(rate: HarmonicEnvelope.Rate(127), level: HarmonicEnvelope.Level(63)),
-                        HarmonicEnvelope.Segment(rate: HarmonicEnvelope.Rate(127), level: HarmonicEnvelope.Level(63)),
-                    ],
-                    loopKind: .off
-                )
-            )
+            envelopes.append(HarmonicEnvelope())
         }
     }
     
@@ -110,7 +102,7 @@ public struct AdditiveKit {
 
     /// The checksum of the additive kit.
     public var checksum: Byte {
-        // Additive kit checksum:
+        // Additive kit checksum (as found in Section 3.1.3):
         // {(HCKIT sum) + (HCcode1 sum) + (HCcode2 sum) + (FF sum) + (HCenv sum) + (loud sense select) + 0xA5} & 0x7F
 
         var totalSum: Int = 0
@@ -179,7 +171,8 @@ public struct AdditiveKit {
 
         totalSum += hcEnvSum & 0xFF
 
-        // TODO: figure out the "loud sens select"
+        // The "loud sens select" value does not affect the checksum
+        // when it is zero as specified in Section 3.1.3.
         
         totalSum += 0xA5
         byteCount += 1
@@ -207,19 +200,16 @@ extension AdditiveKit: SystemExclusiveData {
         data.append(contentsOf: levels.asData())
         data.append(contentsOf: bands.asData())
         
-        var envelopeBytes = ByteArray()
         for env in envelopes {
-            let ed = env.asData()
-            for e in ed {
-                data.append(Byte(e))
-                envelopeBytes.append(e)
-            }
+            data.append(contentsOf: env.asData())
         }
-        
-        //print("< HARM ENV = \(Data(envelopeBytes).hexDump)")
-        
-        data.append(0)  // "loud sens" select WTF?
 
+        // The last byte is shown as "dummy" = 0 in Section 3.1.3.
+        // In the checksum calculation it is referred to as
+        // "LS select" or "loud sence select".
+        data.append(0)
+
+        assert(data.count == AdditiveKit.dataSize)
         return data
     }
     

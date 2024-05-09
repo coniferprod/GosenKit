@@ -184,19 +184,21 @@ public struct FormantFilter {
 
     /// Formant filter bands.
     public struct Bands {
-        public var levels: [Level]  // all 0~127
+        public var levels: [Level]  // all values are 0~127
 
         public static let bandCount = 128
 
         public init() {
-            levels = Array(repeating: Level(127), count: Bands.bandCount)
+            levels = Array(repeating: Level(Level.defaultValue), count: Bands.bandCount)
         }
         
+        /// Initialize the formant filter bands with default values.
         public init(levels: [Level]) {
             // Make sure that there are at max 128 levels
             self.levels = [Level](levels.prefix(upTo: Bands.bandCount))
         }
         
+        /// Parse the formant filter bands from MIDI System Exclusive data.
         public static func parse(from data: ByteArray) -> Result<Bands, ParseError> {
             guard
                 data.count == Bands.bandCount
@@ -226,6 +228,7 @@ public struct FormantFilter {
     public var envelope: Envelope
     public var lfo: LFO
     
+    /// Initialize the formant filter with default values.
     public init() {
         bias = -10
         mode = .envelope
@@ -234,6 +237,7 @@ public struct FormantFilter {
         lfo = LFO()
     }
     
+    /// Parse the formant filter from MIDI System Exclusive data.
     public static func parse(from data: ByteArray) -> Result<FormantFilter, ParseError> {
         var offset: Int = 0
         var b: Byte = 0
@@ -269,6 +273,8 @@ public struct FormantFilter {
         return .success(temp)
     }
 }
+
+// MARK: - RangedInt protocol conformance
 
 extension FormantFilter.Envelope.Rate: RangedInt {
     public static let range: ClosedRange<Int> = 0...127
@@ -351,7 +357,7 @@ extension FormantFilter.LFO.Depth: ExpressibleByIntegerLiteral {
     }
 }
 
-// MARK: - SystemExclusiveData
+// MARK: - SystemExclusiveData protocol conformance
 
 extension FormantFilter.Envelope: SystemExclusiveData {
     public func asData() -> ByteArray {
@@ -444,9 +450,10 @@ extension FormantFilter.LFO: SystemExclusiveData {
     public static let dataSize = 3
 }
 
-// MARK: - CustomStringConvertible
+// MARK: - CustomStringConvertible protocol conformance
 
 extension FormantFilter: CustomStringConvertible {
+    /// Generates a string representation of the value.
     public var description: String {
         var s = ""
         s += "  Bias: \(self.bias)\n"
@@ -459,6 +466,7 @@ extension FormantFilter: CustomStringConvertible {
 }
 
 extension FormantFilter.Mode: CustomStringConvertible {
+    /// Generates a string representation of the value.
     public var description: String {
         switch self {
         case .envelope:
@@ -470,6 +478,7 @@ extension FormantFilter.Mode: CustomStringConvertible {
 }
 
 extension FormantFilter.Envelope: CustomStringConvertible {
+    /// Generates a string representation of the value.
     public var description: String {
         var s = ""
         s += "Attack = \(self.attack) "
@@ -484,12 +493,14 @@ extension FormantFilter.Envelope: CustomStringConvertible {
 }
 
 extension FormantFilter.Envelope.Segment: CustomStringConvertible {
+    /// Generates a string representation of the value.
     public var description: String {
         return "L\(self.level) R\(self.rate)"
     }
 }
 
 extension FormantFilter.LFO.Shape: CustomStringConvertible {
+    /// Generates a string representation of the value.
     public var description: String {
         switch self {
         case .triangle:
@@ -503,13 +514,14 @@ extension FormantFilter.LFO.Shape: CustomStringConvertible {
 }
 
 extension FormantFilter.LFO.Depth: CustomStringConvertible {
-    // Generates a string representation of the value.
+    /// Gets a string representation of the formant filter LFO depth.
     public var description: String {
         return "\(self.value)"
     }
 }
 
 extension FormantFilter.LFO: CustomStringConvertible {
+    /// Gets a string representation of this formant filter LFO.
     public var description: String {
         var s = ""
         s += "Speed: \(self.speed) "
@@ -520,14 +532,14 @@ extension FormantFilter.LFO: CustomStringConvertible {
 }
 
 extension FormantFilter.Envelope.Rate: CustomStringConvertible {
-    // Generates a string representation of the value.
+    /// Gets a string representation of the formant filter envelope rate.
     public var description: String {
         return "\(self.value)"
     }
 }
 
 extension FormantFilter.Envelope.Level: CustomStringConvertible {
-    // Generates a string representation of the value.
+    /// Generates a string representation of the value.
     public var description: String {
         return "\(self.value)"
     }

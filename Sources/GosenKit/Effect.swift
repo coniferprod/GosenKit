@@ -122,6 +122,7 @@ public struct EffectDefinition {
         public var parameterNames: [String]
     }
 
+    /// Effect and parameter names.
     public static let names: [Name] = [
         /*  0 */ Name(name: "Hall 1", parameterNames: ["Dry/Wet 2", "Reverb Time", "Predelay Time", "High Frequency Damping"]),
         /*  1 */ Name(name: "Hall 2", parameterNames: ["Dry/Wet 2", "Reverb Time", "Predelay Time", "High Frequency Damping"]),
@@ -190,6 +191,7 @@ public struct EffectDefinition {
         parameter4 = Level(0)
     }
     
+    /// Parse the effect definition from MIDI System Exclusive data.
     public static func parse(from data: ByteArray) -> Result<EffectDefinition, ParseError> {
         var offset: Int = 0
         var b: Byte = 0
@@ -237,6 +239,7 @@ public struct EffectSettings {
         effect4 = EffectDefinition()
     }
     
+    /// Parse the effect settings from MIDI System Exclusive data.
     public static func parse(from data: ByteArray) -> Result<EffectSettings, ParseError> {
         var offset: Int = 0
         var b: Byte = 0
@@ -290,7 +293,7 @@ public struct EffectSettings {
     }
 }
 
-// MARK: - SystemExclusiveData
+// MARK: - SystemExclusiveData protocol conformance
 
 extension EffectDefinition: SystemExclusiveData {
     /// Gets the effect definition as MIDI System Exclusive data bytes.
@@ -319,6 +322,7 @@ extension EffectDefinition: SystemExclusiveData {
 }
 
 extension EffectSettings: SystemExclusiveData {
+    /// Gets the MIDI System Exclusive data for the effect settings.
     public func asData() -> ByteArray {
         var data = ByteArray()
         
@@ -336,7 +340,7 @@ extension EffectSettings: SystemExclusiveData {
     public static let dataSize = 31
 }
 
-// MARK: - CustomStringConvertible
+// MARK: - CustomStringConvertible protocol conformance
 
 extension EffectSettings: CustomStringConvertible {
     // Helper function to construct a printable effect definition string.

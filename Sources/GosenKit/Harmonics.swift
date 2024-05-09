@@ -146,6 +146,7 @@ public struct HarmonicEnvelope {
         self.loopKind = loopKind
     }
     
+    /// Parses the harmonic envelope from MIDI System Exclusive data.
     public static func parse(from data: ByteArray) -> Result<HarmonicEnvelope, ParseError> {
         var offset: Int = 0
         var b: Byte = 0
