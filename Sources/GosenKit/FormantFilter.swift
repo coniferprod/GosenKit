@@ -191,16 +191,32 @@ public struct FormantFilter {
         public init() {
             levels = Array(repeating: Level(127), count: Bands.bandCount)
         }
-           
-        public init(data d: ByteArray) {
+        
+        public init(levels: [Level]) {
+            // Make sure that there are at max 128 levels
+            self.levels = [Level](levels.prefix(upTo: Bands.bandCount))
+        }
+        
+        public static func parse(from data: ByteArray) -> Result<Bands, ParseError> {
+            guard
+                data.count == Bands.bandCount
+            else {
+                return .failure(.invalidLength(data.count, Bands.bandCount))
+            }
+            
+            var temp = Bands()
+            
             var offset: Int = 0
             var b: Byte = 0
             
-            levels = [Level]()
+            var levels = [Level]()
             for _ in 0 ..< Bands.bandCount {
-                b = d.next(&offset)
+                b = data.next(&offset)
                 levels.append(Level(Int(b)))
             }
+            
+            temp.levels = levels
+            return .success(temp)
         }
     }
     

@@ -848,9 +848,14 @@ public struct DrumKit {
             
             print("Next: Drum Kit Common, Name, offset = \(offset)")
             size = PatchName.length
-            temp.name = PatchName(data: data.slice(from: offset, length: size))
+            switch PatchName.parse(from: data.slice(from: offset, length: size)) {
+            case .success(let name):
+                temp.name = name
+            case .failure(let error):
+                return .failure(error)
+            }
             offset += size
-            
+
             print("Next: Drum Kit Common, Volume, offset = \(offset)")
             b = data.next(&offset)
             temp.volume = Level(Int(b))

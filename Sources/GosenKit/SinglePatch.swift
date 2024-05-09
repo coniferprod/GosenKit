@@ -128,7 +128,12 @@ public struct SinglePatch {
             offset += 1
 
             size = PatchName.length
-            temp.name = PatchName(data: data.slice(from: offset, length: size))
+            switch PatchName.parse(from: data.slice(from: offset, length: size)) {
+            case .success(let name):
+                temp.name = name
+            case .failure(let error):
+                return .failure(error)
+            }
             offset += size
             
             b = data.next(&offset)

@@ -55,10 +55,6 @@ extension Byte {
     public func toBinary() -> String {
         return String(self, radix: 2)
     }
-    
-    public func toHex(digits: Int = 2) -> String {
-        return String(format: "%0\(digits)x", self)
-    }
 }
 
 extension ByteArray {
@@ -203,9 +199,17 @@ public struct PatchName: Equatable, Codable {
         self.value = name  // let property setter handle the adjustment
     }
     
-    /// Initializes the patch name from MIDI System Exclusive data bytes.
-    public init(data: ByteArray) {
-        self.value = String(data: Data(data), encoding: .ascii) ?? "--------"
+    /// Parses the patch name from MIDI System Exclusive data bytes.
+    public static func parse(from data: ByteArray) -> Result<PatchName, ParseError> {
+        guard
+            data.count > PatchName.length
+        else {
+            return .failure(.invalidLength(data.count, PatchName.length))
+        }
+        
+        let value = String(data: Data(data), encoding: .ascii) ?? "--------"
+        let name = PatchName(value)
+        return .success(name)
     }
 }
 

@@ -52,7 +52,7 @@ public enum Wave: Equatable {
             }
             return .success(.pcm(WaveNumber(number + 1)))
         }
-        return .failure(.invalidData(0))
+        return .failure(.invalidData(0, "Invalid wave number bytes \(msb.toHexString()) \(lsb.toHexString())"))
     }
     
     /// Gets the name for this wave.

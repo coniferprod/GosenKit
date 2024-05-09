@@ -7,17 +7,11 @@ public struct GosenKit {
     public init() { }
 }
 
-extension Byte {
-    public func toHex() -> String {
-        return String(format:"%02X", self)
-    }
-}
-
 /// Error type for parsing data from MIDI System Exclusive bytes.
 public enum ParseError: Error {
     case invalidLength(Int, Int)  // actual, expected
     case invalidChecksum(Byte, Byte)  // actual, expected
-    case invalidData(Int)  // offset in data
+    case invalidData(Int, String)  // offset in data, with additional information
 }
 
 extension ParseError: CustomStringConvertible {
@@ -26,9 +20,9 @@ extension ParseError: CustomStringConvertible {
         case .invalidLength(let actual, let expected):
             return "Got \(actual) bytes of data, expected \(expected) bytes."
         case .invalidChecksum(let actual, let expected):
-            return "Computed checksum was \(actual.toHex())H, expected \(expected.toHex())H."
-        case .invalidData(let offset):
-            return "Invalid data at offset \(offset)."
+            return "Computed checksum was \(actual.toHexString())H, expected \(expected.toHexString())H."
+        case .invalidData(let offset, let info):
+            return "Invalid data at offset \(offset). \(info)."
         }
     }
 }
@@ -674,6 +668,43 @@ extension MIDINote: CustomStringConvertible {
 public enum FixedKey {
     case off
     case on(Key)
+}
+
+public struct PatchNumber {
+    private var _value: Int
+}
+
+extension PatchNumber: RangedInt {
+    public static let range: ClosedRange<Int> = 0...127
+    public static let defaultValue = 0
+    
+    public init() {
+        assert(Self.range.contains(Self.defaultValue), "Default value must be in range")
+
+        _value = Self.defaultValue
+    }
+    
+    public init(_ value: Int) {
+        _value = Self.range.clamp(value)
+    }
+
+    public var value: Int {
+        return _value
+    }
+}
+
+extension PatchNumber: ExpressibleByIntegerLiteral {
+    /// Initialize with an integer literal.
+    public init(integerLiteral value: Int) {
+        _value = Self.range.clamp(value)
+    }
+}
+
+extension PatchNumber: CustomStringConvertible {
+    // Generates a string representation of the value.
+    public var description: String {
+        return "\(self.value)"
+    }
 }
 
 public struct Transpose {

@@ -64,7 +64,12 @@ public struct MultiPatch {
             //print("After GEQ parsed, offset = \(String(format: "%d", offset)) (data length = \(data.count))")
 
             size = PatchName.length
-            temp.name = PatchName(data: data.slice(from: offset, length: size))
+            switch PatchName.parse(from: data.slice(from: offset, length: size)) {
+            case .success(let name):
+                temp.name = name
+            case .failure(let error):
+                return .failure(error)
+            }
             offset += size
 
             //print("After name parsed, offset = \(String(format: "%d", offset)) (data length = \(data.count))")

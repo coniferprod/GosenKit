@@ -55,7 +55,12 @@ public struct AdditiveKit {
         offset += size
         
         size = Morf.dataSize
-        temp.morf = Morf(data: data.slice(from: offset, length: size))
+        switch Morf.parse(from: data.slice(from: offset, length: size)) {
+        case .success(let morf):
+            temp.morf = morf
+        case .failure(let error):
+            return .failure(error)
+        }
         offset += size
 
         size = FormantFilter.dataSize
@@ -68,11 +73,21 @@ public struct AdditiveKit {
         offset += size
         
         size = HarmonicLevels.dataSize
-        temp.levels = HarmonicLevels(data: data.slice(from: offset, length: size))
+        switch HarmonicLevels.parse(from: data.slice(from: offset, length: size)) {
+        case .success(let levels):
+            temp.levels = levels
+        case .failure(let error):
+            return .failure(error)
+        }
         offset += size
         
         size = FormantFilter.Bands.dataSize
-        temp.bands = FormantFilter.Bands(data: data.slice(from: offset, length: size))
+        switch FormantFilter.Bands.parse(from: data.slice(from: offset, length: size)) {
+        case .success(let bands):
+            temp.bands = bands
+        case .failure(let error):
+            return .failure(error)
+        }
         offset += size
         
         size = HarmonicEnvelope.dataSize

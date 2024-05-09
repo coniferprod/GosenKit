@@ -171,34 +171,34 @@ public struct DumpCommand {
         guard
             MIDIChannel.range.contains(Int(data[0] + 1))
         else {
-            return .failure(.invalidData(0))
+            return .failure(.invalidData(0, "Invalid MIDI channel byte: \(data[0].toHexString())H"))
         }
         
         guard 
             Cardinality.isValid(value: data[1])
         else {
-            return .failure(.invalidData(1))
+            return .failure(.invalidData(1, "Invalid cardinality byte: \(data[1].toHexString())H"))
         }
         
         // "5th" in spec (section 5.3, "Dump command table"), always 0x00
         guard 
             data[2] == SystemExclusive.groupIdentifier 
         else {
-            return .failure(.invalidData(2))
+            return .failure(.invalidData(2, "Invalid group identifier byte: \(data[2].toHexString())H"))
         }
         
         // "6th" in spec, always 0x0A
         guard 
             data[3] == SystemExclusive.machineIdentifier
         else {
-            return .failure(.invalidData(3))
+            return .failure(.invalidData(3, "Invalid machine identifier, expected \(SystemExclusive.machineIdentifier.toHexString())H, got \(data[3].toHexString())H"))
         }
 
         // patch kind ("7th" in spec): 0x00, 0x10, 0x11 or 0x20
         guard 
             PatchKind.isValid(value: data[4])
         else {
-            return .failure(.invalidData(4))
+            return .failure(.invalidData(4, "Invalid patch kind byte: \(data[4].toHexString())"))
         }
         
         // Match the patterns from the "Dump command table".
@@ -372,7 +372,7 @@ public struct DumpCommand {
         // Block multi is the same as block combi
         
         default:
-            return .failure(.invalidData(0))
+            return .failure(.invalidData(0, "Unspecified error in header"))
         }
     }
 }

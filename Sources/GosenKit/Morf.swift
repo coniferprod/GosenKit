@@ -2,24 +2,13 @@ import SyxPack
 import ByteKit
 
 public struct Morf {
-    public struct CopyParameters: Codable {
-        public var patchNumber: Int  // 0~127
+    public struct CopyParameters {
+        public var patchNumber: PatchNumber  // 0~127
         public var sourceNumber: Int  // 0~11 (0~5:soft, 6~11:loud)
         
         public init() {
             patchNumber = 0
             sourceNumber = 0
-        }
-        
-        public init(data d: ByteArray) {
-            var offset: Int = 0
-            var b: Byte = 0
-        
-            b = d.next(&offset)
-            patchNumber = Int(b)
-            
-            b = d.next(&offset)
-            sourceNumber = Int(b)
         }
         
         public static func parse(from data: ByteArray) -> Result<CopyParameters, ParseError> {
@@ -29,7 +18,7 @@ public struct Morf {
             var temp = CopyParameters()
             
             b = data.next(&offset)
-            temp.patchNumber = Int(b)
+            temp.patchNumber = PatchNumber(Int(b))
             
             b = data.next(&offset)
             temp.sourceNumber = Int(b)
@@ -51,26 +40,6 @@ public struct Morf {
             time3 = 0
             time4 = 0
             loopKind = .off
-        }
-        
-        public init(data d: ByteArray) {
-            var offset: Int = 0
-            var b: Byte = 0
-        
-            b = d.next(&offset)
-            time1 = Level(Int(b))
-            
-            b = d.next(&offset)
-            time2 = Level(Int(b))
-
-            b = d.next(&offset)
-            time3 = Level(Int(b))
-            
-            b = d.next(&offset)
-            time4 = Level(Int(b))
-
-            b = d.next(&offset)
-            loopKind = HarmonicEnvelope.LoopKind(index: Int(b))!
         }
         
         public static func parse(from data: ByteArray) -> Result<Envelope, ParseError> {
@@ -112,24 +81,52 @@ public struct Morf {
         envelope = Envelope()
     }
     
-    public init(data d: ByteArray) {
-        var offset: Int = 0
+    public static func parse(from data: ByteArray) -> Result<Morf, ParseError> {
+        var temp = Morf()
         
+        var offset: Int = 0
         var size = CopyParameters.dataSize
-        copy1 = CopyParameters(data: d.slice(from: offset, length: size))
+        switch CopyParameters.parse(from: data.slice(from: offset, length: size)) {
+        case .success(let copy):
+            temp.copy1 = copy
+        case .failure(let error):
+            return .failure(error)
+        }
         offset += size
 
-        copy2 = CopyParameters(data: d.slice(from: offset, length: size))
+        switch CopyParameters.parse(from: data.slice(from: offset, length: size)) {
+        case .success(let copy):
+            temp.copy2 = copy
+        case .failure(let error):
+            return .failure(error)
+        }
         offset += size
 
-        copy3 = CopyParameters(data: d.slice(from: offset, length: size))
+        switch CopyParameters.parse(from: data.slice(from: offset, length: size)) {
+        case .success(let copy):
+            temp.copy3 = copy
+        case .failure(let error):
+            return .failure(error)
+        }
         offset += size
 
-        copy4 = CopyParameters(data: d.slice(from: offset, length: size))
+        switch CopyParameters.parse(from: data.slice(from: offset, length: size)) {
+        case .success(let copy):
+            temp.copy4 = copy
+        case .failure(let error):
+            return .failure(error)
+        }
         offset += size
-
+        
         size = Envelope.dataSize
-        envelope = Envelope(data: d.slice(from: offset, length: size))
+        switch Envelope.parse(from: data.slice(from: offset, length: size)) {
+        case .success(let envelope):
+            temp.envelope = envelope
+        case .failure(let error):
+            return .failure(error)
+        }
+
+        return .success(temp)
     }
 }
 
@@ -137,7 +134,7 @@ public struct Morf {
 
 extension Morf.CopyParameters: SystemExclusiveData {
     public func asData() -> ByteArray {
-        return [Byte(patchNumber), Byte(sourceNumber)]
+        return [Byte(patchNumber.value), Byte(sourceNumber)]
     }
     
     public var dataLength: Int { Morf.CopyParameters.dataSize }

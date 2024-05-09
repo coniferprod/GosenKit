@@ -60,7 +60,7 @@ public struct MultiBank {
     
     /// Parse a bank of multi patches from MIDI System Exclusive data.
     public static func parse(from data: ByteArray) -> Result<MultiBank, ParseError> {
-        //print("Parsing multi bank, \(data.count) bytes")
+        print("Parsing multi bank, \(data.count) bytes")
         var offset = 0
         
         var temp = MultiBank()
@@ -69,11 +69,11 @@ public struct MultiBank {
         var patches = [MultiPatch]()
         for _ in 0..<MultiBank.patchCount {
             let patchData = data.slice(from: offset, length: size)
-            //print("patchData: from: \(offset) length: \(patchData.count)")
+            print("patchData: from: \(offset) length: \(patchData.count)")
             switch MultiPatch.parse(from: patchData) {
             case .success(let multiPatch):
                 patches.append(multiPatch)
-                //print(multiPatch.common.name.value)
+                print(multiPatch.common.name.value)
             case .failure(let error):
                 return .failure(error)
             }

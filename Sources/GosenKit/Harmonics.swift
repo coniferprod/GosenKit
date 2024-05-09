@@ -296,26 +296,37 @@ public struct HarmonicLevels {
         }
     }
 
-    /// Initializes harmonic levels from MIDI System Exclusive data bytes.
-    public init(data d: ByteArray) {
+    public init(soft: [Level], loud: [Level]) {
+        self.soft = soft
+        self.loud = loud
+    }
+    
+    /// Parses the harmonic levels from MIDI System Exclusive data bytes.
+    public static func parse(from data: ByteArray) -> Result<HarmonicLevels, ParseError> {
+        var temp = HarmonicLevels()
+
         var offset: Int = 0
         var b: Byte = 0
 
         var i = 0
-        soft = [Level]()
+        var soft = [Level]()
         while i < HarmonicLevels.harmonicCount {
-            b = d.next(&offset)
+            b = data.next(&offset)
             soft.append(Level(Int(b)))
             i += 1
         }
+        temp.soft = soft
         
         i = 0
-        loud = [Level]()
+        var loud = [Level]()
         while i < HarmonicLevels.harmonicCount {
-            b = d.next(&offset)
+            b = data.next(&offset)
             loud.append(Level(Int(b)))
             i += 1
         }
+        temp.loud = loud
+
+        return .success(temp)
     }
 }
 

@@ -11,7 +11,7 @@ public class ToneMap {
         self.included = [Bool](repeating: false, count: maxCount)
     }
     
-    /// Parse from binary data.
+    /// Parse tone map from MIDI System Exclusive data.
     public static func parse(from data: ByteArray) -> Result<ToneMap, ParseError> {
         guard
             data.count == ToneMap.dataSize
@@ -30,23 +30,6 @@ public class ToneMap {
         }
 
         return .success(temp)
-    }
-    
-    /// Initializes a tone map from System Exclusive data.
-    public init?(data: ByteArray) {
-        guard 
-            data.count == ToneMap.dataSize
-        else {
-            return nil
-        }
-        
-        self.included = [Bool]()
-        for (_, byte) in data.enumerated() {
-            // Take the bottom seven bits of each byte
-            for bit in 0..<7 {
-                self.included.append(byte.isBitSet(bit))
-            }
-        }
     }
     
     /// Sets or resets the included status of the tone at `index`.
