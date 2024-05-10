@@ -155,36 +155,202 @@ final class SystemExclusiveTests: XCTestCase {
         XCTAssertEqual(data.count, 5434)
     }
 
-    // The test dump commands are organized like section 5.3 "Dump command table"
-    // in the K5000 MIDI implementation document (p. 43).
+    // The test dump commands are organized like section 3.1.1
+    // in the K5000 MIDI implementation document (p. 9).
     
     // NOTE: There is always are least 8 bytes of data, because the header will be
     // followed by the actual patch data. Depending on the dump command, some of
     // the data at the end will be ignored.
     
-    // K5000W
-    // One
-    let oneADDBankA: ByteArray = [ 0x00, 0x20, 0x00, 0x0A, 0x00, 0x00, 0x00, /* filler */ 0x00 ] // One ADD Bank A (see 3.1.1b)
-    let onePCMBankB: ByteArray = [ 0x00, 0x20, 0x00, 0x0A, 0x00, 0x01, 0x00, /* filler */ 0x00 ] // One PCM Bank B (see 3.1.1d)
+    // The prelude F0 40 is not included. All samples are on MIDI channel 1.
+
+    // a:BLOCK SINGLE DUMP (ADD, All of enable patch in A1 - 128)
+    let blockSingleA: ByteArray = [
+        0x00,  // MIDI channel 1
+        0x21, 0x00, 0x0A, 0x00, 0x00,
+        
+        /* tone map of 19 bytes */
+        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+        0x00, 0x00, 0x00,
+    ]
+    
+    // b:ONE SINGLE DUMP (ADD, A1 - 128)
+    let oneSingleA: ByteArray = [
+        0x00,  // MIDI channel 1
+
+        0x20, 0x00, 0x0A, 0x00, 0x00,
+        
+        0x00,  // sub1 = Tone No. (00~7F)
+    ]
+    
+    // c:BLOCK SINGLE DUMP (PCM, all of B70 - B116)  (only for K5000W)
+    let blockSingleB: ByteArray = [
+        0x00,  // MIDI channel 1
+
+        0x21, 0x00, 0x0A, 0x00, 0x01,
+    ]
+    
+    // d:ONE SINGLE DUMP (PCM, B70 - B116) (only for K5000W)
+    let oneSingleB: ByteArray = [
+        0x00,  // MIDI channel 1
+
+        0x20, 0x00, 0x0A, 0x00, 0x01,
+        
+        0x00,  // sub1 = Tone No. (45~73)
+    ]
+    
+    // e:DRUM KIT DUMP (B117) (only for K5000W)
+    let drumKitB: ByteArray = [
+        0x00,  // MIDI channel 1
+
+        0x20, 0x00, 0x0A, 0x10,
+    ]
+    
+    // f:BLOCK DRUM INST DUMP (All of Inst User1~32) (only for K5000W)
+    let blockDrumInst: ByteArray = [
+        0x00,  // MIDI channel 1
+
+        0x21, 0x00, 0x0A, 0x11,
+    ]
+    
+    // g:ONE DRUM INST DUMP (User Inst U1 - 32) (only for K5000W)
+    let oneDrumInst: ByteArray = [
+        0x00,  // MIDI channel 1
+
+        0x20, 0x00, 0x0A, 0x11,
+        
+        0x00, // sub1 = INST No. (00 ~ 1F)
+    ]
+    
+    // h:BLOCK COMBI DUMP (All of C1 - 64) (Combi is changed to Multi on K5000S/R)
+    let blockCombi: ByteArray = [
+        0x00,  // MIDI channel 1
+
+        0x21, 0x00, 0x0A, 0x20,
+    ]
+    
+    // i:ONE COMBI DUMP (C1 - 64) (Combi is changed to Multi on K5000S/R)
+    let oneCombi: ByteArray = [
+        0x00,  // MIDI channel 1
+
+        0x20, 0x00, 0x0A, 0x20,
+        
+        0x00, // sub1 = INST No. (00 ~ 3F)
+    ]
+    
+    // j:BLOCK SINGLE DUMP (ADD, All of enable patch in D1-128) (only for K5000S/R)
+    let blockSingleD: ByteArray = [
+        0x00,  // MIDI channel 1
+
+        0x21, 0x00, 0x0A, 0x00, 0x02,
+        
+        /* tone map of 19 bytes */
+        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+        0x00, 0x00, 0x00,
+    ]
+    
+    // k:ONE SINGLE DUMP (ADD, D1 - 128) (Only for K5000S/R)
+    let oneSingleD: ByteArray = [
+        0x00,  // MIDI channel 1
+
+        0x20, 0x00, 0x0A, 0x00, 0x02,
+        
+        0x00,  // sub1 = Tone No. (00 ~ 7F)
+    ]
+    
+    // l:BLOCK SINGLE DUMP (ADD, All of enable patch in E1-128) (Only when ME-1 is installed)
+    let blockSingleE: ByteArray = [
+        0x00,  // MIDI channel 1
+        
+        0x21, 0x00, 0x0A, 0x00, 0x03,
+
+        /* tone map of 19 bytes */
+        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+        0x00, 0x00, 0x00,
+    ]
+    
+    // m:ONE SINGLE DUMP (ADD, E1 - 128) (Only when ME-1 is installed)
+    let oneSingleE: ByteArray = [
+        0x00,  // MIDI channel 1
+        
+        0x20, 0x00, 0x0A, 0x00, 0x03,
+        
+        0x00, // sub1 = Tone No. (00 ~ 7F)
+    ]
+    
+    // n:BLOCK SINGLE DUMP (ADD, all of enable patch in F1 - 128) (Only when ME-1 is installed)
+    let blockSingleF: ByteArray = [
+        0x00,  // MIDI channel 1
+    
+        0x21, 0x00, 0x0A, 0x00, 0x04,
+        
+        /* tone map of 19 bytes */
+        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+        0x00, 0x00, 0x00,
+    ]
+    
+    // o:ONE SINGLE DUMP (ADD, F1 - 128) (Only when ME-1 is installed)
+    let oneSingleF: ByteArray = [
+        0x00,  // MIDI channel 1
+
+        0x20, 0x00, 0x0A, 0x00, 0x04,
+        
+        0x00, // sub1: Tone No. (00 ~ 7F)
+    ]
+    
+    // One ADD Bank A (see 3.1.1b)
+    let oneADDBankA: ByteArray = [
+        0x00, 0x20, 0x00, 0x0A, 0x00, 0x00,
+        0x00, // Tone No. 00
+    ]
+    
+    // One PCM Bank B (see 3.1.1d)
+    let onePCMBankB: ByteArray = [
+        0x00, 0x20, 0x00, 0x0A, 0x00, 0x01,
+        0x00, /* filler */ 0x00 ]
+    
     let oneExpBankE: ByteArray = [ 0x00, 0x20, 0x00, 0x0A, 0x00, 0x03, 0x00, /* filler */ 0x00 ] // One Exp Bank E ((see 3.1.1m)
     let oneExpBankF: ByteArray = [ 0x00, 0x20, 0x00, 0x0A, 0x00, 0x04, 0x00, /* filler */ 0x00 ] // One Exp Bank F (see 3.1.1o)
     let oneDrumKit: ByteArray = [ 0x00, 0x20, 0x00, 0x0A, 0x10, /* filler */ 0x00, 0x00, 0x00 ]
     let oneDrumInstrument: ByteArray = [ 0x00, 0x20, 0x00, 0x0A, 0x11, 0x00, /* filler */ 0x00, 0x00 ]
-    let oneCombi: ByteArray = [ 0x00, 0x20, 0x00, 0x0A, 0x20, 0x00, /* filler */ 0x00, 0x00 ] // One Multi/Combi (see 3.1.1i)
+    //let oneCombi: ByteArray = [ 0x00, 0x20, 0x00, 0x0A, 0x20, 0x00, /* filler */ 0x00, 0x00 ] // One Multi/Combi (see 3.1.1i)
 
     // Block
-    let blockADDBankA: ByteArray = [ 0x00, 0x21, 0x00, 0x0A, 0x00, 0x00,
-                                     /* tone map of 19 bytes would follow */
-                                     /* filler */ 0x00, 0x00 ]
+    let blockADDBankA: ByteArray = [
+        0x00, 0x21, 0x00, 0x0A, 0x00, 0x00,
+                                     
+        /* tone map of 19 bytes */
+        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+        0x00, 0x00, 0x00,
+    ]
+    
     let blockPCMBankB: ByteArray = [ 0x00, 0x21, 0x00, 0x0A, 0x00, 0x01, /* filler */ 0x00, 0x00 ]
-    let blockExpBankE: ByteArray = [ 0x00, 0x21, 0x00, 0x0A, 0x00, 0x03,
-                                     /* tone map of 19 bytes would follow */
-                                     /* filler */ 0x00, 0x00 ]
-    let blockExpBankF: ByteArray = [ 0x00, 0x21, 0x00, 0x0A, 0x00, 0x04,
-                                     /* tone map of 19 bytes would follow */
-                                     /* filler */ 0x00, 0x00 ]
+    
+    let blockExpBankE: ByteArray = [
+        0x00, 0x21, 0x00, 0x0A, 0x00, 0x03,
+        
+        /* tone map of 19 bytes */
+        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+        0x00, 0x00, 0x00,
+    ]
+    
+    let blockExpBankF: ByteArray = [
+        0x00, 0x21, 0x00, 0x0A, 0x00, 0x04,
+                                     
+        /* tone map of 19 bytes */
+        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+        0x00, 0x00, 0x00,
+    ]
+    
     let blockDrumInstrument: ByteArray = [ 0x00, 0x21, 0x00, 0x0A, 0x11, /* filler */ 0x00, 0x00, 0x00 ]
-    let blockCombi: ByteArray = [ 0x00, 0x21, 0x00, 0x0A, 0x20, /* filler */ 0x00, 0x00, 0x00 ]
+    //let blockCombi: ByteArray = [ 0x00, 0x21, 0x00, 0x0A, 0x20, /* filler */ 0x00, 0x00, 0x00 ]
 
     // K5000S/R
     // One
@@ -195,121 +361,166 @@ final class SystemExclusiveTests: XCTestCase {
     
     // Block
     // blockADDBankA is the same as on the K5000W
-    let blockADDBankD: ByteArray = [ 0x00, 0x21, 0x00, 0x0A, 0x00, 0x02,
-                                     /* tone map of 19 bytes would follow */
-                                     /* filler */ 0x00, 0x00 ]
+    let blockADDBankD: ByteArray = [ 
+        0x00, 0x21, 0x00, 0x0A, 0x00, 0x02,
+        
+        /* tone map of 19 bytes */
+        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+        0x00, 0x00, 0x00,
+    ]
     // blockExpBankE and blockExpBankF are the same as on the K5000W
     // blockMulti is the same as blockCombi on the K5000W
     
-    func testDumpCommand_oneADDBankA() {
-        let actual = DumpCommand(data: oneADDBankA)
-        XCTAssertTrue(actual != nil)
-        let expected = DumpCommand(channel: MIDIChannel(1), cardinality: .one, bank: .a, kind: .single, subBytes: [0x00])
-        XCTAssertEqual(actual, expected)
+    // The following functions are named after the sub-sections of
+    // section 3.1.1 in the K5000 MIDI manual.
+    func testDump_a() {
+        switch DumpCommand.parse(from: blockSingleA) {
+        case .success(let actual):
+            let expected = DumpCommand(channel: MIDIChannel(1), cardinality: .block, bank: .a, kind: .single, subBytes: ByteArray(repeating: 0x00, count: ToneMap.dataSize))
+            XCTAssertEqual(actual, expected)
+        case .failure(let error):
+            XCTFail("\(error)")
+        }
     }
     
-    func testDumpCommand_onePCMBankB() {
-        let actual = DumpCommand(data: onePCMBankB)
-        XCTAssertTrue(actual != nil)
-        let expected = DumpCommand(channel: MIDIChannel(1), cardinality: .one, bank: .b, kind: .single, subBytes: [0x00])
-        XCTAssertEqual(actual, expected)
+    func testDump_b() {
+        switch DumpCommand.parse(from: oneSingleA) {
+        case .success(let actual):
+            let expected = DumpCommand(channel: MIDIChannel(1), cardinality: .one, bank: .a, kind: .single, subBytes: [0x00])
+            XCTAssertEqual(actual, expected)
+        case .failure(let error):
+            XCTFail("\(error)")
+        }
     }
     
-    func testDumpCommand_oneExpBankE() {
-        let actual = DumpCommand(data: oneExpBankE)
-        XCTAssertTrue(actual != nil)
-        let expected = DumpCommand(channel: MIDIChannel(1), cardinality: .one, bank: .e, kind: .single, subBytes: [0x00])
-        XCTAssertEqual(actual, expected)
+    func testDump_c() {
+        switch DumpCommand.parse(from: blockSingleB) {
+        case .success(let actual):
+            let expected = DumpCommand(channel: MIDIChannel(1), cardinality: .block, bank: .b, kind: .single, subBytes: [])
+            XCTAssertEqual(actual, expected)
+        case .failure(let error):
+            XCTFail("\(error)")
+        }
     }
     
-    func testDumpCommand_oneExpBankF() {
-        let actual = DumpCommand(data: oneExpBankF)
-        XCTAssertTrue(actual != nil)
-        let expected = DumpCommand(channel: MIDIChannel(1), cardinality: .one, bank: .f, kind: .single, subBytes: [0x00])
-        XCTAssertEqual(actual, expected)
-    }
-
-    func testDumpCommand_oneDrumKit() {
-        let actual = DumpCommand(data: oneDrumKit)
-        XCTAssertTrue(actual != nil)
-        let expected = DumpCommand(channel: MIDIChannel(1), cardinality: .one, bank: .none, kind: .drumKit, subBytes: [])
-        XCTAssertEqual(actual, expected)
+    func testDump_d() {
+        switch DumpCommand.parse(from: oneSingleB) {
+        case .success(let actual):
+            let expected = DumpCommand(channel: MIDIChannel(1), cardinality: .one, bank: .b, kind: .single, subBytes: [0x00])
+            XCTAssertEqual(actual, expected)
+        case .failure(let error):
+            XCTFail("\(error)")
+        }
     }
     
-    func testDumpCommand_oneDrumInstrument() {
-        let actual = DumpCommand(data: oneDrumInstrument)
-        XCTAssertTrue(actual != nil)
-        let expected = DumpCommand(channel: MIDIChannel(1), cardinality: .one, bank: .none, kind: .drumInstrument, subBytes: [])
-        XCTAssertEqual(actual, expected)
-    }
-        
-    func testDumpCommand_oneCombi() {
-        let actual = DumpCommand(data: oneCombi)
-        XCTAssertTrue(actual != nil)
-        let expected = DumpCommand(channel: MIDIChannel(1), cardinality: .one, bank: .multi, kind: .multi, subBytes: [0x00])
-        XCTAssertEqual(actual, expected)
+    func testDump_e() {
+        switch DumpCommand.parse(from: drumKitB) {
+        case .success(let actual):
+            let expected = DumpCommand(channel: MIDIChannel(1), cardinality: .one, bank: .none, kind: .drumKit, subBytes: [])
+            XCTAssertEqual(actual, expected)
+        case .failure(let error):
+            XCTFail("\(error)")
+        }
     }
     
-    func testDumpCommand_blockADDBankA() {
-        let actual = DumpCommand(data: blockADDBankA)
-        XCTAssertTrue(actual != nil)
-        let expected = DumpCommand(channel: MIDIChannel(1), cardinality: .block, bank: .a, kind: .single, subBytes: [0x00, 0x00])
-        XCTAssertEqual(actual, expected)
+    func testDump_f() {
+        switch DumpCommand.parse(from: blockDrumInst) {
+        case .success(let actual):
+            let expected = DumpCommand(channel: MIDIChannel(1), cardinality: .block, bank: .none, kind: .drumInstrument, subBytes: [])
+            XCTAssertEqual(actual, expected)
+        case .failure(let error):
+            XCTFail("\(error)")
+        }
     }
     
-    func testDumpCommand_blockPCMBankB() {
-        let actual = DumpCommand(data: blockPCMBankB)
-        XCTAssertTrue(actual != nil)
-        let expected = DumpCommand(channel: MIDIChannel(1), cardinality: .block, bank: .b, kind: .single, subBytes: [])
-        XCTAssertEqual(actual, expected)
+    func testDump_g() {
+        switch DumpCommand.parse(from: oneDrumInst) {
+        case .success(let actual):
+            let expected = DumpCommand(channel: MIDIChannel(1), cardinality: .one, bank: .none, kind: .drumInstrument, subBytes: [0x00])
+            XCTAssertEqual(actual, expected)
+        case .failure(let error):
+            XCTFail("\(error)")
+        }
     }
     
-    func testDumpCommand_blockExpBankE() {
-        let actual = DumpCommand(data: blockExpBankE)
-        XCTAssertTrue(actual != nil)
-        let expected = DumpCommand(channel: MIDIChannel(1), cardinality: .block, bank: .e, kind: .single, subBytes: [0x00, 0x00])
-        XCTAssertEqual(actual, expected)
+    func testDump_h() {
+        switch DumpCommand.parse(from: blockCombi) {
+        case .success(let actual):
+            let expected = DumpCommand(channel: MIDIChannel(1), cardinality: .block, bank: .multi, kind: .multi, subBytes: [])
+            XCTAssertEqual(actual, expected)
+        case .failure(let error):
+            XCTFail("\(error)")
+        }
     }
     
-    func testDumpCommand_blockExpBankF() {
-        let actual = DumpCommand(data: blockExpBankF)
-        XCTAssertTrue(actual != nil)
-        let expected = DumpCommand(channel: MIDIChannel(1), cardinality: .block, bank: .f, kind: .single, subBytes: [0x00, 0x00])
-        XCTAssertEqual(actual, expected)
+    func testDump_i() {
+        switch DumpCommand.parse(from: blockCombi) {
+        case .success(let actual):
+            let expected = DumpCommand(channel: MIDIChannel(1), cardinality: .block, bank: .multi, kind: .multi, subBytes: [])
+            XCTAssertEqual(actual, expected)
+        case .failure(let error):
+            XCTFail("\(error)")
+        }
     }
     
-    func testDumpCommand_blockDrumInstrument() {
-        let actual = DumpCommand(data: blockDrumInstrument)
-        XCTAssertTrue(actual != nil)
-        let expected = DumpCommand(channel: MIDIChannel(1), cardinality: .block, bank: .none, kind: .drumInstrument, subBytes: [])
-        XCTAssertEqual(actual, expected)
-    }
-
-    func testDumpCommand_blockCombi() {
-        let actual = DumpCommand(data: blockCombi)
-        XCTAssertTrue(actual != nil)
-        let expected = DumpCommand(channel: MIDIChannel(1), cardinality: .block, bank: .multi, kind: .multi, subBytes: [])
-        XCTAssertEqual(actual, expected)
-    }
-
-    func testDumpCommand_oneADDBankD() {
-        let actual = DumpCommand(data: oneADDBankD)
-        XCTAssertTrue(actual != nil)
-        let expected = DumpCommand(channel: MIDIChannel(1), cardinality: .one, bank: .d, kind: .single, subBytes: [0x00])
-        XCTAssertEqual(actual, expected)
+    func testDump_j() {
+        switch DumpCommand.parse(from: blockSingleD) {
+        case .success(let actual):
+            let expected = DumpCommand(channel: MIDIChannel(1), cardinality: .block, bank: .d, kind: .single, subBytes: ByteArray(repeating: 0x00, count: ToneMap.dataSize))
+            XCTAssertEqual(actual, expected)
+        case .failure(let error):
+            XCTFail("\(error)")
+        }
     }
     
-    func testDumpCommand_blockADDBankD() {
-        let actual = DumpCommand(data: blockADDBankD)
-        XCTAssertTrue(actual != nil)
-        let expected = DumpCommand(channel: MIDIChannel(1), cardinality: .block, bank: .d, kind: .single, subBytes: [0x00, 0x00])
-        XCTAssertEqual(actual, expected)
+    func testDump_k() {
+        switch DumpCommand.parse(from: oneSingleD) {
+        case .success(let actual):
+            let expected = DumpCommand(channel: MIDIChannel(1), cardinality: .one, bank: .d, kind: .single, subBytes: [0x00])
+            XCTAssertEqual(actual, expected)
+        case .failure(let error):
+            XCTFail("\(error)")
+        }
     }
     
-    func testDumpCommand_asData() {
-        let dump = DumpCommand(data: oneADDBankA)
-        XCTAssertTrue(dump != nil)
-        let dumpData = dump?.asData()
-        XCTAssertEqual(dumpData, ByteArray([0x00, 0x20, 0x00, 0x0A, 0x00, 0x00, 0x00]))
+    func testDump_l() {
+        switch DumpCommand.parse(from: blockSingleE) {
+        case .success(let actual):
+            let expected = DumpCommand(channel: MIDIChannel(1), cardinality: .block, bank: .e, kind: .single, subBytes: ByteArray(repeating: 0x00, count: ToneMap.dataSize))
+            XCTAssertEqual(actual, expected)
+        case .failure(let error):
+            XCTFail("\(error)")
+        }
+    }
+    
+    func testDump_m() {
+        switch DumpCommand.parse(from: oneSingleE) {
+        case .success(let actual):
+            let expected = DumpCommand(channel: MIDIChannel(1), cardinality: .one, bank: .e, kind: .single, subBytes: [0x00])
+            XCTAssertEqual(actual, expected)
+        case .failure(let error):
+            XCTFail("\(error)")
+        }
+    }
+    
+    func testDump_n() {
+        switch DumpCommand.parse(from: blockSingleF) {
+        case .success(let actual):
+            let expected = DumpCommand(channel: MIDIChannel(1), cardinality: .block, bank: .f, kind: .single, subBytes: ByteArray(repeating: 0x00, count: ToneMap.dataSize))
+            XCTAssertEqual(actual, expected)
+        case .failure(let error):
+            XCTFail("\(error)")
+        }
+    }
+    
+    func testDump_o() {
+        switch DumpCommand.parse(from: oneSingleF) {
+        case .success(let actual):
+            let expected = DumpCommand(channel: MIDIChannel(1), cardinality: .one, bank: .f, kind: .single, subBytes: [0x00])
+            XCTAssertEqual(actual, expected)
+        case .failure(let error):
+            XCTFail("\(error)")
+        }
     }
 }

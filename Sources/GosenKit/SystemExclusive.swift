@@ -84,10 +84,21 @@ public enum SystemExclusive {
     }
 }
 
+/// Represents the cardinality of the dump: one or block.
 public enum Cardinality: Byte, CustomStringConvertible {
     case one = 0x20
     case block = 0x21
     
+    /// Initialize the cardinality from a byte value.
+    public init?(index: Byte) {
+        switch index {
+        case 0x20: self = .one
+        case 0x21: self = .block
+        default: return nil
+        }
+    }
+
+    /// Gets a printable representation of the cardinality.
     public var description: String {
         switch self {
         case .one:
@@ -96,31 +107,52 @@ public enum Cardinality: Byte, CustomStringConvertible {
             return "Block"
         }
     }
-    
+
+    /// Checks the validity of the cardinality byte.
+    /// Returns `true` if the byte represents a valid cardinality value,
+    /// `false` otherwise.
     public static func isValid(value: Byte) -> Bool {
-        return value == Cardinality.one.rawValue || value == Cardinality.block.rawValue
+        return 
+            value == Cardinality.one.rawValue
+            || value == Cardinality.block.rawValue
     }
 }
 
+/// Represents the kind of a patch.
 public enum PatchKind: Byte, CaseIterable, CustomStringConvertible {
     case single = 0x00
-    case multi = 0x20
     case drumKit = 0x10  // only on K5000W
     case drumInstrument = 0x11  // only on K5000W
+    case multi = 0x20
 
+    /// Initialize the patch kind from a byte value.
+    public init?(index: Byte) {
+        switch index {
+        case 0x00: self = .single
+        case 0x10: self = .drumKit
+        case 0x11: self = .drumInstrument
+        case 0x20: self = .multi
+        default: return nil
+        }
+    }
+
+    /// Gets a printable representation of this patch kind.
     public var description: String {
         switch self {
         case .single:
             return "Single"
-        case .multi:
-            return "Multi"
         case .drumKit:
             return "Drum Kit"
         case .drumInstrument:
             return "Drum Instrument"
+        case .multi:
+            return "Multi"
         }
     }
     
+    /// Checks the validity of the patch kind byte.
+    /// Returns `true` if the byte represents a valid patch kind value,
+    /// `false` otherwise.
     public static func isValid(value: Byte) -> Bool {
         return PatchKind.allCases.contains(where: { $0.rawValue == value })
     }
@@ -148,7 +180,8 @@ public struct DumpCommand {
         self.init(channel: MIDIChannel(1), cardinality: .one, bank: .a, kind: .single)
     }
     
-    /// Initialize a dump command with all values. The sub-bytes array can be, and defaults to, empty.
+    /// Initialize a dump command with all values. 
+    /// The sub-bytes array can be, and defaults to, empty.
     public init(channel: MIDIChannel, cardinality: Cardinality, bank: BankIdentifier, kind: PatchKind, subBytes: ByteArray = []) {
         self.channel = channel
         self.cardinality = cardinality
@@ -157,16 +190,7 @@ public struct DumpCommand {
         self.subBytes = subBytes
     }
     
-    public init?(data: ByteArray) {
-        let result = DumpCommand.parse(from: data)
-        switch result {
-        case .success(let command):
-            self = command
-        case .failure:
-            return nil
-        }
-    }
-    
+    /// Parse the dump command from MIDI System Exclusive data.
     public static func parse(from data: ByteArray) -> Result<DumpCommand, ParseError> {
         guard
             MIDIChannel.range.contains(Int(data[0] + 1))
@@ -180,193 +204,146 @@ public struct DumpCommand {
             return .failure(.invalidData(1, "Invalid cardinality byte: \(data[1].toHexString())H"))
         }
         
-        // "5th" in spec (section 5.3, "Dump command table"), always 0x00
-        guard 
+        // data[2] = "5th" in spec (section 5.3, "Dump command table"), always 0x00
+        guard
             data[2] == SystemExclusive.groupIdentifier 
         else {
             return .failure(.invalidData(2, "Invalid group identifier byte: \(data[2].toHexString())H"))
         }
         
-        // "6th" in spec, always 0x0A
-        guard 
+        // data[3] = "6th" in spec, always 0x0A
+        guard
             data[3] == SystemExclusive.machineIdentifier
         else {
             return .failure(.invalidData(3, "Invalid machine identifier, expected \(SystemExclusive.machineIdentifier.toHexString())H, got \(data[3].toHexString())H"))
         }
 
-        // patch kind ("7th" in spec): 0x00, 0x10, 0x11 or 0x20
-        guard 
+        // data[4] = patch kind ("7th" in spec): 0x00, 0x10, 0x11 or 0x20
+        // This is the last byte that appears in every dump command.
+        guard
             PatchKind.isValid(value: data[4])
         else {
             return .failure(.invalidData(4, "Invalid patch kind byte: \(data[4].toHexString())"))
         }
         
-        // Match the patterns from the "Dump command table".
+        // data[5] = "8th" in spec, bank identifier. Not valid for dr kit, dr inst, combi.
+        // (Except for dr inst see note below.)
+        // data[6] = "9th" in spec, is sub bytes or actual data. Not in all dumps.
+        
+        print("Dump command data length = \(data.count)")
+        print("Dump command bytes:\n\(data.hexDump())")
+
+        var dumpCommand = DumpCommand()
+        
+        // We have already checked that the MIDI channel is good.
+        dumpCommand.channel = MIDIChannel(Int(data[0]) + 1)
+        
+        // We have already checked that the cardinality byte is valid,
+        // so we can instantiate the enum and force unwrap.
+        dumpCommand.cardinality = Cardinality(index: data[1])!
+
+        // We have already checked that the patch kind byte is valid,
+        // so we can instantiate the enum and force unwrap.
+        dumpCommand.kind = PatchKind(index: data[4])!
+        
+        // Short dump command, must be dr kit, dr inst, or single multi/combi
+        if data.count < 6 {
+            if dumpCommand.kind == .multi {
+                dumpCommand.bank = .multi
+            }
+            else {
+                dumpCommand.bank = .none
+            }
+        }
+        else {
+            if dumpCommand.kind == .drumInstrument {
+                dumpCommand.bank = .none
+            }
+            else {
+                dumpCommand.bank = BankIdentifier(index: data[5])!
+            }
+        }
+        
+        // Match the patterns in the order they appear in the
+        // MIDI spec section 5.3, "Dump command table".
         // Leave out bytes "5th" and "6th" (data[2] and data[3]) because they are always the same.
         // We already have guard statements for them (see above).
-        switch (data[0], data[1], data[4], data[5], data[6], data[7]) {
+        // We can't have sub1 and sub2 bytes here because they may be missing in some dumps.
+        switch (dumpCommand.cardinality, dumpCommand.kind, dumpCommand.bank) {
             
         //
         // K50000W
         //
 
-        // One Add Bank A
-        case (let channel, Cardinality.one.rawValue, PatchKind.single.rawValue, BankIdentifier.a.rawValue, let sub1, _):
-            let temp = DumpCommand(
-                channel: MIDIChannel(Int(channel) + 1),
-                cardinality: .one,
-                bank: .a,
-                kind: .single,
-                subBytes: [sub1])
-            return .success(temp)
-            
-        // One PCM Bank B
-        case (let channel, Cardinality.one.rawValue, PatchKind.single.rawValue, BankIdentifier.b.rawValue, let sub1, _):
-            let temp = DumpCommand(
-                channel: MIDIChannel(Int(channel) + 1),
-                cardinality: .one,
-                bank: .b,
-                kind: .single,
-                subBytes: [sub1])
-            return .success(temp)
-            
-        // One Exp Bank E
-        case (let channel, Cardinality.one.rawValue, PatchKind.single.rawValue, BankIdentifier.e.rawValue, let sub1, _):
-            let temp = DumpCommand(
-                channel: MIDIChannel(Int(channel) + 1),
-                cardinality: .one,
-                bank: .e,
-                kind: .single,
-                subBytes: [sub1])
-            return .success(temp)
-            
-        // One Exp Bank F
-        case (let channel, Cardinality.one.rawValue, PatchKind.single.rawValue, BankIdentifier.f.rawValue, let sub1, _):
-            let temp = DumpCommand(
-                channel: MIDIChannel(Int(channel) + 1),
-                cardinality: .one,
-                bank: .f,
-                kind: .single,
-                subBytes: [sub1])
-            return .success(temp)
-            
+        // One Add Bank A, One PCM Bank B, One Exp Bank E, One Exp Bank F,
+        // One Add Bank D
+        case (.one, .single, _):
+            dumpCommand.subBytes = [data[6]]
+            return .success(dumpCommand)
+
         // One dr kit
-        case (let channel, Cardinality.one.rawValue, PatchKind.drumKit.rawValue, _, _, _):
-            let temp = DumpCommand(
-                channel: MIDIChannel(Int(channel) + 1),
-                cardinality: .one,
-                bank: .none,
-                kind: .drumKit)
-            return .success(temp)
+        case (.one, .drumKit, _):
+            // sub-bytes are left as empty
+            return .success(dumpCommand)
             
         // One dr inst
-        case (let channel, Cardinality.one.rawValue, PatchKind.drumInstrument.rawValue, _, _, _):
-            let temp = DumpCommand(
-                channel: MIDIChannel(Int(channel) + 1),
-                cardinality: .one,
-                bank: .none,
-                kind: .drumInstrument)
-            return .success(temp)
+        // NOTE: The dump command table does not agree with the
+        // dump description in 3.1.1g. The dump command table says
+        // there are no sub-bytes but the dump description says 
+        // that there is an instrument number (00~1F) as the first sub-byte.
+        case (.one, .drumInstrument, _):
+            dumpCommand.subBytes = [data[5]]
+            return .success(dumpCommand)
             
         // One combi
-        case (let channel, Cardinality.one.rawValue, PatchKind.multi.rawValue, _, let sub1, _):
-            let temp = DumpCommand(
-                channel: MIDIChannel(Int(channel) + 1),
-                cardinality: .one,
-                bank: .multi,
-                kind: .multi,
-                subBytes: [sub1])
-            return .success(temp)
+        case (.one, .multi, _):
+            dumpCommand.subBytes = [data[6]]
+            return .success(dumpCommand)
 
         // Block ADD Bank A
-        case (let channel, Cardinality.block.rawValue, PatchKind.single.rawValue, BankIdentifier.a.rawValue, let sub1, let sub2):
-            let temp = DumpCommand(
-                channel: MIDIChannel(Int(channel) + 1),
-                cardinality: .block,
-                bank: .a,
-                kind: .single,
-                subBytes: [sub1, sub2])
-            return .success(temp)
+        case (.block, .single, .a):
+            // sub-bytes has the tone map
+            dumpCommand.subBytes = data.slice(from: 6, length: ToneMap.dataSize)
+            return .success(dumpCommand)
             
         // Block PCM Bank B
-        case (let channel, Cardinality.block.rawValue, PatchKind.single.rawValue, BankIdentifier.b.rawValue, _, _):
-            let temp = DumpCommand(
-                channel: MIDIChannel(Int(channel) + 1),
-                cardinality: .block,
-                bank: .b,
-                kind: .single)
-            return .success(temp)
+        case (.block, .single, .b):
+            // no sub-bytes
+            return .success(dumpCommand)
             
         // Block Exp Bank E
-        case (let channel, Cardinality.block.rawValue, PatchKind.single.rawValue, BankIdentifier.e.rawValue, let sub1, let sub2):
-            let temp = DumpCommand(
-                channel: MIDIChannel(Int(channel) + 1),
-                cardinality: .block,
-                bank: .e,
-                kind: .single,
-                subBytes: [sub1, sub2])
-            return .success(temp)
-            
+        case (.block, .single, .e):
+            dumpCommand.subBytes = data.slice(from: 6, length: ToneMap.dataSize)
+            return .success(dumpCommand)
+        
         // Block Exp Bank F
-        case (let channel, Cardinality.block.rawValue, PatchKind.single.rawValue, BankIdentifier.f.rawValue, let sub1, let sub2):
-            let temp = DumpCommand(
-                channel: MIDIChannel(Int(channel) + 1),
-                cardinality: .block,
-                bank: .f,
-                kind: .single,
-                subBytes: [sub1, sub2])
-            return .success(temp)
-            
+        case (.block, .single, .f):
+            dumpCommand.subBytes = data.slice(from: 6, length: ToneMap.dataSize)
+            return .success(dumpCommand)
+
         // Block dr inst
-        case (let channel, Cardinality.block.rawValue, PatchKind.drumInstrument.rawValue, _, _, _):
-            let temp = DumpCommand(
-                channel: MIDIChannel(Int(channel) + 1),
-                cardinality: .block,
-                bank: .none,
-                kind: .drumInstrument)
-            return .success(temp)
+        case (.block, .drumInstrument, _):
+            // empty sub-bytes
+            return .success(dumpCommand)
             
         // Block combi / multi
-        case (let channel, Cardinality.block.rawValue, PatchKind.multi.rawValue, _, _, _):
-            let temp = DumpCommand(
-                channel: MIDIChannel(Int(channel) + 1),
-                cardinality: .block,
-                bank: .multi,
-                kind: .multi)
-            return .success(temp)
+        case (.block, .multi, _):
+            // empty sub-bytes
+            return .success(dumpCommand)
 
         //
         // K5000S/R
         //
-            
-        // One ADD Bank A is the same
-        
-        // One Add Bank D
-        case (let channel, Cardinality.one.rawValue, PatchKind.single.rawValue, BankIdentifier.d.rawValue, let sub1, _):
-            let temp = DumpCommand(
-                channel: MIDIChannel(Int(channel) + 1),
-                cardinality: .one,
-                bank: .d,
-                kind: .single,
-                subBytes: [sub1])
-            return .success(temp)
-                
-        // One Exp Bank E and F are the same
             
         // One multi is the same as one combi
             
         // Block ADD Bank A is the same
             
         // Block ADD Bank D
-        case (let channel, Cardinality.block.rawValue, PatchKind.single.rawValue, BankIdentifier.d.rawValue, let sub1, let sub2):
-            let temp = DumpCommand(
-                channel: MIDIChannel(Int(channel) + 1),
-                cardinality: .block,
-                bank: .d,
-                kind: .single,
-                subBytes: [sub1, sub2])
-            return .success(temp)
-            
+        case (.block, .single, .d):
+            dumpCommand.subBytes = data.slice(from: 6, length: ToneMap.dataSize)
+            return .success(dumpCommand)
+
         // Block Exp Bank E is the same
         // Block Exp Bank F is the same
         // Block multi is the same as block combi

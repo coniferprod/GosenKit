@@ -21,7 +21,22 @@ public enum BankIdentifier: Byte, CaseIterable, CustomStringConvertible {
     case e = 0x03
     case f = 0x04
     case multi = 0x66  // the multi/combi bank has no ID
-    case none = 0x99
+    case none = 0x99  // use for drum
+
+    /// Initialize the bank identifier from a byte value.
+    /// Note that the multi/combi and the none variants
+    /// don't have a byte value in System Exclusive data,
+    /// so you can't get them using this initializer.
+    public init?(index: Byte) {
+        switch index {
+        case 0x00: self = .a
+        case 0x01: self = .b
+        case 0x02: self = .d
+        case 0x03: self = .e
+        case 0x04: self = .f
+        default: return nil
+        }
+    }
 
     public var description: String {
         switch self {
