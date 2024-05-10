@@ -3,12 +3,12 @@ import ByteKit
 
 /// Represents the set of included patches in a bank.
 public class ToneMap {
-    private let maxCount = 128
+    public static let maxCount = 128
     private var included: [Bool]  // true if patch is included, false if not
     
     /// Initialize an empty tone map.
     public init() {
-        self.included = [Bool](repeating: false, count: maxCount)
+        self.included = [Bool](repeating: false, count: ToneMap.maxCount)
     }
     
     /// Parse tone map from MIDI System Exclusive data.
@@ -39,7 +39,7 @@ public class ToneMap {
         }
         set(newValue) {
             // Only set if the index is in valid range
-            if (0..<maxCount).contains(index) {
+            if (0..<ToneMap.maxCount).contains(index) {
                 self.included[index] = newValue
             }
         }
@@ -51,16 +51,16 @@ public class ToneMap {
     }
     
     /// The set of all included tones.
-    public var allIncludedTones: Set<Int> {
-        var set = Set<Int>()
+    public var allIncludedTones: Array<Int> {
+        var tones = [Int]()
         
-        for t in 1...maxCount {
-            if self.includes(tone: t) {
-                set.insert(t)
+        for tone in 1...ToneMap.maxCount {
+            if self.includes(tone: tone) {
+                tones.append(tone)
             }
         }
-        
-        return set
+
+        return tones
     }
     
     /// Checks if the tone map includes `tone`.
@@ -70,7 +70,7 @@ public class ToneMap {
     /// - Returns: `true` if the tone is included, `false` if not
     public func includes(tone: Int) -> Bool {
         guard
-            (1...maxCount).contains(tone)
+            (1...ToneMap.maxCount).contains(tone)
         else {
             return false
         }

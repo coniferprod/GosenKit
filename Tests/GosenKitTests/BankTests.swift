@@ -4,7 +4,6 @@ import ByteKit
 @testable import GosenKit
 
 final class BankTests: XCTestCase {
-
     func test_MultiBank_fromData() {
         let data: ByteArray = [
             //0xf0,

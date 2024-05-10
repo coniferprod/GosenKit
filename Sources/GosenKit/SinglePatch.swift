@@ -237,7 +237,8 @@ public struct SinglePatch {
         // The default sources are PCM, so the additive kit dictionary is empty
         additiveKits = AdditiveKitDictionary()
     }
-        
+    
+    /// Parse the SinglePatch from MIDI System Exclusive data.
     public static func parse(from data: ByteArray) -> Result<SinglePatch, ParseError> {
         var offset: Int = 0
         
