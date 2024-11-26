@@ -111,15 +111,26 @@ public enum ControlDestination: String, Codable, CaseIterable {
 }
 
 public struct MacroController {
-    /// Macro depth
+    /// Macro depth (-31...31).
     public struct Depth {
-        private var _value: Int
+        public var value: Int
+        public static let range: ClosedRange<Int> = -31...31
+        public static let defaultValue = 0
+
+        public init() {
+            assert(Self.range.contains(Self.defaultValue), "Default value must be in range \(Self.range)")
+            self.value = Self.defaultValue
+        }
+
+        public init(_ value: Int) {
+            self.value = Self.range.clamp(value)
+        }
     }
-    
+
     public var destination1: ControlDestination
-    public var depth1: Depth  // -31~+31
+    public var depth1: Depth
     public var destination2: ControlDestination
-    public var depth2: Depth // -31~+31
+    public var depth2: Depth
     
     public init() {
         destination1 = .cutoffOffset
@@ -161,29 +172,10 @@ public struct MacroController {
     }
 }
 
-extension MacroController.Depth: RangedInt {
-    public static let range: ClosedRange<Int> = -31...31
-    public static let defaultValue = 0
-    
-    public init() {
-        assert(Self.range.contains(Self.defaultValue), "Default value must be in range")
-
-        _value = Self.defaultValue
-    }
-    
-    public init(_ value: Int) {
-        _value = Self.range.clamp(value)
-    }
-
-    public var value: Int {
-        return _value
-    }
-}
-
 extension MacroController.Depth: ExpressibleByIntegerLiteral {
     /// Initialize with an integer literal.
     public init(integerLiteral value: Int) {
-        _value = Self.range.clamp(value)
+        self.value = Self.range.clamp(value)
     }
 }
 

@@ -2,33 +2,25 @@ import SyxPack
 import ByteKit
 
 /// Wave number for DCO.
-public struct WaveNumber {
-    private var _value: Int
-}
-
-extension WaveNumber: RangedInt {
+public struct WaveNumber: RangedInt {
+    public var value: Int
     public static let range: ClosedRange<Int> = 1...464
     public static let defaultValue = 1
-    
+
     public init() {
-        assert(Self.range.contains(Self.defaultValue), "Default value must be in range")
-
-        _value = Self.defaultValue
+        assert(Self.range.contains(Self.defaultValue), "Default value must be in range \(Self.range)")
+        self.value = Self.defaultValue
     }
-    
+
     public init(_ value: Int) {
-        _value = Self.range.clamp(value)
-    }
-
-    public var value: Int {
-        return _value
+        self.value = Self.range.clamp(value)
     }
 }
 
 extension WaveNumber: ExpressibleByIntegerLiteral {
-    /// Initialize wave number with an integer literal.
+    /// Initialize with an integer literal.
     public init(integerLiteral value: Int) {
-        _value = Self.range.clamp(value)
+        self.value = Self.range.clamp(value)
     }
 }
 
@@ -95,7 +87,7 @@ public enum Wave: Equatable {
         case (.additive, .additive):
             return true
         case (.pcm(let lhsNumber), .pcm(let rhsNumber)):
-            return lhsNumber == rhsNumber
+            return lhsNumber.value == rhsNumber.value
         default:
             return false
         }

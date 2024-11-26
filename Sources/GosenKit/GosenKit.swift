@@ -30,14 +30,14 @@ extension ParseError: CustomStringConvertible {
 
 /// Protocol to wrap an Int guaranteed to be contained
 /// in the given closed range.
-protocol RangedInt {
-    /// The current value of the wrapped Int
+protocol RangedInt: CustomStringConvertible {
+    /// The current value of the wrapped `Int`.
     var value: Int { get }
     
-    /// The range where the Int must be in.
+    /// The range where the `Int` must be in.
     static var range: ClosedRange<Int> { get }
     
-    /// The default value for the Int.
+    /// The default value for the `Int`.
     static var defaultValue: Int { get }
 
     /// Initialization with the default value.
@@ -60,10 +60,10 @@ extension RangedInt {
         return Self.range.contains(value)
     }
 
-    /// Satisfies Equatable conformance.
-    /// This is a default implementation.
-    public static func ==(lhs: Self, rhs: Self) -> Bool {
-        return lhs.value == rhs.value
+    /// Generates a string representation of the value.
+    /// Satisfies CustomStringConvertible conformance.
+    public var description: String {
+        String(self.value)
     }
 }
 
@@ -76,617 +76,448 @@ extension ClosedRange {
 }
 
 /// Volume (0...127).
-public struct Volume {
-    private var _value: Int
-}
-
-extension Volume: RangedInt {
+public struct Volume: RangedInt {
+    public var value: Int
     public static let range: ClosedRange<Int> = 0...127
-
     public static let defaultValue = 0
 
-    public var value: Int {
-        return _value
-    }
-
     public init() {
-        assert(Self.range.contains(Self.defaultValue), "Default value must be in range")
-        _value = Self.defaultValue
+        assert(Self.range.contains(Self.defaultValue), "Default value must be in range \(Self.range)")
+        self.value = Self.defaultValue
     }
 
     public init(_ value: Int) {
-        _value = Self.range.clamp(value)
+        self.value = Self.range.clamp(value)
     }
 }
 
 extension Volume: ExpressibleByIntegerLiteral {
     /// Initialize with an integer literal.
     public init(integerLiteral value: Int) {
-        _value = Self.range.clamp(value)
-    }
-}
-
-extension Volume: CustomStringConvertible {
-    // Generates a string representation of the value.
-    public var description: String {
-        return "\(self.value)"
+        self.value = Self.range.clamp(value)
     }
 }
 
 /// Level (0...127)
-public struct Level {
-    private var _value: Int
-}
-
-extension Level: RangedInt {
+public struct Level: RangedInt {
+    public var value: Int
     public static let range: ClosedRange<Int> = 0...127
-
     public static let defaultValue = 0
 
-    public var value: Int {
-        return _value
-    }
-
     public init() {
-        assert(Self.range.contains(Self.defaultValue), "Default value must be in range")
-
-        _value = Self.defaultValue
+        assert(Self.range.contains(Self.defaultValue), "Default value must be in range \(Self.range)")
+        self.value = Self.defaultValue
     }
 
     public init(_ value: Int) {
-        _value = Self.range.clamp(value)
+        self.value = Self.range.clamp(value)
     }
 }
 
 extension Level: ExpressibleByIntegerLiteral {
     /// Initialize with an integer literal.
     public init(integerLiteral value: Int) {
-        _value = Self.range.clamp(value)
+        self.value = Self.range.clamp(value)
     }
 }
 
-extension Level: CustomStringConvertible {
-    // Generates a string representation of the value.
-    public var description: String {
-        return "\(self.value)"
+/// Time (0...127)
+public struct Time: RangedInt {
+    public var value: Int
+    public static let range: ClosedRange<Int> = 0...127
+    public static let defaultValue = 0
+
+    public init() {
+        assert(Self.range.contains(Self.defaultValue), "Default value must be in range \(Self.range)")
+        self.value = Self.defaultValue
+    }
+
+    public init(_ value: Int) {
+        self.value = Self.range.clamp(value)
+    }
+}
+
+extension Time: ExpressibleByIntegerLiteral {
+    /// Initialize with an integer literal.
+    public init(integerLiteral value: Int) {
+        self.value = Self.range.clamp(value)
     }
 }
 
 /// Depth (-63...+63).
 public struct Depth {
-    private var _value: Int
-}
-
-extension Depth: RangedInt {
+    public var value: Int
     public static let range: ClosedRange<Int> = -63...63
-
     public static let defaultValue = 0
 
-    public var value: Int {
-        return _value
-    }
-
     public init() {
-        assert(Self.range.contains(Self.defaultValue), "Default value must be in range")
-
-        _value = Self.defaultValue
+        assert(Self.range.contains(Self.defaultValue), "Default value must be in range \(Self.range)")
+        self.value = Self.defaultValue
     }
 
     public init(_ value: Int) {
-        _value = Self.range.clamp(value)
+        self.value = Self.range.clamp(value)
     }
 }
 
 extension Depth: ExpressibleByIntegerLiteral {
     /// Initialize with an integer literal.
     public init(integerLiteral value: Int) {
-        _value = Self.range.clamp(value)
-    }
-}
-
-extension Depth: CustomStringConvertible {
-    /// Generates a string representation of the value.
-    public var description: String {
-        return "\(self.value)"
+        self.value = Self.range.clamp(value)
     }
 }
 
 /// Pan (-63...+63).
 public struct Pan {
-    private var _value: Int
-}
-
-extension Pan: RangedInt {
+    public var value: Int
     public static let range: ClosedRange<Int> = -63...63
-
     public static let defaultValue = 0
 
-    public var value: Int {
-        return _value
-    }
-
     public init() {
-        assert(Self.range.contains(Self.defaultValue), "Default value must be in range")
-
-        _value = Self.defaultValue
+        assert(Self.range.contains(Self.defaultValue), "Default value must be in range \(Self.range)")
+        self.value = Self.defaultValue
     }
 
     public init(_ value: Int) {
-        _value = Self.range.clamp(value)
+        self.value = Self.range.clamp(value)
     }
 }
 
 extension Pan: ExpressibleByIntegerLiteral {
     /// Initialize with an integer literal.
     public init(integerLiteral value: Int) {
-        _value = Self.range.clamp(value)
-    }
-}
-
-extension Pan: CustomStringConvertible {
-    /// Generates a string representation of the value.
-    public var description: String {
-        return "\(self.value)"
+        self.value = Self.range.clamp(value)
     }
 }
 
 /// MIDI channel (1...16).
 public struct MIDIChannel: Equatable {
-    private var _value: Int
-}
-
-extension MIDIChannel: RangedInt {
+    public var value: Int
     public static let range: ClosedRange<Int> = 1...16
     public static let defaultValue = 1
     
     public init() {
-        assert(Self.range.contains(Self.defaultValue), "Default value must be in range")
-
-        _value = Self.defaultValue
+        assert(Self.range.contains(Self.defaultValue), "Default value must be in range \(Self.range)")
+        self.value = Self.defaultValue
     }
     
     public init(_ value: Int) {
-        _value = Self.range.clamp(value)
-    }
-
-    public var value: Int {
-        return _value
+        self.value = Self.range.clamp(value)
     }
 }
 
 extension MIDIChannel: ExpressibleByIntegerLiteral {
     /// Initialize with an integer literal.
     public init(integerLiteral value: Int) {
-        _value = Self.range.clamp(value)
-    }
-}
-
-extension MIDIChannel: CustomStringConvertible {
-    /// Generates a string representation of the value.
-    public var description: String {
-        return "\(self.value)"
+        self.value = Self.range.clamp(value)
     }
 }
 
 /// Velocity curve (1...12).
 public struct VelocityCurve {
-    private var _value: Int
-}
-
-extension VelocityCurve: RangedInt {
+    public var value: Int
     public static let range: ClosedRange<Int> = 1...12
     public static let defaultValue = 1
     
     public init() {
-        assert(Self.range.contains(Self.defaultValue), "Default value must be in range")
-
-        _value = Self.defaultValue
+        assert(Self.range.contains(Self.defaultValue), "Default value must be in range \(Self.range)")
+        self.value = Self.defaultValue
     }
     
     public init(_ value: Int) {
-        _value = Self.range.clamp(value)
-    }
-
-    public var value: Int {
-        return _value
+        self.value = Self.range.clamp(value)
     }
 }
 
 extension VelocityCurve: ExpressibleByIntegerLiteral {
     /// Initialize with an integer literal.
     public init(integerLiteral value: Int) {
-        _value = Self.range.clamp(value)
-    }
-}
-
-extension VelocityCurve: CustomStringConvertible {
-    /// Generates a string representation of the value.
-    public var description: String {
-        return "\(self.value)"
+        self.value = Self.range.clamp(value)
     }
 }
 
 /// Control depth (-63...+63).
 public struct ControlDepth {
-    private var _value: Int
-}
-
-extension ControlDepth: RangedInt {
+    public var value: Int
     public static let range: ClosedRange<Int> = -63...63
     public static let defaultValue = 0
     
     public init() {
-        assert(Self.range.contains(Self.defaultValue), "Default value must be in range")
-
-        _value = Self.defaultValue
+        assert(Self.range.contains(Self.defaultValue), "Default value must be in range \(Self.range)")
+        self.value = Self.defaultValue
     }
     
     public init(_ value: Int) {
-        _value = Self.range.clamp(value)
-    }
-
-    public var value: Int {
-        return _value
+        self.value = Self.range.clamp(value)
     }
 }
 
 extension ControlDepth: ExpressibleByIntegerLiteral {
     /// Initialize with an integer literal.
     public init(integerLiteral value: Int) {
-        _value = Self.range.clamp(value)
-    }
-}
-
-extension ControlDepth: CustomStringConvertible {
-    /// Generates a string representation of the value.
-    public var description: String {
-        return "\(self.value)"
+        self.value = Self.range.clamp(value)
     }
 }
 
 /// Coarse tuning (-24...+24).
 public struct Coarse {
-    private var _value: Int
-}
-
-extension Coarse: RangedInt {
+    public var value: Int
     public static let range: ClosedRange<Int> = -24...24
     public static let defaultValue = 0
     
     public init() {
-        assert(Self.range.contains(Self.defaultValue), "Default value must be in range")
-
-        _value = Self.defaultValue
+        assert(Self.range.contains(Self.defaultValue), "Default value must be in range \(Self.range)")
+        self.value = Self.defaultValue
     }
     
     public init(_ value: Int) {
-        _value = Self.range.clamp(value)
-    }
-
-    public var value: Int {
-        return _value
+        self.value = Self.range.clamp(value)
     }
 }
 
 extension Coarse: ExpressibleByIntegerLiteral {
     /// Initialize with an integer literal.
     public init(integerLiteral value: Int) {
-        _value = Self.range.clamp(value)
+        self.value = Self.range.clamp(value)
     }
 }
 
-extension Coarse: CustomStringConvertible {
-    /// Generates a string representation of the value.
-    public var description: String {
-        return "\(self.value)"
-    }
-}
-
-/// Fine tuning (-63...+63).
+/// Fine tuning (-63...63).
 public struct Fine {
-    private var _value: Int
-}
-
-extension Fine: RangedInt {
+    public var value: Int
     public static let range: ClosedRange<Int> = -63...63
     public static let defaultValue = 0
-    
+
     public init() {
-        assert(Self.range.contains(Self.defaultValue), "Default value must be in range")
-
-        _value = Self.defaultValue
+        assert(Self.range.contains(Self.defaultValue), "Default value must be in range \(Self.range)")
+        self.value = Self.defaultValue
     }
-    
+
     public init(_ value: Int) {
-        _value = Self.range.clamp(value)
-    }
-
-    public var value: Int {
-        return _value
+        self.value = Self.range.clamp(value)
     }
 }
 
 extension Fine: ExpressibleByIntegerLiteral {
     /// Initialize with an integer literal.
     public init(integerLiteral value: Int) {
-        _value = Self.range.clamp(value)
+        self.value = Self.range.clamp(value)
     }
 }
 
-extension Fine: CustomStringConvertible {
-    /// Generates a string representation of the value.
-    public var description: String {
-        return "\(self.value)"
-    }
-}
 
 /// Effect depth (0...100).
 public struct EffectDepth {
-    private var _value: Int
-}
-
-extension EffectDepth: RangedInt {
+    public var value: Int
     public static let range: ClosedRange<Int> = 0...100
-
     public static let defaultValue = 0
 
-    public var value: Int {
-        return _value
-    }
-
     public init() {
-        assert(Self.range.contains(Self.defaultValue), "Default value must be in range")
-
-        _value = Self.defaultValue
+        assert(Self.range.contains(Self.defaultValue), "Default value must be in range \(Self.range)")
+        self.value = Self.defaultValue
     }
 
     public init(_ value: Int) {
-        _value = Self.range.clamp(value)
+        self.value = Self.range.clamp(value)
     }
 }
 
-extension EffectDepth: CustomStringConvertible {
-    /// Generates a string representation of the value.
-    public var description: String {
-        return "\(self.value)"
+extension EffectDepth: ExpressibleByIntegerLiteral {
+    /// Initialize with an integer literal.
+    public init(integerLiteral value: Int) {
+        self.value = Self.range.clamp(value)
     }
 }
+
 
 /// Effect path (1...4).
 public struct EffectPath {
-    private var _value: Int
-}
-
-extension EffectPath: RangedInt {
+    public var value: Int
     public static let range: ClosedRange<Int> = 1...4
-
     public static let defaultValue = 1
 
-    public var value: Int {
-        return _value
-    }
-
     public init() {
-        assert(Self.range.contains(Self.defaultValue), "Default value must be in range")
-
-        _value = Self.defaultValue
+        assert(Self.range.contains(Self.defaultValue), "Default value must be in range \(Self.range)")
+        self.value = Self.defaultValue
     }
 
     public init(_ value: Int) {
-        _value = Self.range.clamp(value)
+        self.value = Self.range.clamp(value)
     }
 }
 
 extension EffectPath: ExpressibleByIntegerLiteral {
     /// Initialize with an integer literal.
     public init(integerLiteral value: Int) {
-        _value = Self.range.clamp(value)
+        self.value = Self.range.clamp(value)
     }
 }
 
-extension EffectPath: CustomStringConvertible {
-    /// Generates a string representation of the value.
-    public var description: String {
-        return "\(self.value)"
-    }
-}
 
 /// Resonance (0...31).
 public struct Resonance {
-    private var _value: Int
-}
-
-extension Resonance: RangedInt {
+    public var value: Int
     public static let range: ClosedRange<Int> = 0...31
-
     public static let defaultValue = 0
 
-    public var value: Int {
-        return _value
-    }
-
     public init() {
-        assert(Self.range.contains(Self.defaultValue), "Default value must be in range")
-
-        _value = Self.defaultValue
+        assert(Self.range.contains(Self.defaultValue), "Default value must be in range \(Self.range)")
+        self.value = Self.defaultValue
     }
 
     public init(_ value: Int) {
-        _value = Self.range.clamp(value)
+        self.value = Self.range.clamp(value)
     }
 }
 
 extension Resonance: ExpressibleByIntegerLiteral {
     /// Initialize with an integer literal.
     public init(integerLiteral value: Int) {
-        _value = Self.range.clamp(value)
+        self.value = Self.range.clamp(value)
     }
 }
 
-extension Resonance: CustomStringConvertible {
-    /// Generates a string representation of the value.
-    public var description: String {
-        return "\(self.value)"
-    }
-}
 
-/// Gain setting (1...63).
+/// Gain (1...63).
 public struct Gain {
-    private var _value: Int
-}
-
-extension Gain: RangedInt {
+    public var value: Int
     public static let range: ClosedRange<Int> = 1...63
-
     public static let defaultValue = 1
 
-    public var value: Int {
-        return _value
-    }
-
     public init() {
-        assert(Self.range.contains(Self.defaultValue), "Default value must be in range")
-        
-        _value = Self.defaultValue
+        assert(Self.range.contains(Self.defaultValue), "Default value must be in range \(Self.range)")
+        self.value = Self.defaultValue
     }
 
     public init(_ value: Int) {
-        _value = Self.range.clamp(value)
+        self.value = Self.range.clamp(value)
     }
 }
 
 extension Gain: ExpressibleByIntegerLiteral {
     /// Initialize with an integer literal.
     public init(integerLiteral value: Int) {
-        _value = Self.range.clamp(value)
+        self.value = Self.range.clamp(value)
     }
 }
 
-extension Gain: CustomStringConvertible {
-    /// Generates a string representation of the value.
-    public var description: String {
-        return "\(self.value)"
-    }
-}
 
-/// Bender pitch amount (-12...+12).
+/// Bender pitch (-12...12).
 public struct BenderPitch {
-    private var _value: Int
-}
-
-extension BenderPitch: RangedInt {
+    public var value: Int
     public static let range: ClosedRange<Int> = -12...12
-
     public static let defaultValue = 0
 
-    public var value: Int {
-        return _value
-    }
-
     public init() {
-        assert(Self.range.contains(Self.defaultValue), "Default value must be in range")
-
-        _value = Self.defaultValue
+        assert(Self.range.contains(Self.defaultValue), "Default value must be in range \(Self.range)")
+        self.value = Self.defaultValue
     }
 
     public init(_ value: Int) {
-        _value = Self.range.clamp(value)
+        self.value = Self.range.clamp(value)
     }
 }
 
 extension BenderPitch: ExpressibleByIntegerLiteral {
     /// Initialize with an integer literal.
     public init(integerLiteral value: Int) {
-        _value = Self.range.clamp(value)
+        self.value = Self.range.clamp(value)
     }
 }
 
-extension BenderPitch: CustomStringConvertible {
-    /// Generates a string representation of the value.
-    public var description: String {
-        return "\(self.value)"
-    }
-}
 
 /// Bender cutoff (0...31).
 public struct BenderCutoff {
-    private var _value: Int
-}
-
-extension BenderCutoff: RangedInt {
+    public var value: Int
     public static let range: ClosedRange<Int> = 0...31
-
     public static let defaultValue = 0
 
-    public var value: Int {
-        return _value
-    }
-
     public init() {
-        assert(Self.range.contains(Self.defaultValue), "Default value must be in range")
-
-        _value = Self.defaultValue
+        assert(Self.range.contains(Self.defaultValue), "Default value must be in range \(Self.range)")
+        self.value = Self.defaultValue
     }
 
     public init(_ value: Int) {
-        _value = Self.range.clamp(value)
+        self.value = Self.range.clamp(value)
     }
 }
 
 extension BenderCutoff: ExpressibleByIntegerLiteral {
     /// Initialize with an integer literal.
     public init(integerLiteral value: Int) {
-        _value = Self.range.clamp(value)
+        self.value = Self.range.clamp(value)
     }
 }
 
-extension BenderCutoff: CustomStringConvertible {
-    /// Generates a string representation of the value.
-    public var description: String {
-        return "\(self.value)"
-    }
-}
 
-/// MIDI note number (0...127).
-public struct MIDINote: Equatable {
-    private var _value: Int
-}
-
-extension MIDINote: RangedInt {
+/// MIDI note (0...127).
+public struct MIDINote {
+    public var value: Int
     public static let range: ClosedRange<Int> = 0...127
-    
-    public static let defaultValue = 60  // Middle C
-
-    public var value: Int {
-        return _value
-    }
+    public static let defaultValue = 60
 
     public init() {
-        assert(Self.range.contains(Self.defaultValue), "Default value must be in range")
-
-        _value = Self.defaultValue
+        assert(Self.range.contains(Self.defaultValue), "Default value must be in range \(Self.range)")
+        self.value = Self.defaultValue
     }
 
     public init(_ value: Int) {
-        _value = Self.range.clamp(value)
+        self.value = Self.range.clamp(value)
     }
 }
 
 extension MIDINote: ExpressibleByIntegerLiteral {
     /// Initialize with an integer literal.
     public init(integerLiteral value: Int) {
-        _value = Self.range.clamp(value)
+        self.value = Self.range.clamp(value)
     }
 }
 
-extension MIDINote: CustomStringConvertible {
-    /// Generates a string representation of the value.
-    public var description: String {
-        let noteNames = ["C", "C#", "D", "D#", "E", "F",
-                         "F#", "G", "G#", "A", "A#", "B"]
-        let octave = self.value / 12 - 2  // use Yamaha convention
-        let name = noteNames[self.value % 12]
-        return "\(name)\(octave)"
+
+/// Patch number (0...127).
+public struct PatchNumber {
+    public var value: Int
+    public static let range: ClosedRange<Int> = 0...127
+    public static let defaultValue = 0
+
+    public init() {
+        assert(Self.range.contains(Self.defaultValue), "Default value must be in range \(Self.range)")
+        self.value = Self.defaultValue
+    }
+
+    public init(_ value: Int) {
+        self.value = Self.range.clamp(value)
+    }
+}
+
+extension PatchNumber: ExpressibleByIntegerLiteral {
+    /// Initialize with an integer literal.
+    public init(integerLiteral value: Int) {
+        self.value = Self.range.clamp(value)
+    }
+}
+
+
+/// Transpose (-24...24).
+public struct Transpose {
+    public var value: Int
+    public static let range: ClosedRange<Int> = -24...24
+    public static let defaultValue = 0
+
+    public init() {
+        assert(Self.range.contains(Self.defaultValue), "Default value must be in range \(Self.range)")
+        self.value = Self.defaultValue
+    }
+
+    public init(_ value: Int) {
+        self.value = Self.range.clamp(value)
+    }
+}
+
+extension Transpose: ExpressibleByIntegerLiteral {
+    /// Initialize with an integer literal.
+    public init(integerLiteral value: Int) {
+        self.value = Self.range.clamp(value)
     }
 }
 
@@ -696,78 +527,3 @@ public enum FixedKey {
     case on(Key)
 }
 
-/// Patch number in a bank.
-public struct PatchNumber {
-    private var _value: Int
-}
-
-extension PatchNumber: RangedInt {
-    public static let range: ClosedRange<Int> = 0...127
-    public static let defaultValue = 0
-    
-    public init() {
-        assert(Self.range.contains(Self.defaultValue), "Default value must be in range")
-
-        _value = Self.defaultValue
-    }
-    
-    public init(_ value: Int) {
-        _value = Self.range.clamp(value)
-    }
-
-    public var value: Int {
-        return _value
-    }
-}
-
-extension PatchNumber: ExpressibleByIntegerLiteral {
-    /// Initialize with an integer literal.
-    public init(integerLiteral value: Int) {
-        _value = Self.range.clamp(value)
-    }
-}
-
-extension PatchNumber: CustomStringConvertible {
-    /// Generates a string representation of the value.
-    public var description: String {
-        return "\(self.value)"
-    }
-}
-
-/// Transpose amount (-24...+24).
-public struct Transpose {
-    private var _value: Int
-}
-
-extension Transpose: RangedInt {
-    public static let range: ClosedRange<Int> = -24...24
-    public static let defaultValue = 0
-    
-    public init() {
-        assert(Self.range.contains(Self.defaultValue), "Default value must be in range")
-
-        _value = Self.defaultValue
-    }
-    
-    public init(_ value: Int) {
-        _value = Self.range.clamp(value)
-    }
-
-    public var value: Int {
-        return _value
-    }
-}
-
-extension Transpose: ExpressibleByIntegerLiteral {
-    /// Initialize with an integer literal.
-    public init(integerLiteral value: Int) {
-        _value = Self.range.clamp(value)
-    }
-}
-
-extension Transpose: CustomStringConvertible {
-    /// Generates a string representation of the value.
-    public var description: String {
-        return "\(self.value)"
-    }
-}

@@ -20,14 +20,36 @@ public struct Filter {
 
     /// Filter envelope.
     public struct Envelope {
-        /// Filter envelope time (for attack, decay 1, decay 2, and release)
-        public struct Time {
-            private var _value: Int
+        /// Filter envelope time (for attack, decay 1, decay 2, and release) (0...127)
+        public struct Time: RangedInt {
+            public var value: Int
+            public static let range: ClosedRange<Int> = 0...127
+            public static let defaultValue = 0
+
+            public init() {
+                assert(Self.range.contains(Self.defaultValue), "Default value must be in range \(Self.range)")
+                self.value = Self.defaultValue
+            }
+
+            public init(_ value: Int) {
+                self.value = Self.range.clamp(value)
+            }
         }
-        
-        /// Filter envelope level (for decay 1, decay 2, etc.)
-        public struct Level {
-            private var _value: Int
+
+        /// Filter envelope level (for decay 1, decay 2, etc.) (-63...63)
+        public struct Level: RangedInt {
+            public var value: Int
+            public static let range: ClosedRange<Int> = -63...63
+            public static let defaultValue = 0
+
+            public init() {
+                assert(Self.range.contains(Self.defaultValue), "Default value must be in range \(Self.range)")
+                self.value = Self.defaultValue
+            }
+
+            public init(_ value: Int) {
+                self.value = Self.range.clamp(value)
+            }
         }
 
         public var attackTime: Time
@@ -169,59 +191,19 @@ public struct Filter {
     }
 }
 
-// MARK: - RangedInt protocol conformance
-
-extension Filter.Envelope.Time: RangedInt {
-    public static let range: ClosedRange<Int> = 0...127
-
-    public static let defaultValue = 0
-
-    public var value: Int {
-        return _value
-    }
-
-    public init() {
-        assert(Self.range.contains(Self.defaultValue), "Default value must be in range")
-
-        _value = Self.defaultValue
-    }
-
-    public init(_ value: Int) {
-        _value = Self.range.clamp(value)
-    }
-}
+// MARK: - ExpressibleByIntegerLiteral conformance for RangedInt
 
 extension Filter.Envelope.Time: ExpressibleByIntegerLiteral {
     /// Initialize with an integer literal.
     public init(integerLiteral value: Int) {
-        _value = Self.range.clamp(value)
-    }
-}
-
-extension Filter.Envelope.Level: RangedInt {
-    public static let range: ClosedRange<Int> = -63...63
-
-    public static let defaultValue = 0
-
-    public var value: Int {
-        return _value
-    }
-
-    public init() {
-        assert(Self.range.contains(Self.defaultValue), "Default value must be in range")
-
-        _value = Self.defaultValue
-    }
-
-    public init(_ value: Int) {
-        _value = Self.range.clamp(value)
+        self.value = Self.range.clamp(value)
     }
 }
 
 extension Filter.Envelope.Level: ExpressibleByIntegerLiteral {
     /// Initialize with an integer literal.
     public init(integerLiteral value: Int) {
-        _value = Self.range.clamp(value)
+        self.value = Self.range.clamp(value)
     }
 }
 

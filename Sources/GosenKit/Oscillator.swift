@@ -6,13 +6,35 @@ public struct Oscillator {
     /// Pitch envelope of an oscillator.
     public struct PitchEnvelope {
         /// Pitch envelope time 0~127
-        public struct Time {
-            private var _value: Int
+        public struct Time: RangedInt {
+            public var value: Int
+            public static let range: ClosedRange<Int> = 0...127
+            public static let defaultValue = 0
+
+            public init() {
+                assert(Self.range.contains(Self.defaultValue), "Default value must be in range \(Self.range)")
+                self.value = Self.defaultValue
+            }
+
+            public init(_ value: Int) {
+                self.value = Self.range.clamp(value)
+            }
         }
-        
+
         /// Pitch envelope level -63~+63
-        public struct Level {
-            private var _value: Int
+        public struct Level: RangedInt {
+            public var value: Int
+            public static let range: ClosedRange<Int> = -63...63
+            public static let defaultValue = 0
+
+            public init() {
+                assert(Self.range.contains(Self.defaultValue), "Default value must be in range \(Self.range)")
+                self.value = Self.defaultValue
+            }
+
+            public init(_ value: Int) {
+                self.value = Self.range.clamp(value)
+            }
         }
 
         public var start: Level
@@ -24,12 +46,12 @@ public struct Oscillator {
         
         /// Initializes a default pitch envelope.
         public init() {
-            start = Level(0)
-            attackTime = Time(0)
-            attackLevel = Level(127)
-            decayTime = Time(0)
-            timeVelocitySensitivity = Level(0)
-            levelVelocitySensitivity = Level(0)
+            start = 0
+            attackTime = 0
+            attackLevel = 127
+            decayTime = 0
+            timeVelocitySensitivity = 0
+            levelVelocitySensitivity = 0
         }
         
         /// Parse the pitch envelope from MIDI System Exclusive data.
@@ -90,8 +112,8 @@ public struct Oscillator {
     /// Initializes an oscillator with default settings.
     public init() {
         wave = .pcm(411)
-        coarse = Coarse(0)
-        fine = Fine(0)
+        coarse = 0
+        fine = 0
         keyScalingToPitch = .zeroCent
         fixedKey = .off
         pitchEnvelope = PitchEnvelope()
@@ -251,42 +273,16 @@ extension Oscillator.KeyScaling: CustomStringConvertible {
 
 // MARK: - RangedInt protocol conformance
 
-extension Oscillator.PitchEnvelope.Time: RangedInt {
-    public static let range: ClosedRange<Int> = 0...127
-
-    public static let defaultValue = 0
-
-    public var value: Int {
-        return _value
-    }
-
-    public init() {
-        assert(Self.range.contains(Self.defaultValue), "Default value must be in range")
-
-        _value = Self.defaultValue
-    }
-
-    public init(_ value: Int) {
-        _value = Self.range.clamp(value)
+extension Oscillator.PitchEnvelope.Time: ExpressibleByIntegerLiteral {
+    /// Initialize with an integer literal.
+    public init(integerLiteral value: Int) {
+        self.value = Self.range.clamp(value)
     }
 }
 
-extension Oscillator.PitchEnvelope.Level: RangedInt {
-    public static let range: ClosedRange<Int> = -63...63
-
-    public static let defaultValue = 0
-
-    public var value: Int {
-        return _value
-    }
-
-    public init() {
-        assert(Self.range.contains(Self.defaultValue), "Default value must be in range")
-
-        _value = Self.defaultValue
-    }
-
-    public init(_ value: Int) {
-        _value = Self.range.clamp(value)
+extension Oscillator.PitchEnvelope.Level: ExpressibleByIntegerLiteral {
+    /// Initialize with an integer literal.
+    public init(integerLiteral value: Int) {
+        self.value = Self.range.clamp(value)
     }
 }

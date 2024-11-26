@@ -5,14 +5,36 @@ import ByteKit
 public struct Amplifier {
     /// Amplifier envelope
     public struct Envelope: Equatable {
-        /// Amplifier envelope time
+        /// Amplifier envelope time (0...127)
         public struct Time {
-            private var _value: Int
+            public var value: Int
+            public static let range: ClosedRange<Int> = 0...127
+            public static let defaultValue = 0
+
+            public init() {
+                assert(Self.range.contains(Self.defaultValue), "Default value must be in range \(Self.range)")
+                self.value = Self.defaultValue
+            }
+
+            public init(_ value: Int) {
+                self.value = Self.range.clamp(value)
+            }
         }
-        
-        /// Amplifier envelope level
+
+        /// Amplifier envelope level (0...127)
         public struct Level {
-            private var _value: Int
+            public var value: Int
+            public static let range: ClosedRange<Int> = 0...127
+            public static let defaultValue = 0
+
+            public init() {
+                assert(Self.range.contains(Self.defaultValue), "Default value must be in range \(Self.range)")
+                self.value = Self.defaultValue
+            }
+
+            public init(_ value: Int) {
+                self.value = Self.range.clamp(value)
+            }
         }
 
         // All values are 0...127
@@ -73,13 +95,12 @@ public struct Amplifier {
         
         /// Compares two amplifier envelopes.
         public static func == (lhs: Amplifier.Envelope, rhs: Amplifier.Envelope) -> Bool {
-            return 
-                lhs.attackTime == rhs.attackTime
-                && lhs.decay1Time == rhs.decay1Time
-                && lhs.decay1Level == rhs.decay1Level
-                && lhs.decay2Time == rhs.decay2Time
-                && lhs.decay2Level == rhs.decay2Level
-                && lhs.releaseTime == rhs.releaseTime
+            return lhs.attackTime.value == rhs.attackTime.value
+            && lhs.decay1Time.value == rhs.decay1Time.value
+                && lhs.decay1Level.value == rhs.decay1Level.value
+                && lhs.decay2Time.value == rhs.decay2Time.value
+                && lhs.decay2Level.value == rhs.decay2Level.value
+                && lhs.releaseTime.value == rhs.releaseTime.value
         }
     }
 
@@ -87,12 +108,34 @@ public struct Amplifier {
     public struct Modulation {
         /// Key scaling control for amplifier modulation.
         public struct KeyScalingControl {
-            public struct Level {
-                private var _value: Int
+            public struct Time {
+                public var value: Int
+                public static let range: ClosedRange<Int> = -63...63
+                public static let defaultValue = 0
+
+                public init() {
+                    assert(Self.range.contains(Self.defaultValue), "Default value must be in range \(Self.range)")
+                    self.value = Self.defaultValue
+                }
+
+                public init(_ value: Int) {
+                    self.value = Self.range.clamp(value)
+                }
             }
 
-            public struct Time {
-                private var _value: Int
+            public struct Level {
+                public var value: Int
+                public static let range: ClosedRange<Int> = -63...63
+                public static let defaultValue = 0
+
+                public init() {
+                    assert(Self.range.contains(Self.defaultValue), "Default value must be in range \(Self.range)")
+                    self.value = Self.defaultValue
+                }
+
+                public init(_ value: Int) {
+                    self.value = Self.range.clamp(value)
+                }
             }
 
             // All values are -63...+63
@@ -140,13 +183,38 @@ public struct Amplifier {
 
         /// Velocity control for amplifier modulation.
         public struct VelocityControl {
+            /// Velocity control level (0...63)
             public struct Level {
-                private var _value: Int
+                public var value: Int
+                public static let range: ClosedRange<Int> = 0...63
+                public static let defaultValue = 0
+
+                public init() {
+                    assert(Self.range.contains(Self.defaultValue), "Default value must be in range \(Self.range)")
+                    self.value = Self.defaultValue
+                }
+
+                public init(_ value: Int) {
+                    self.value = Self.range.clamp(value)
+                }
             }
 
+            /// Velocity control time (-63...63)
             public struct Time {
-                private var _value: Int
+                public var value: Int
+                public static let range: ClosedRange<Int> = -63...63
+                public static let defaultValue = 0
+
+                public init() {
+                    assert(Self.range.contains(Self.defaultValue), "Default value must be in range \(Self.range)")
+                    self.value = Self.defaultValue
+                }
+
+                public init(_ value: Int) {
+                    self.value = Self.range.clamp(value)
+                }
             }
+
 
             // Almost the same as KeyScalingControl, but the level
             // is positive only (0...63), others are -63...+63.
@@ -432,166 +500,46 @@ extension Amplifier.Modulation.VelocityControl: CustomStringConvertible {
     }
 }
 
-// MARK: - RangedInt conformance
+// MARK: - ExpressibleByIntegerLiteral conformance for RangedInt
 
-extension Amplifier.Envelope.Time: RangedInt {
-    public static let range: ClosedRange<Int> = 0...127
-
-    public static let defaultValue = 0
-
-    public var value: Int {
-        return _value
-    }
-
-    public init() {
-        assert(Self.range.contains(Self.defaultValue), "Default value must be in range")
-
-        _value = Self.defaultValue
-    }
-
-    public init(_ value: Int) {
-        _value = Self.range.clamp(value)
-    }
-}
-
-extension Amplifier.Envelope.Level: RangedInt {
-    public static let range: ClosedRange<Int> = 0...127
-
-    public static let defaultValue = 0
-
-    public var value: Int {
-        return _value
-    }
-
-    public init() {
-        assert(Self.range.contains(Self.defaultValue), "Default value must be in range")
-
-        _value = Self.defaultValue
-    }
-
-    public init(_ value: Int) {
-        _value = Self.range.clamp(value)
+extension Amplifier.Envelope.Time: ExpressibleByIntegerLiteral {
+    /// Initialize with an integer literal.
+    public init(integerLiteral value: Int) {
+        self.value = Self.range.clamp(value)
     }
 }
 
 extension Amplifier.Envelope.Level: ExpressibleByIntegerLiteral {
     /// Initialize with an integer literal.
     public init(integerLiteral value: Int) {
-        _value = Self.range.clamp(value)
-    }
-}
-
-extension Amplifier.Envelope.Time: ExpressibleByIntegerLiteral {
-    /// Initialize with an integer literal.
-    public init(integerLiteral value: Int) {
-        _value = Self.range.clamp(value)
-    }
-}
-
-extension Amplifier.Modulation.KeyScalingControl.Time: RangedInt {
-    public static let range: ClosedRange<Int> = -63...63
-
-    public static let defaultValue = 0
-
-    public var value: Int {
-        return _value
-    }
-
-    public init() {
-        assert(Self.range.contains(Self.defaultValue), "Default value must be in range")
-
-        _value = Self.defaultValue
-    }
-
-    public init(_ value: Int) {
-        _value = Self.range.clamp(value)
+        self.value = Self.range.clamp(value)
     }
 }
 
 extension Amplifier.Modulation.KeyScalingControl.Time: ExpressibleByIntegerLiteral {
     /// Initialize with an integer literal.
     public init(integerLiteral value: Int) {
-        _value = Self.range.clamp(value)
-    }
-}
-
-extension Amplifier.Modulation.KeyScalingControl.Level: RangedInt {
-    public static let range: ClosedRange<Int> = -63...63
-
-    public static let defaultValue = 0
-
-    public var value: Int {
-        return _value
-    }
-
-    public init() {
-        assert(Self.range.contains(Self.defaultValue), "Default value must be in range")
-
-        _value = Self.defaultValue
-    }
-
-    public init(_ value: Int) {
-        _value = Self.range.clamp(value)
+        self.value = Self.range.clamp(value)
     }
 }
 
 extension Amplifier.Modulation.KeyScalingControl.Level: ExpressibleByIntegerLiteral {
     /// Initialize with an integer literal.
     public init(integerLiteral value: Int) {
-        _value = Self.range.clamp(value)
-    }
-}
-
-extension Amplifier.Modulation.VelocityControl.Time: RangedInt {
-    public static let range: ClosedRange<Int> = -63...63
-
-    public static let defaultValue = 0
-
-    public var value: Int {
-        return _value
-    }
-
-    public init() {
-        assert(Self.range.contains(Self.defaultValue), "Default value must be in range")
-
-        _value = Self.defaultValue
-    }
-
-    public init(_ value: Int) {
-        _value = Self.range.clamp(value)
+        self.value = Self.range.clamp(value)
     }
 }
 
 extension Amplifier.Modulation.VelocityControl.Time: ExpressibleByIntegerLiteral {
     /// Initialize with an integer literal.
     public init(integerLiteral value: Int) {
-        _value = Self.range.clamp(value)
-    }
-}
-
-extension Amplifier.Modulation.VelocityControl.Level: RangedInt {
-    public static let range: ClosedRange<Int> = 0...63
-
-    public static let defaultValue = 0
-
-    public var value: Int {
-        assert(Self.range.contains(Self.defaultValue), "Default value must be in range")
-
-        return _value
-    }
-
-    public init() {
-        _value = Self.defaultValue
-    }
-
-    public init(_ value: Int) {
-        _value = Self.range.clamp(value)
+        self.value = Self.range.clamp(value)
     }
 }
 
 extension Amplifier.Modulation.VelocityControl.Level: ExpressibleByIntegerLiteral {
     /// Initialize with an integer literal.
     public init(integerLiteral value: Int) {
-        _value = Self.range.clamp(value)
+        self.value = Self.range.clamp(value)
     }
 }
