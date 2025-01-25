@@ -1,72 +1,23 @@
-types = [
-    {'name': 'Fine',
-     'comment': 'Fine tuning',
-     'range_low': -63,
-     'range_high': 63,
-     'default_value': 0},
-
-    {'name': 'EffectDepth',
-     'comment': 'Effect depth',
-     'range_low': 0,
-     'range_high': 100,
-     'default_value': 0},
-
-    {'name': 'EffectPath',
-     'comment': 'Effect path',
-     'range_low': 1,
-     'range_high': 4,
-     'default_value': 1},
-
-    {'name': 'Resonance',
-     'comment': 'Resonance',
-     'range_low': 0,
-     'range_high': 31,
-     'default_value': 0},
-
-    {'name': 'Gain',
-     'comment': 'Gain',
-     'range_low': 1,
-     'range_high': 63,
-     'default_value': 1},
-
-    {'name': 'BenderPitch',
-     'comment': 'Bender pitch',
-     'range_low': -12,
-     'range_high': 12,
-     'default_value': 0},
-
-    {'name': 'BenderCutoff',
-     'comment': 'Bender cutoff',
-     'range_low': 0,
-     'range_high': 31,
-     'default_value': 0},
-
-    {'name': 'MIDINote',
-     'comment': 'MIDI note',
-     'range_low': 0,
-     'range_high': 127,
-     'default_value': 60},
-
-    {'name': 'PatchNumber',
-     'comment': 'Patch number',
-     'range_low': 0,
-     'range_high': 127,
-     'default_value': 0},
-
-    {'name': 'Transpose',
-     'comment': 'Transpose',
-     'range_low': -24,
-     'range_high': 24,
-     'default_value': 0}
+specs = [
+    ('Fine', 'Fine tuning', -63, 63, 0),
+    ('EffectDepth', 'Effect depth', 0, 100, 0),
+    ('EffectPath', 'Effect path', 1, 4, 1),
+    ('Resonance', 'Resonance', 0, 31, 0),
+    ('Gain', 'Gain', 1, 63, 1),
+    ('BenderPitch', 'Bender pitch', -12, 12, 0),
+    ('BenderCutoff', 'Bender cutoff', 0, 31, 0),
+    ('MIDINote', 'MIDI note', 0, 127, 60),
+    ('PatchNumber', 'Patch number', 0, 127, 0),
+    ('Transpose', 'Transpose', -24, 24, 0)
 ]
 
-for t in types:
-    range_string = f'{t["range_low"]}...{t["range_high"]}'
-    print('/// ' + t["comment"] + f' ({range_string}).')
-    print(f'public struct {t["name"]}' + ' {')
+for spec in specs:
+    range_string = f'{spec[2]}...{spec[3]}'
+    print('/// ' + spec[1] + f' ({range_string}).')
+    print(f'public struct {spec[0]}' + ' {')
     print('    public var value: Int')
     print(f'    public static let range: ClosedRange<Int> = {range_string}')
-    print(f'    public static let defaultValue = {t["default_value"]}')
+    print(f'    public static let defaultValue = {spec[4]}')
 
     init_method_1 = '''
     public init() {
@@ -83,7 +34,7 @@ for t in types:
     print('}')
     print()
 
-    ext_header = f'extension {t["name"]}: ExpressibleByIntegerLiteral ' + '{'
+    ext_header = f'extension {spec[0]}: ExpressibleByIntegerLiteral ' + '{'
     ext = '''    /// Initialize with an integer literal.
     public init(integerLiteral value: Int) {
         self.value = Self.range.clamp(value)
