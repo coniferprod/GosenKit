@@ -1,0 +1,24 @@
+{
+  "configurations" : [
+    {
+      "id" : "AE957DDF-9477-4F61-A052-BFA35ABBF60C",
+      "name" : "Test Scheme Action",
+      "options" : {
+
+      }
+    }
+  ],
+  "defaultOptions" : {
+
+  },
+  "testTargets" : [
+    {
+      "target" : {
+        "containerPath" : "container:",
+        "identifier" : "GosenKitTests",
+        "name" : "GosenKitTests"
+      }
+    }
+  ],
+  "version" : 1
+}
