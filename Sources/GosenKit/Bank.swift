@@ -7,6 +7,11 @@ import ByteKit
 // Kawai K5000 banks contain either single patches (up to 128 of them)
 // or exactly 64 multi patches (called combi on K5000W).
 
+struct SourceCount: Equatable {
+    var a: Int
+    var p: Int
+}
+
 // key = file size, value = tuple of (PCM count, ADD count)
 // This is based on the table by Jens Groh.
 let singlePatchSizes = [
@@ -53,9 +58,47 @@ public struct SingleBank {
         var offset = 0
         
         var temp = SingleBank()
-        var singlePatchSize = singlePatchSizes.keys.sorted().first!  // smallest
+        var smallestSinglePatchSize = singlePatchSizes.keys.sorted().first!
+        print("Smallest single patch size = \(smallestSinglePatchSize) bytes")
         
         for tone in toneMap.allIncludedTones {
+            switch SinglePatch.parse(from: data.slice(from: offset, length: smallestSinglePatchSize)) {
+            case .success(let patch):
+                print("Parsing single patch \(tone), got \(patch.common.name)")
+                temp.patches[tone] = patch
+                
+                // Find out the actual length of the patch data
+                var length = 0
+
+                var sourceCounts = SourceCount(a: 0, p: 0)
+                for source in patch.sources {
+                    if source.oscillator.wave == .additive {
+                        sourceCounts.a += 1
+                    } else {
+                        sourceCounts.p += 1
+                    }
+                }
+                print("Patch has \(sourceCounts.a) ADD sources and \(sourceCounts.p) PCM sources")
+                
+                var sizes: [Int: SourceCount] = [:]
+                for (size, counts) in singlePatchSizes {
+                    sizes[size] = SourceCount(a: counts.0, p: counts.1)
+                }
+                for (size, counts) in sizes {
+                    if counts == sourceCounts {
+                        length = size
+                        break
+                    }
+                }
+                print("Computed patch length = \(length) bytes")
+
+                offset += length  // jump to the next patch
+                
+            case .failure:
+                return .failure(.invalidData(offset, "Error parsing single patch"))
+            }
+
+            /*
             // Read the common data of the single patch.
             // Note that we skip the checksum!
             let commonData = data.slice(from: offset + 1, length: SinglePatch.Common.dataSize)
@@ -64,12 +107,15 @@ public struct SingleBank {
             // and then determine their sizes.
             switch SinglePatch.Common.parse(from: commonData) {
             case .success(let common):
-                print("Common data = \(common)")
+                print("Common data source count = \(common.sourceCount)")
+                //print("Additive source count = \(common.)")
+                
             case .failure(let error):
                 return .failure(error)
             }
 
             break
+             */
         }
         
         return .success(temp)

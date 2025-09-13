@@ -19,7 +19,7 @@ final class EffectTests: XCTestCase {
 
         switch EffectSettings.parse(from: effectData) {
         case .success(let effect):
-            XCTAssertEqual(effect.algorithm, 3)  // original byte is 0x02, algorithm values are 1~4
+            XCTAssertEqual(effect.algorithm.value, 3)  // original byte is 0x02, algorithm values are 1~4
         case .failure(let error):
             XCTFail("\(error)")
         }
@@ -48,7 +48,7 @@ final class EffectTests: XCTestCase {
         
         switch EffectSettings.parse(from: data) {
         case .success(let effectSettings):
-            XCTAssertEqual(effectSettings.algorithm, 1)  // original byte is 0x00, algorithm values are 1~4
+            XCTAssertEqual(effectSettings.algorithm.value, 1)  // original byte is 0x00, algorithm values are 1~4
             XCTAssertEqual(effectSettings.reverb.kind, .plate3)
         case .failure(let error):
             XCTFail("\(error)")
@@ -69,7 +69,7 @@ final class EffectTests: XCTestCase {
         ]
         switch EffectSettings.parse(from: data) {
         case .success(let effectSettings):
-            XCTAssertEqual(effectSettings.algorithm, 1)  // original byte is 0x00, algorithm values are 1~4
+            XCTAssertEqual(effectSettings.algorithm.value, 1)  // original byte is 0x00, algorithm values are 1~4
         case .failure(let error):
             XCTFail("\(error)")
         }

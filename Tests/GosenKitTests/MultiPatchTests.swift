@@ -38,11 +38,12 @@ final class MultiPatchTests: XCTestCase {
     }
     
     func testMultiPatch_fromData() {
-        if case let .manufacturerSpecific(_, payload) = Message(data: self.patchData) {
-            let dumpCommand = DumpCommand.parse(from: payload)
+        switch Message.parse(from: self.patchData) {
+        case .success(let message):
+            let dumpCommand = DumpCommand.parse(from: message.payload)
             switch dumpCommand {
             case .success(let command):
-                let data = ByteArray(payload[command.dataLength...])
+                let data = ByteArray(message.payload[command.dataLength...])
                 switch MultiPatch.parse(from: data) {
                 case .success(let patch):
                     XCTAssert(patch.common.name.value == "Evening3")
@@ -52,8 +53,7 @@ final class MultiPatchTests: XCTestCase {
             case .failure(let error):
                 XCTFail("\(error)")
             }
-        }
-        else {
+        case .failure(let error):
             XCTFail("Unable to parse patch data as System Exclusive message")
         }
     }    

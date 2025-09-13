@@ -274,3 +274,10 @@ extension InstrumentNumber: SystemExclusiveData {
     /// Gets the MIDI System Exclusive data length for this instrument number.
     public var dataLength: Int { 2 }
 }
+
+// Reverse lookup for dictionary
+extension Dictionary where Value: Equatable {
+    func key(forValue value: Value) -> Key? {
+        return first { $0.1 == value }?.0
+    }
+}

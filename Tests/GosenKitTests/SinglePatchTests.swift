@@ -317,11 +317,12 @@ final class SinglePatchTests: XCTestCase {
     }
     
     func testSinglePatch_fromData() {
-        if case let .manufacturerSpecific(_, payload) = Message(data: self.patchData) {
-            let dumpCommand = DumpCommand.parse(from: payload)
+        switch Message.parse(from: self.patchData) {
+        case .success(let message):
+            let dumpCommand = DumpCommand.parse(from: message.payload)
             switch dumpCommand {
             case .success(let command):
-                let data = ByteArray(payload[command.dataLength...])
+                let data = ByteArray(message.payload[command.dataLength...])
                 switch SinglePatch.parse(from: data) {
                 case .success(let patch):
                     XCTAssert(patch.common.name.value == "PowerK5K")
@@ -331,10 +332,10 @@ final class SinglePatchTests: XCTestCase {
             case .failure(let error):
                 XCTFail("\(error)")
             }
-        }
-        else {
+
+        case .failure(let error):
             XCTFail("Unable to parse patch data as System Exclusive message")
-        }
+        }        
     }
         
     func testPatchName_truncated() {
