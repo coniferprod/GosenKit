@@ -30,7 +30,7 @@ extension ParseError: CustomStringConvertible {
 
 /// Protocol to wrap an Int guaranteed to be contained
 /// in the given closed range.
-protocol RangedInt: CustomStringConvertible {
+protocol RangedInt: CustomStringConvertible, ExpressibleByIntegerLiteral {
     /// The current value of the wrapped `Int`.
     var value: Int { get }
     
@@ -45,6 +45,9 @@ protocol RangedInt: CustomStringConvertible {
     
     /// Initialization with a value (will be clamped).
     init(_ value: Int)
+    
+    /// Initialize with an integer literal.
+    init(integerLiteral value: Int)
 }
 
 extension RangedInt {
@@ -64,6 +67,18 @@ extension RangedInt {
     /// Satisfies CustomStringConvertible conformance.
     public var description: String {
         String(self.value)
+    }
+    
+    /// Initialize with an integer literal.
+    /// Satisfies ExpressibleByIntegerLiteral conformance.
+    public init(integerLiteral value: Int) {
+        self.init(value)
+    }
+    
+    public init() {
+        assert(Self.range.contains(Self.defaultValue),
+               "Default value must be in range \(Self.range)")
+        self.init(Self.defaultValue)
     }
 }
 
@@ -91,13 +106,6 @@ public struct Volume: RangedInt {
     }
 }
 
-extension Volume: ExpressibleByIntegerLiteral {
-    /// Initialize with an integer literal.
-    public init(integerLiteral value: Int) {
-        self.value = Self.range.clamp(value)
-    }
-}
-
 /// Level (0...127)
 public struct Level: RangedInt {
     public var value: Int
@@ -110,13 +118,6 @@ public struct Level: RangedInt {
     }
 
     public init(_ value: Int) {
-        self.value = Self.range.clamp(value)
-    }
-}
-
-extension Level: ExpressibleByIntegerLiteral {
-    /// Initialize with an integer literal.
-    public init(integerLiteral value: Int) {
         self.value = Self.range.clamp(value)
     }
 }
@@ -137,15 +138,8 @@ public struct Time: RangedInt {
     }
 }
 
-extension Time: ExpressibleByIntegerLiteral {
-    /// Initialize with an integer literal.
-    public init(integerLiteral value: Int) {
-        self.value = Self.range.clamp(value)
-    }
-}
-
 /// Depth (-63...+63).
-public struct Depth {
+public struct Depth: RangedInt {
     public var value: Int
     public static let range: ClosedRange<Int> = -63...63
     public static let defaultValue = 0
@@ -156,19 +150,12 @@ public struct Depth {
     }
 
     public init(_ value: Int) {
-        self.value = Self.range.clamp(value)
-    }
-}
-
-extension Depth: ExpressibleByIntegerLiteral {
-    /// Initialize with an integer literal.
-    public init(integerLiteral value: Int) {
         self.value = Self.range.clamp(value)
     }
 }
 
 /// Pan (-63...+63).
-public struct Pan {
+public struct Pan: RangedInt {
     public var value: Int
     public static let range: ClosedRange<Int> = -63...63
     public static let defaultValue = 0
@@ -183,15 +170,8 @@ public struct Pan {
     }
 }
 
-extension Pan: ExpressibleByIntegerLiteral {
-    /// Initialize with an integer literal.
-    public init(integerLiteral value: Int) {
-        self.value = Self.range.clamp(value)
-    }
-}
-
 /// MIDI channel (1...16).
-public struct MIDIChannel: Equatable {
+public struct MIDIChannel: RangedInt, Equatable {
     public var value: Int
     public static let range: ClosedRange<Int> = 1...16
     public static let defaultValue = 1
@@ -206,15 +186,8 @@ public struct MIDIChannel: Equatable {
     }
 }
 
-extension MIDIChannel: ExpressibleByIntegerLiteral {
-    /// Initialize with an integer literal.
-    public init(integerLiteral value: Int) {
-        self.value = Self.range.clamp(value)
-    }
-}
-
 /// Velocity curve (1...12).
-public struct VelocityCurve {
+public struct VelocityCurve: RangedInt {
     public var value: Int
     public static let range: ClosedRange<Int> = 1...12
     public static let defaultValue = 1
@@ -229,15 +202,8 @@ public struct VelocityCurve {
     }
 }
 
-extension VelocityCurve: ExpressibleByIntegerLiteral {
-    /// Initialize with an integer literal.
-    public init(integerLiteral value: Int) {
-        self.value = Self.range.clamp(value)
-    }
-}
-
 /// Control depth (-63...+63).
-public struct ControlDepth {
+public struct ControlDepth: RangedInt {
     public var value: Int
     public static let range: ClosedRange<Int> = -63...63
     public static let defaultValue = 0
@@ -252,15 +218,8 @@ public struct ControlDepth {
     }
 }
 
-extension ControlDepth: ExpressibleByIntegerLiteral {
-    /// Initialize with an integer literal.
-    public init(integerLiteral value: Int) {
-        self.value = Self.range.clamp(value)
-    }
-}
-
 /// Coarse tuning (-24...+24).
-public struct Coarse {
+public struct Coarse: RangedInt {
     public var value: Int
     public static let range: ClosedRange<Int> = -24...24
     public static let defaultValue = 0
@@ -275,15 +234,8 @@ public struct Coarse {
     }
 }
 
-extension Coarse: ExpressibleByIntegerLiteral {
-    /// Initialize with an integer literal.
-    public init(integerLiteral value: Int) {
-        self.value = Self.range.clamp(value)
-    }
-}
-
 /// Fine tuning (-63...63).
-public struct Fine {
+public struct Fine: RangedInt {
     public var value: Int
     public static let range: ClosedRange<Int> = -63...63
     public static let defaultValue = 0
@@ -298,16 +250,8 @@ public struct Fine {
     }
 }
 
-extension Fine: ExpressibleByIntegerLiteral {
-    /// Initialize with an integer literal.
-    public init(integerLiteral value: Int) {
-        self.value = Self.range.clamp(value)
-    }
-}
-
-
 /// Effect depth (0...100).
-public struct EffectDepth {
+public struct EffectDepth: RangedInt {
     public var value: Int
     public static let range: ClosedRange<Int> = 0...100
     public static let defaultValue = 0
@@ -322,16 +266,8 @@ public struct EffectDepth {
     }
 }
 
-extension EffectDepth: ExpressibleByIntegerLiteral {
-    /// Initialize with an integer literal.
-    public init(integerLiteral value: Int) {
-        self.value = Self.range.clamp(value)
-    }
-}
-
-
 /// Effect path (1...4).
-public struct EffectPath {
+public struct EffectPath: RangedInt {
     public var value: Int
     public static let range: ClosedRange<Int> = 1...4
     public static let defaultValue = 1
@@ -346,16 +282,8 @@ public struct EffectPath {
     }
 }
 
-extension EffectPath: ExpressibleByIntegerLiteral {
-    /// Initialize with an integer literal.
-    public init(integerLiteral value: Int) {
-        self.value = Self.range.clamp(value)
-    }
-}
-
-
 /// Resonance (0...31).
-public struct Resonance {
+public struct Resonance: RangedInt {
     public var value: Int
     public static let range: ClosedRange<Int> = 0...31
     public static let defaultValue = 0
@@ -370,16 +298,8 @@ public struct Resonance {
     }
 }
 
-extension Resonance: ExpressibleByIntegerLiteral {
-    /// Initialize with an integer literal.
-    public init(integerLiteral value: Int) {
-        self.value = Self.range.clamp(value)
-    }
-}
-
-
 /// Gain (1...63).
-public struct Gain {
+public struct Gain: RangedInt {
     public var value: Int
     public static let range: ClosedRange<Int> = 1...63
     public static let defaultValue = 1
@@ -394,16 +314,8 @@ public struct Gain {
     }
 }
 
-extension Gain: ExpressibleByIntegerLiteral {
-    /// Initialize with an integer literal.
-    public init(integerLiteral value: Int) {
-        self.value = Self.range.clamp(value)
-    }
-}
-
-
 /// Bender pitch (-12...12).
-public struct BenderPitch {
+public struct BenderPitch: RangedInt {
     public var value: Int
     public static let range: ClosedRange<Int> = -12...12
     public static let defaultValue = 0
@@ -418,16 +330,8 @@ public struct BenderPitch {
     }
 }
 
-extension BenderPitch: ExpressibleByIntegerLiteral {
-    /// Initialize with an integer literal.
-    public init(integerLiteral value: Int) {
-        self.value = Self.range.clamp(value)
-    }
-}
-
-
 /// Bender cutoff (0...31).
-public struct BenderCutoff {
+public struct BenderCutoff: RangedInt {
     public var value: Int
     public static let range: ClosedRange<Int> = 0...31
     public static let defaultValue = 0
@@ -442,16 +346,8 @@ public struct BenderCutoff {
     }
 }
 
-extension BenderCutoff: ExpressibleByIntegerLiteral {
-    /// Initialize with an integer literal.
-    public init(integerLiteral value: Int) {
-        self.value = Self.range.clamp(value)
-    }
-}
-
-
 /// MIDI note (0...127).
-public struct MIDINote {
+public struct MIDINote: RangedInt {
     public var value: Int
     public static let range: ClosedRange<Int> = 0...127
     public static let defaultValue = 60
@@ -466,16 +362,8 @@ public struct MIDINote {
     }
 }
 
-extension MIDINote: ExpressibleByIntegerLiteral {
-    /// Initialize with an integer literal.
-    public init(integerLiteral value: Int) {
-        self.value = Self.range.clamp(value)
-    }
-}
-
-
 /// Patch number (0...127).
-public struct PatchNumber {
+public struct PatchNumber: RangedInt {
     public var value: Int
     public static let range: ClosedRange<Int> = 0...127
     public static let defaultValue = 0
@@ -490,16 +378,8 @@ public struct PatchNumber {
     }
 }
 
-extension PatchNumber: ExpressibleByIntegerLiteral {
-    /// Initialize with an integer literal.
-    public init(integerLiteral value: Int) {
-        self.value = Self.range.clamp(value)
-    }
-}
-
-
 /// Transpose (-24...24).
-public struct Transpose {
+public struct Transpose: RangedInt {
     public var value: Int
     public static let range: ClosedRange<Int> = -24...24
     public static let defaultValue = 0
@@ -514,16 +394,8 @@ public struct Transpose {
     }
 }
 
-extension Transpose: ExpressibleByIntegerLiteral {
-    /// Initialize with an integer literal.
-    public init(integerLiteral value: Int) {
-        self.value = Self.range.clamp(value)
-    }
-}
-
 /// Fixed key setting.
 public enum FixedKey {
     case off
     case on(Key)
 }
-
