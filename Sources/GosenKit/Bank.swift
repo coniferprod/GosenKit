@@ -54,22 +54,22 @@ public struct SingleBank {
     
     /// Parse a bank of single patches from MIDI System Exclusive data.
     public static func parse(from data: ByteArray, toneMap: ToneMap) -> Result<SingleBank, ParseError> {
-        print("Parsing single bank, with \(data.count) bytes of data. Tone map = \(toneMap)")
+        //print("Parsing single bank, with \(data.count) bytes of data. Tone map = \(toneMap)")
         var offset = 0
         
-        var temp = SingleBank()
-        var smallestSinglePatchSize = singlePatchSizes.keys.sorted().first!
-        print("Smallest single patch size = \(smallestSinglePatchSize) bytes")
+        let minimumPatchSize = SinglePatch.Common.dataSize + 2 * Source.dataSize
         
+        var temp = SingleBank()
         for tone in toneMap.allIncludedTones {
-            switch SinglePatch.parse(from: data.slice(from: offset, length: smallestSinglePatchSize)) {
+            // We don't know yet how many bytes the patch is,
+            // but it is at least the minimum size.
+            var sizeToRead = Swift.max(minimumPatchSize, data.count - offset)
+            
+            switch SinglePatch.parse(from: data.slice(from: offset, length: sizeToRead)) {
             case .success(let patch):
-                print("Parsing single patch \(tone), got \(patch.common.name)")
+                //print("Parsing single patch \(tone), got \(patch.common.name)")
                 temp.patches[tone] = patch
                 
-                // Find out the actual length of the patch data
-                var length = 0
-
                 var sourceCounts = SourceCount(a: 0, p: 0)
                 for source in patch.sources {
                     if source.oscillator.wave == .additive {
@@ -78,44 +78,18 @@ public struct SingleBank {
                         sourceCounts.p += 1
                     }
                 }
-                print("Patch has \(sourceCounts.a) ADD sources and \(sourceCounts.p) PCM sources")
-                
-                var sizes: [Int: SourceCount] = [:]
-                for (size, counts) in singlePatchSizes {
-                    sizes[size] = SourceCount(a: counts.0, p: counts.1)
-                }
-                for (size, counts) in sizes {
-                    if counts == sourceCounts {
-                        length = size
-                        break
-                    }
-                }
-                print("Computed patch length = \(length) bytes")
 
-                offset += length  // jump to the next patch
+                // Figure out the total size of the single patch based on the counts
+                let patchSize = 1 + SinglePatch.Common.dataSize  // includes the checksum
+                    + patch.sources.count * Source.dataSize  // all sources have this part
+                    + sourceCounts.a * AdditiveKit.dataSize
+                print("\(sourceCounts.a)ADD \(sourceCounts.p)PCM  size = \(patchSize) bytes")
+
+                offset += patchSize  // jump to the next patch
                 
             case .failure:
                 return .failure(.invalidData(offset, "Error parsing single patch"))
             }
-
-            /*
-            // Read the common data of the single patch.
-            // Note that we skip the checksum!
-            let commonData = data.slice(from: offset + 1, length: SinglePatch.Common.dataSize)
-            
-            // Parse the single patch common data to get the actual number of sources
-            // and then determine their sizes.
-            switch SinglePatch.Common.parse(from: commonData) {
-            case .success(let common):
-                print("Common data source count = \(common.sourceCount)")
-                //print("Additive source count = \(common.)")
-                
-            case .failure(let error):
-                return .failure(error)
-            }
-
-            break
-             */
         }
         
         return .success(temp)

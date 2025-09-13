@@ -41,9 +41,12 @@ final class BankTests: XCTestCase {
                 case .success(let toneMap):
                     switch SingleBank.parse(from: patchPayload, toneMap: toneMap) {
                     case .success(let bank):
+                        XCTAssert(bank.patches.count == toneMap.includedCount)
+                        /*
                         for tone in bank.patches.keys.sorted() {
                             print("\(tone): \(String(describing: bank.patches[tone]?.common.name))")
                         }
+                         */
                     case .failure(let error):
                         XCTFail("Error parsing single bank: \(error)")
                     }
