@@ -2,28 +2,15 @@ import SyxPack
 import ByteKit
 
 /// Drum wave number (0...285).
-public struct DrumWaveNumber {
+public struct DrumWaveNumber: RangedInt {
     public var value: Int
     public static let range: ClosedRange<Int> = 0...285
     public static let defaultValue = 0
-
-    public init() {
-        assert(Self.range.contains(Self.defaultValue), "Default value must be in range \(Self.range)")
-        self.value = Self.defaultValue
-    }
 
     public init(_ value: Int) {
         self.value = Self.range.clamp(value)
     }
 }
-
-extension DrumWaveNumber: ExpressibleByIntegerLiteral {
-    /// Initialize with an integer literal.
-    public init(integerLiteral value: Int) {
-        self.value = Self.range.clamp(value)
-    }
-}
-
 
 /// Drum waveform.
 /// TODO: Use DrumWaveNumber.
@@ -351,15 +338,10 @@ public struct DrumSource {
     /// Pitch envelope for a drum source.
     public struct PitchEnvelope {
         /// Drum source pitch envelope level (-63...63)
-        public struct Level {
+        public struct Level: RangedInt {
             public var value: Int
             public static let range: ClosedRange<Int> = -63...63
             public static let defaultValue = 0
-
-            public init() {
-                assert(Self.range.contains(Self.defaultValue), "Default value must be in range \(Self.range)")
-                self.value = Self.defaultValue
-            }
 
             public init(_ value: Int) {
                 self.value = Self.range.clamp(value)
@@ -367,15 +349,10 @@ public struct DrumSource {
         }
 
         /// Drum source pitch envelope time (0...127)
-        public struct Time {
+        public struct Time: RangedInt {
             public var value: Int
             public static let range: ClosedRange<Int> = 0...127
             public static let defaultValue = 0
-
-            public init() {
-                assert(Self.range.contains(Self.defaultValue), "Default value must be in range \(Self.range)")
-                self.value = Self.defaultValue
-            }
 
             public init(_ value: Int) {
                 self.value = Self.range.clamp(value)
@@ -413,15 +390,10 @@ public struct DrumSource {
     /// Velocity control for drum source DCA.
     public struct VelocityControl {
         /// Drum source velocity control level
-        public struct Level {
+        public struct Level: RangedInt {
             public var value: Int
             public static let range: ClosedRange<Int> = 0...63
             public static let defaultValue = 0
-
-            public init() {
-                assert(Self.range.contains(Self.defaultValue), "Default value must be in range \(Self.range)")
-                self.value = Self.defaultValue
-            }
 
             public init(_ value: Int) {
                 self.value = Self.range.clamp(value)
@@ -429,15 +401,10 @@ public struct DrumSource {
         }
 
         /// Drum source velocity control time
-        public struct Time {
+        public struct Time: RangedInt {
             public var value: Int
             public static let range: ClosedRange<Int> = -63...63
             public static let defaultValue = 0
-
-            public init() {
-                assert(Self.range.contains(Self.defaultValue), "Default value must be in range \(Self.range)")
-                self.value = Self.defaultValue
-            }
 
             public init(_ value: Int) {
                 self.value = Self.range.clamp(value)
@@ -602,34 +569,6 @@ public struct DrumSource {
         }
 
         return .success(temp).self
-    }
-}
-
-extension DrumSource.PitchEnvelope.Level: ExpressibleByIntegerLiteral {
-    /// Initialize with an integer literal.
-    public init(integerLiteral value: Int) {
-        self.value = Self.range.clamp(value)
-    }
-}
-
-extension DrumSource.PitchEnvelope.Time: ExpressibleByIntegerLiteral {
-    /// Initialize with an integer literal.
-    public init(integerLiteral value: Int) {
-        self.value = Self.range.clamp(value)
-    }
-}
-
-extension DrumSource.VelocityControl.Level: ExpressibleByIntegerLiteral {
-    /// Initialize with an integer literal.
-    public init(integerLiteral value: Int) {
-        self.value = Self.range.clamp(value)
-    }
-}
-
-extension DrumSource.VelocityControl.Time: ExpressibleByIntegerLiteral {
-    /// Initialize with an integer literal.
-    public init(integerLiteral value: Int) {
-        self.value = Self.range.clamp(value)
     }
 }
 

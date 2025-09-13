@@ -6,15 +6,10 @@ public struct Amplifier {
     /// Amplifier envelope
     public struct Envelope: Equatable {
         /// Amplifier envelope time (0...127)
-        public struct Time {
+        public struct Time: RangedInt {
             public var value: Int
             public static let range: ClosedRange<Int> = 0...127
             public static let defaultValue = 0
-
-            public init() {
-                assert(Self.range.contains(Self.defaultValue), "Default value must be in range \(Self.range)")
-                self.value = Self.defaultValue
-            }
 
             public init(_ value: Int) {
                 self.value = Self.range.clamp(value)
@@ -22,15 +17,10 @@ public struct Amplifier {
         }
 
         /// Amplifier envelope level (0...127)
-        public struct Level {
+        public struct Level: RangedInt {
             public var value: Int
             public static let range: ClosedRange<Int> = 0...127
             public static let defaultValue = 0
-
-            public init() {
-                assert(Self.range.contains(Self.defaultValue), "Default value must be in range \(Self.range)")
-                self.value = Self.defaultValue
-            }
 
             public init(_ value: Int) {
                 self.value = Self.range.clamp(value)
@@ -108,30 +98,20 @@ public struct Amplifier {
     public struct Modulation {
         /// Key scaling control for amplifier modulation.
         public struct KeyScalingControl {
-            public struct Time {
+            public struct Time: RangedInt {
                 public var value: Int
                 public static let range: ClosedRange<Int> = -63...63
                 public static let defaultValue = 0
-
-                public init() {
-                    assert(Self.range.contains(Self.defaultValue), "Default value must be in range \(Self.range)")
-                    self.value = Self.defaultValue
-                }
 
                 public init(_ value: Int) {
                     self.value = Self.range.clamp(value)
                 }
             }
 
-            public struct Level {
+            public struct Level: RangedInt {
                 public var value: Int
                 public static let range: ClosedRange<Int> = -63...63
                 public static let defaultValue = 0
-
-                public init() {
-                    assert(Self.range.contains(Self.defaultValue), "Default value must be in range \(Self.range)")
-                    self.value = Self.defaultValue
-                }
 
                 public init(_ value: Int) {
                     self.value = Self.range.clamp(value)
@@ -184,15 +164,10 @@ public struct Amplifier {
         /// Velocity control for amplifier modulation.
         public struct VelocityControl {
             /// Velocity control level (0...63)
-            public struct Level {
+            public struct Level: RangedInt {
                 public var value: Int
                 public static let range: ClosedRange<Int> = 0...63
                 public static let defaultValue = 0
-
-                public init() {
-                    assert(Self.range.contains(Self.defaultValue), "Default value must be in range \(Self.range)")
-                    self.value = Self.defaultValue
-                }
 
                 public init(_ value: Int) {
                     self.value = Self.range.clamp(value)
@@ -200,21 +175,15 @@ public struct Amplifier {
             }
 
             /// Velocity control time (-63...63)
-            public struct Time {
+            public struct Time: RangedInt {
                 public var value: Int
                 public static let range: ClosedRange<Int> = -63...63
                 public static let defaultValue = 0
-
-                public init() {
-                    assert(Self.range.contains(Self.defaultValue), "Default value must be in range \(Self.range)")
-                    self.value = Self.defaultValue
-                }
 
                 public init(_ value: Int) {
                     self.value = Self.range.clamp(value)
                 }
             }
-
 
             // Almost the same as KeyScalingControl, but the level
             // is positive only (0...63), others are -63...+63.
@@ -497,49 +466,5 @@ extension Amplifier.Modulation.VelocityControl: CustomStringConvertible {
         result += "Level=\(self.level.value) AttackTime=\(self.attackTime.value) Decay1Time=\(self.decay1Time.value) Release=\(self.release.value)"
         
         return result
-    }
-}
-
-// MARK: - ExpressibleByIntegerLiteral conformance for RangedInt
-
-extension Amplifier.Envelope.Time: ExpressibleByIntegerLiteral {
-    /// Initialize with an integer literal.
-    public init(integerLiteral value: Int) {
-        self.value = Self.range.clamp(value)
-    }
-}
-
-extension Amplifier.Envelope.Level: ExpressibleByIntegerLiteral {
-    /// Initialize with an integer literal.
-    public init(integerLiteral value: Int) {
-        self.value = Self.range.clamp(value)
-    }
-}
-
-extension Amplifier.Modulation.KeyScalingControl.Time: ExpressibleByIntegerLiteral {
-    /// Initialize with an integer literal.
-    public init(integerLiteral value: Int) {
-        self.value = Self.range.clamp(value)
-    }
-}
-
-extension Amplifier.Modulation.KeyScalingControl.Level: ExpressibleByIntegerLiteral {
-    /// Initialize with an integer literal.
-    public init(integerLiteral value: Int) {
-        self.value = Self.range.clamp(value)
-    }
-}
-
-extension Amplifier.Modulation.VelocityControl.Time: ExpressibleByIntegerLiteral {
-    /// Initialize with an integer literal.
-    public init(integerLiteral value: Int) {
-        self.value = Self.range.clamp(value)
-    }
-}
-
-extension Amplifier.Modulation.VelocityControl.Level: ExpressibleByIntegerLiteral {
-    /// Initialize with an integer literal.
-    public init(integerLiteral value: Int) {
-        self.value = Self.range.clamp(value)
     }
 }

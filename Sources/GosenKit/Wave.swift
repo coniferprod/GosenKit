@@ -7,11 +7,6 @@ public struct WaveNumber: RangedInt {
     public static let range: ClosedRange<Int> = 1...464
     public static let defaultValue = 1
 
-    public init() {
-        assert(Self.range.contains(Self.defaultValue), "Default value must be in range \(Self.range)")
-        self.value = Self.defaultValue
-    }
-
     public init(_ value: Int) {
         self.value = Self.range.clamp(value)
     }

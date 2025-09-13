@@ -96,11 +96,6 @@ public struct Volume: RangedInt {
     public static let range: ClosedRange<Int> = 0...127
     public static let defaultValue = 0
 
-    public init() {
-        assert(Self.range.contains(Self.defaultValue), "Default value must be in range \(Self.range)")
-        self.value = Self.defaultValue
-    }
-
     public init(_ value: Int) {
         self.value = Self.range.clamp(value)
     }
@@ -111,11 +106,6 @@ public struct Level: RangedInt {
     public var value: Int
     public static let range: ClosedRange<Int> = 0...127
     public static let defaultValue = 0
-
-    public init() {
-        assert(Self.range.contains(Self.defaultValue), "Default value must be in range \(Self.range)")
-        self.value = Self.defaultValue
-    }
 
     public init(_ value: Int) {
         self.value = Self.range.clamp(value)
@@ -128,11 +118,6 @@ public struct Time: RangedInt {
     public static let range: ClosedRange<Int> = 0...127
     public static let defaultValue = 0
 
-    public init() {
-        assert(Self.range.contains(Self.defaultValue), "Default value must be in range \(Self.range)")
-        self.value = Self.defaultValue
-    }
-
     public init(_ value: Int) {
         self.value = Self.range.clamp(value)
     }
@@ -143,11 +128,6 @@ public struct Depth: RangedInt {
     public var value: Int
     public static let range: ClosedRange<Int> = -63...63
     public static let defaultValue = 0
-
-    public init() {
-        assert(Self.range.contains(Self.defaultValue), "Default value must be in range \(Self.range)")
-        self.value = Self.defaultValue
-    }
 
     public init(_ value: Int) {
         self.value = Self.range.clamp(value)
@@ -160,11 +140,6 @@ public struct Pan: RangedInt {
     public static let range: ClosedRange<Int> = -63...63
     public static let defaultValue = 0
 
-    public init() {
-        assert(Self.range.contains(Self.defaultValue), "Default value must be in range \(Self.range)")
-        self.value = Self.defaultValue
-    }
-
     public init(_ value: Int) {
         self.value = Self.range.clamp(value)
     }
@@ -175,11 +150,6 @@ public struct MIDIChannel: RangedInt, Equatable {
     public var value: Int
     public static let range: ClosedRange<Int> = 1...16
     public static let defaultValue = 1
-    
-    public init() {
-        assert(Self.range.contains(Self.defaultValue), "Default value must be in range \(Self.range)")
-        self.value = Self.defaultValue
-    }
     
     public init(_ value: Int) {
         self.value = Self.range.clamp(value)
@@ -192,11 +162,6 @@ public struct VelocityCurve: RangedInt {
     public static let range: ClosedRange<Int> = 1...12
     public static let defaultValue = 1
     
-    public init() {
-        assert(Self.range.contains(Self.defaultValue), "Default value must be in range \(Self.range)")
-        self.value = Self.defaultValue
-    }
-    
     public init(_ value: Int) {
         self.value = Self.range.clamp(value)
     }
@@ -208,11 +173,6 @@ public struct ControlDepth: RangedInt {
     public static let range: ClosedRange<Int> = -63...63
     public static let defaultValue = 0
     
-    public init() {
-        assert(Self.range.contains(Self.defaultValue), "Default value must be in range \(Self.range)")
-        self.value = Self.defaultValue
-    }
-    
     public init(_ value: Int) {
         self.value = Self.range.clamp(value)
     }
@@ -223,12 +183,7 @@ public struct Coarse: RangedInt {
     public var value: Int
     public static let range: ClosedRange<Int> = -24...24
     public static let defaultValue = 0
-    
-    public init() {
-        assert(Self.range.contains(Self.defaultValue), "Default value must be in range \(Self.range)")
-        self.value = Self.defaultValue
-    }
-    
+        
     public init(_ value: Int) {
         self.value = Self.range.clamp(value)
     }
@@ -239,11 +194,6 @@ public struct Fine: RangedInt {
     public var value: Int
     public static let range: ClosedRange<Int> = -63...63
     public static let defaultValue = 0
-
-    public init() {
-        assert(Self.range.contains(Self.defaultValue), "Default value must be in range \(Self.range)")
-        self.value = Self.defaultValue
-    }
 
     public init(_ value: Int) {
         self.value = Self.range.clamp(value)
@@ -256,11 +206,6 @@ public struct EffectDepth: RangedInt {
     public static let range: ClosedRange<Int> = 0...100
     public static let defaultValue = 0
 
-    public init() {
-        assert(Self.range.contains(Self.defaultValue), "Default value must be in range \(Self.range)")
-        self.value = Self.defaultValue
-    }
-
     public init(_ value: Int) {
         self.value = Self.range.clamp(value)
     }
@@ -271,11 +216,6 @@ public struct EffectPath: RangedInt {
     public var value: Int
     public static let range: ClosedRange<Int> = 1...4
     public static let defaultValue = 1
-
-    public init() {
-        assert(Self.range.contains(Self.defaultValue), "Default value must be in range \(Self.range)")
-        self.value = Self.defaultValue
-    }
 
     public init(_ value: Int) {
         self.value = Self.range.clamp(value)
@@ -288,11 +228,6 @@ public struct Resonance: RangedInt {
     public static let range: ClosedRange<Int> = 0...31
     public static let defaultValue = 0
 
-    public init() {
-        assert(Self.range.contains(Self.defaultValue), "Default value must be in range \(Self.range)")
-        self.value = Self.defaultValue
-    }
-
     public init(_ value: Int) {
         self.value = Self.range.clamp(value)
     }
@@ -303,11 +238,6 @@ public struct Gain: RangedInt {
     public var value: Int
     public static let range: ClosedRange<Int> = 1...63
     public static let defaultValue = 1
-
-    public init() {
-        assert(Self.range.contains(Self.defaultValue), "Default value must be in range \(Self.range)")
-        self.value = Self.defaultValue
-    }
 
     public init(_ value: Int) {
         self.value = Self.range.clamp(value)
@@ -320,11 +250,6 @@ public struct BenderPitch: RangedInt {
     public static let range: ClosedRange<Int> = -12...12
     public static let defaultValue = 0
 
-    public init() {
-        assert(Self.range.contains(Self.defaultValue), "Default value must be in range \(Self.range)")
-        self.value = Self.defaultValue
-    }
-
     public init(_ value: Int) {
         self.value = Self.range.clamp(value)
     }
@@ -335,11 +260,6 @@ public struct BenderCutoff: RangedInt {
     public var value: Int
     public static let range: ClosedRange<Int> = 0...31
     public static let defaultValue = 0
-
-    public init() {
-        assert(Self.range.contains(Self.defaultValue), "Default value must be in range \(Self.range)")
-        self.value = Self.defaultValue
-    }
 
     public init(_ value: Int) {
         self.value = Self.range.clamp(value)
@@ -352,11 +272,6 @@ public struct MIDINote: RangedInt {
     public static let range: ClosedRange<Int> = 0...127
     public static let defaultValue = 60
 
-    public init() {
-        assert(Self.range.contains(Self.defaultValue), "Default value must be in range \(Self.range)")
-        self.value = Self.defaultValue
-    }
-
     public init(_ value: Int) {
         self.value = Self.range.clamp(value)
     }
@@ -368,11 +283,6 @@ public struct PatchNumber: RangedInt {
     public static let range: ClosedRange<Int> = 0...127
     public static let defaultValue = 0
 
-    public init() {
-        assert(Self.range.contains(Self.defaultValue), "Default value must be in range \(Self.range)")
-        self.value = Self.defaultValue
-    }
-
     public init(_ value: Int) {
         self.value = Self.range.clamp(value)
     }
@@ -383,11 +293,6 @@ public struct Transpose: RangedInt {
     public var value: Int
     public static let range: ClosedRange<Int> = -24...24
     public static let defaultValue = 0
-
-    public init() {
-        assert(Self.range.contains(Self.defaultValue), "Default value must be in range \(Self.range)")
-        self.value = Self.defaultValue
-    }
 
     public init(_ value: Int) {
         self.value = Self.range.clamp(value)

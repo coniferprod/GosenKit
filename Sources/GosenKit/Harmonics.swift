@@ -74,11 +74,6 @@ public struct HarmonicEnvelope {
         public static let range: ClosedRange<Int> = 0...127
         public static let defaultValue = 0
 
-        public init() {
-            assert(Self.range.contains(Self.defaultValue), "Default value must be in range \(Self.range)")
-            self.value = Self.defaultValue
-        }
-
         public init(_ value: Int) {
             self.value = Self.range.clamp(value)
         }
@@ -89,11 +84,6 @@ public struct HarmonicEnvelope {
         public var value: Int
         public static let range: ClosedRange<Int> = 0...63
         public static let defaultValue = 0
-
-        public init() {
-            assert(Self.range.contains(Self.defaultValue), "Default value must be in range \(Self.range)")
-            self.value = Self.defaultValue
-        }
 
         public init(_ value: Int) {
             self.value = Self.range.clamp(value)
@@ -231,22 +221,6 @@ public struct HarmonicEnvelope {
         }
 
         return .success(temp)
-    }
-}
-
-// MARK: - RangedInt protocol conformance
-
-extension HarmonicEnvelope.Rate: ExpressibleByIntegerLiteral {
-    /// Initialize with an integer literal.
-    public init(integerLiteral value: Int) {
-        self.value = Self.range.clamp(value)
-    }
-}
-
-extension HarmonicEnvelope.Level: ExpressibleByIntegerLiteral {
-    /// Initialize with an integer literal.
-    public init(integerLiteral value: Int) {
-        self.value = Self.range.clamp(value)
     }
 }
 

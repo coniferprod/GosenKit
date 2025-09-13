@@ -11,11 +11,6 @@ public struct FormantFilter {
             public static let range: ClosedRange<Int> = 0...127
             public static let defaultValue = 0
 
-            public init() {
-                assert(Self.range.contains(Self.defaultValue), "Default value must be in range \(Self.range)")
-                self.value = Self.defaultValue
-            }
-
             public init(_ value: Int) {
                 self.value = Self.range.clamp(value)
             }
@@ -27,16 +22,10 @@ public struct FormantFilter {
             public static let range: ClosedRange<Int> = -63...63
             public static let defaultValue = 0
 
-            public init() {
-                assert(Self.range.contains(Self.defaultValue), "Default value must be in range \(Self.range)")
-                self.value = Self.defaultValue
-            }
-
             public init(_ value: Int) {
                 self.value = Self.range.clamp(value)
             }
         }
-
 
         /// Formant filter envelope segment.
         public struct Segment {
@@ -162,11 +151,6 @@ public struct FormantFilter {
             public var value: Int
             public static let range: ClosedRange<Int> = 0...63
             public static let defaultValue = 0
-
-            public init() {
-                assert(Self.range.contains(Self.defaultValue), "Default value must be in range \(Self.range)")
-                self.value = Self.defaultValue
-            }
 
             public init(_ value: Int) {
                 self.value = Self.range.clamp(value)
@@ -305,29 +289,6 @@ public struct FormantFilter {
         }
         
         return .success(temp)
-    }
-}
-
-// MARK: - RangedInt protocol conformance
-
-extension FormantFilter.Envelope.Rate: ExpressibleByIntegerLiteral {
-    /// Initialize with an integer literal.
-    public init(integerLiteral value: Int) {
-        self.value = Self.range.clamp(value)
-    }
-}
-
-extension FormantFilter.Envelope.Level: ExpressibleByIntegerLiteral {
-    /// Initialize with an integer literal.
-    public init(integerLiteral value: Int) {
-        self.value = Self.range.clamp(value)
-    }
-}
-
-extension FormantFilter.LFO.Depth: ExpressibleByIntegerLiteral {
-    /// Initialize with an integer literal.
-    public init(integerLiteral value: Int) {
-        self.value = Self.range.clamp(value)
     }
 }
 

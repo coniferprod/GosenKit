@@ -112,15 +112,10 @@ public enum ControlDestination: String, Codable, CaseIterable {
 
 public struct MacroController {
     /// Macro depth (-31...31).
-    public struct Depth {
+    public struct Depth: RangedInt {
         public var value: Int
         public static let range: ClosedRange<Int> = -31...31
         public static let defaultValue = 0
-
-        public init() {
-            assert(Self.range.contains(Self.defaultValue), "Default value must be in range \(Self.range)")
-            self.value = Self.defaultValue
-        }
 
         public init(_ value: Int) {
             self.value = Self.range.clamp(value)
@@ -169,13 +164,6 @@ public struct MacroController {
         temp.depth2 = Depth(Int(b) - 64)
         
         return .success(temp)
-    }
-}
-
-extension MacroController.Depth: ExpressibleByIntegerLiteral {
-    /// Initialize with an integer literal.
-    public init(integerLiteral value: Int) {
-        self.value = Self.range.clamp(value)
     }
 }
 

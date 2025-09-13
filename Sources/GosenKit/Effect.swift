@@ -220,9 +220,20 @@ public struct EffectDefinition {
     }
 }
 
+/// Effect algorithm (1...4).
+public struct EffectAlgorithm: RangedInt {
+    public var value: Int
+    public static let range: ClosedRange<Int> = 1...4
+    public static let defaultValue = 1
+
+    public init(_ value: Int) {
+        self.value = Self.range.clamp(value)
+    }
+}
+
 /// Represents the effect settings for a patch.
 public struct EffectSettings {
-    public var algorithm: Int  // 1...4
+    public var algorithm: EffectAlgorithm  // 1...4
     public var reverb: EffectDefinition
     public var effect1: EffectDefinition
     public var effect2: EffectDefinition
@@ -247,7 +258,7 @@ public struct EffectSettings {
         var temp = EffectSettings()  // initialize with defaults, then fill in
         
         b = data.next(&offset)
-        temp.algorithm = Int(b + 1)  // adjust 0~3 to 1~4
+        temp.algorithm = EffectAlgorithm(Int(b + 1))  // adjust 0~3 to 1~4
         
         let size = EffectDefinition.dataSize
         switch EffectDefinition.parse(from: data.slice(from: offset, length: size)) {
@@ -326,7 +337,7 @@ extension EffectSettings: SystemExclusiveData {
     public func asData() -> ByteArray {
         var data = ByteArray()
         
-        data.append(Byte(algorithm - 1))  // offset one to make the value 0~3
+        data.append(Byte(algorithm.value - 1))  // offset one to make the value 0~3
         data.append(contentsOf: reverb.asData())
         data.append(contentsOf: effect1.asData())
         data.append(contentsOf: effect2.asData())

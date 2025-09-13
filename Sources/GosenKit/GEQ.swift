@@ -11,11 +11,6 @@ public struct GEQ {
         public static let range: ClosedRange<Int> = -6...6
         public static let defaultValue = 0
 
-        public init() {
-            assert(Self.range.contains(Self.defaultValue), "Default value must be in range \(Self.range)")
-            self.value = Self.defaultValue
-        }
-
         public init(_ value: Int) {
             self.value = Self.range.clamp(value)
         }
@@ -50,15 +45,6 @@ public struct GEQ {
         }
         temp.levels = levels
         return .success(temp)
-    }
-}
-
-// MARK: - RangedInt protocol conformance
-
-extension GEQ.Level: ExpressibleByIntegerLiteral {
-    /// Initialize with an integer literal.
-    public init(integerLiteral value: Int) {
-        self.value = Self.range.clamp(value)
     }
 }
 
