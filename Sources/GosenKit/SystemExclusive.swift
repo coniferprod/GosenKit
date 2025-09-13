@@ -49,7 +49,6 @@ public enum SystemExclusive {
         // or manufacturer byte).
         public static func identify(data: ByteArray) -> SystemExclusive.Function {
             // data[0] is the MIDI channel
-            
             if data[1] == SystemExclusive.Function.allBlockDump.rawValue && data[2] == 0x00 && data[3] == 0x0A && data[4] == 0x00 {
                 return .allBlockDump
             }
@@ -149,13 +148,6 @@ public enum PatchKind: Byte, CaseIterable, CustomStringConvertible {
             return "Multi"
         }
     }
-    
-    /// Checks the validity of the patch kind byte.
-    /// Returns `true` if the byte represents a valid patch kind value,
-    /// `false` otherwise.
-    public static func isValid(value: Byte) -> Bool {
-        return PatchKind.allCases.contains(where: { $0.rawValue == value })
-    }
 }
 
 /// Dump command header for various patch types.
@@ -221,7 +213,7 @@ public struct DumpCommand {
         // data[4] = patch kind ("7th" in spec): 0x00, 0x10, 0x11 or 0x20
         // This is the last byte that appears in every dump command.
         guard
-            PatchKind.isValid(value: data[4])
+            let kind = PatchKind(index: data[4])
         else {
             return .failure(.invalidData(4, "Invalid patch kind byte: \(data[4].toHexString())"))
         }
@@ -242,9 +234,8 @@ public struct DumpCommand {
         // so we can instantiate the enum and force unwrap.
         dumpCommand.cardinality = Cardinality(index: data[1])!
 
-        // We have already checked that the patch kind byte is valid,
-        // so we can instantiate the enum and force unwrap.
-        dumpCommand.kind = PatchKind(index: data[4])!
+        // We have already checked that the patch kind byte is valid with a guard above.
+        dumpCommand.kind = kind
         
         // Short dump command, must be dr kit, dr inst, or single multi/combi
         if data.count < 6 {

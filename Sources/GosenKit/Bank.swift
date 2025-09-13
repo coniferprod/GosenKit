@@ -128,6 +128,27 @@ public enum BankIdentifier: Byte, CaseIterable, CustomStringConvertible {
     public static func isValid(value: Byte) -> Bool {
         return BankIdentifier.allCases.contains(where: { $0.rawValue == value })
     }
+    
+    /// Initializes a bank identifier from a string.
+    /// If the string is not recognized as a bank identifier,
+    /// it is set to `.none`.
+    /// Provides ExpressibleByStringLiteral protocol conformance.
+    public init(stringLiteral value: String) {
+        self = switch value.uppercased() {
+            case "A":
+                BankIdentifier.a
+            case "B":
+                BankIdentifier.b
+            case "D":
+                BankIdentifier.d
+            case "E":
+                BankIdentifier.e
+            case "F":
+                BankIdentifier.f
+            default:
+                BankIdentifier.none
+        }
+    }
 }
 
 /// Bank of combi/multi patches.
