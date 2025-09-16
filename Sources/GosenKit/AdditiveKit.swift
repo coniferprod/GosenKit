@@ -193,21 +193,33 @@ extension AdditiveKit: SystemExclusiveData {
         var data = ByteArray()
         
         data.append(checksum)
+        print(data.count)
         
         data.append(contentsOf: common.asData())
+        print(data.count)
+
         data.append(contentsOf: morf.asData())
+        print(data.count)
+
         data.append(contentsOf: formantFilter.asData())
+        print(data.count)
+
         data.append(contentsOf: levels.asData())
+        print(data.count)
+
         data.append(contentsOf: bands.asData())
-        
+        print(data.count)
+
         for env in envelopes {
             data.append(contentsOf: env.asData())
         }
+        print(data.count)
 
         // The last byte is shown as "dummy" = 0 in Section 3.1.3.
         // In the checksum calculation it is referred to as
         // "LS select" or "loud sence select".
         data.append(0)
+        print(data.count)
 
         assert(data.count == AdditiveKit.dataSize)
         return data
