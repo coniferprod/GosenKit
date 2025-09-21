@@ -6,9 +6,9 @@ public struct FormantFilter {
     /// Formant filter envelope.
     public struct Envelope {
         /// Formant filter envelope rate (0~127).
-        public struct Rate: RangedInt {
+        public struct Rate: RangedInt, Equatable {
             public var value: Int
-            public static let range: ClosedRange<Int> = 0...127
+            public static let range = 0...127
             public static let defaultValue = 0
 
             public init(_ value: Int) {
@@ -17,9 +17,9 @@ public struct FormantFilter {
         }
 
         /// Format filter envelope level (-63~+63).
-        public struct Level: RangedInt {
+        public struct Level: RangedInt, Equatable {
             public var value: Int
-            public static let range: ClosedRange<Int> = -63...63
+            public static let range = -63...63
             public static let defaultValue = 0
 
             public init(_ value: Int) {
@@ -147,9 +147,9 @@ public struct FormantFilter {
         }
 
         /// Format filter LFO depth (0~63).
-        public struct Depth: RangedInt {
+        public struct Depth: RangedInt, Equatable {
             public var value: Int
-            public static let range: ClosedRange<Int> = 0...63
+            public static let range = 0...63
             public static let defaultValue = 0
 
             public init(_ value: Int) {

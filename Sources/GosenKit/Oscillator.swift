@@ -6,9 +6,9 @@ public struct Oscillator {
     /// Pitch envelope of an oscillator.
     public struct PitchEnvelope {
         /// Pitch envelope time 0~127
-        public struct Time: RangedInt {
+        public struct Time: RangedInt, Equatable {
             public var value: Int
-            public static let range: ClosedRange<Int> = 0...127
+            public static let range = 0...127
             public static let defaultValue = 0
 
             public init(_ value: Int) {
@@ -17,9 +17,9 @@ public struct Oscillator {
         }
 
         /// Pitch envelope level -63~+63
-        public struct Level: RangedInt {
+        public struct Level: RangedInt, Equatable {
             public var value: Int
-            public static let range: ClosedRange<Int> = -63...63
+            public static let range = -63...63
             public static let defaultValue = 0
 
             public init(_ value: Int) {

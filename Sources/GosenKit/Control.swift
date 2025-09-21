@@ -112,9 +112,9 @@ public enum ControlDestination: String, Codable, CaseIterable {
 
 public struct MacroController {
     /// Macro depth (-31...31).
-    public struct Depth: RangedInt {
+    public struct Depth: RangedInt, Equatable {
         public var value: Int
-        public static let range: ClosedRange<Int> = -31...31
+        public static let range = -31...31
         public static let defaultValue = 0
 
         public init(_ value: Int) {

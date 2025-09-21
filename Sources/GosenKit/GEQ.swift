@@ -6,9 +6,9 @@ import SyxPack
 public struct GEQ {
     public static let bandCount = 7
 
-    public struct Level: RangedInt {
+    public struct Level: RangedInt, Equatable {
         public var value: Int
-        public static let range: ClosedRange<Int> = -6...6
+        public static let range = -6...6
         public static let defaultValue = 0
 
         public init(_ value: Int) {

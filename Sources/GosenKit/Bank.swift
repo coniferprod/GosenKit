@@ -63,7 +63,7 @@ public struct SingleBank {
         for tone in toneMap.allIncludedTones {
             // We don't know yet how many bytes the patch is,
             // but it is at least the minimum size.
-            var sizeToRead = Swift.max(minimumPatchSize, data.count - offset)
+            let sizeToRead = Swift.max(minimumPatchSize, data.count - offset)
             
             switch SinglePatch.parse(from: data.slice(from: offset, length: sizeToRead)) {
             case .success(let patch):

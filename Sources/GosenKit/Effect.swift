@@ -221,9 +221,9 @@ public struct EffectDefinition {
 }
 
 /// Effect algorithm (1...4).
-public struct EffectAlgorithm: RangedInt {
+public struct EffectAlgorithm: RangedInt, Equatable {
     public var value: Int
-    public static let range: ClosedRange<Int> = 1...4
+    public static let range = 1...4
     public static let defaultValue = 1
 
     public init(_ value: Int) {

@@ -2,19 +2,12 @@ import SyxPack
 import ByteKit
 
 /// Wave number for DCO.
-public struct WaveNumber: RangedInt {
+public struct WaveNumber: RangedInt, Equatable {
     public var value: Int
-    public static let range: ClosedRange<Int> = 1...464
+    public static let range = 1...464
     public static let defaultValue = 1
 
     public init(_ value: Int) {
-        self.value = Self.range.clamp(value)
-    }
-}
-
-extension WaveNumber: ExpressibleByIntegerLiteral {
-    /// Initialize with an integer literal.
-    public init(integerLiteral value: Int) {
         self.value = Self.range.clamp(value)
     }
 }

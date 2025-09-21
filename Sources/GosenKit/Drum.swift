@@ -2,49 +2,39 @@ import SyxPack
 import ByteKit
 
 /// Drum wave number (0...285).
-public struct DrumWaveNumber: RangedInt {
+public struct DrumWave: RangedInt, Equatable {
     public var value: Int
-    public static let range: ClosedRange<Int> = 0...285
+    public static let range = 0...285 // (9 bits)
     public static let defaultValue = 0
 
     public init(_ value: Int) {
         self.value = Self.range.clamp(value)
     }
-}
-
-/// Drum waveform.
-/// TODO: Use DrumWaveNumber.
-public struct DrumWave {
-    private(set) var number: Int  // wave number 0~285 (9 bits)
     
-    /// Initialize drum wave with number.
-    public init(number: Int) {
-        self.number = number
-    }
-    
-    /// Initialize drum wave from two bytes.
+    /// Initialize drum wave number from two bytes.
     public init(msb: Byte, lsb: Byte) {
-        self.number = DrumWave.numberFromBytes(msb, lsb)!
+        self.value = DrumWave.fromBytes(msb, lsb)!
     }
-    
-    /// Gets the name of this drum wave.
-    public var name: String { DrumWave.names[Int(self.number)] }
     
     /// Gets the drum wave number from `msb` and ` lsb`.
-    public static func numberFromBytes(_ msb: Byte, _ lsb: Byte) -> Int? {
+    public static func fromBytes(_ msb: Byte, _ lsb: Byte) -> Int? {
         let waveMSBString = String(msb, radix: 2).padded(with: "0", to: 2, from: .left)
         let waveLSBString = String(lsb, radix: 2).padded(with: "0", to: 7, from: .left)
         let waveString = waveMSBString + waveLSBString
         // Now we should have a 9-bit binary string, convert it to a decimal number.
         // The wave number is zero-based in the SysEx file, but treated as one-based. (0=MUTE)
-        if let number = Int(waveString, radix: 2) {
+        let number = Int(waveString, radix: 2)!
+        if Self.isValid(value: number) {
             return number + 1
         }
         return nil
     }
     
+    /// Gets the name of this drum wave.
+    public var name: String { DrumWave.names[self.value] }
+    
     private func asBytes() -> (msb: Byte, lsb: Byte) {
-        let num = self.number - 1  // make wave number zero-based
+        let num = self.value - 1  // make wave number zero-based
         
         // Convert wave kit number to binary string with 9 digits
         // using a String extension (see Helpers.swift).
@@ -61,7 +51,7 @@ public struct DrumWave {
         return (msb, lsb)
     }
     
-    static let names = [
+    private static let names = [
         "MUTE",
         
         // BD group
@@ -338,9 +328,9 @@ public struct DrumSource {
     /// Pitch envelope for a drum source.
     public struct PitchEnvelope {
         /// Drum source pitch envelope level (-63...63)
-        public struct Level: RangedInt {
+        public struct Level: RangedInt, Equatable {
             public var value: Int
-            public static let range: ClosedRange<Int> = -63...63
+            public static let range = -63...63
             public static let defaultValue = 0
 
             public init(_ value: Int) {
@@ -349,9 +339,9 @@ public struct DrumSource {
         }
 
         /// Drum source pitch envelope time (0...127)
-        public struct Time: RangedInt {
+        public struct Time: RangedInt, Equatable {
             public var value: Int
-            public static let range: ClosedRange<Int> = 0...127
+            public static let range = 0...127
             public static let defaultValue = 0
 
             public init(_ value: Int) {
@@ -390,9 +380,9 @@ public struct DrumSource {
     /// Velocity control for drum source DCA.
     public struct VelocityControl {
         /// Drum source velocity control level
-        public struct Level: RangedInt {
+        public struct Level: RangedInt, Equatable {
             public var value: Int
-            public static let range: ClosedRange<Int> = 0...63
+            public static let range = 0...63
             public static let defaultValue = 0
 
             public init(_ value: Int) {
@@ -401,9 +391,9 @@ public struct DrumSource {
         }
 
         /// Drum source velocity control time
-        public struct Time: RangedInt {
+        public struct Time: RangedInt, Equatable {
             public var value: Int
-            public static let range: ClosedRange<Int> = -63...63
+            public static let range = -63...63
             public static let defaultValue = 0
 
             public init(_ value: Int) {
@@ -499,7 +489,7 @@ public struct DrumSource {
     public init() {
         self.volume = 100
         self.pan = 0
-        self.wave = DrumWave(number: 1)
+        self.wave = DrumWave(1)
         self.coarse = 0
         self.fine = Fine(0)
         self.pitchEnvelope = PitchEnvelope()

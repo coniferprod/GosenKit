@@ -21,9 +21,9 @@ public struct Filter {
     /// Filter envelope.
     public struct Envelope {
         /// Filter envelope time (for attack, decay 1, decay 2, and release) (0...127)
-        public struct Time: RangedInt {
+        public struct Time: RangedInt, Equatable {
             public var value: Int
-            public static let range: ClosedRange<Int> = 0...127
+            public static let range = 0...127
             public static let defaultValue = 0
 
             public init(_ value: Int) {
@@ -32,9 +32,9 @@ public struct Filter {
         }
 
         /// Filter envelope level (for decay 1, decay 2, etc.) (-63...63)
-        public struct Level: RangedInt {
+        public struct Level: RangedInt, Equatable {
             public var value: Int
-            public static let range: ClosedRange<Int> = -63...63
+            public static let range = -63...63
             public static let defaultValue = 0
 
             public init(_ value: Int) {
