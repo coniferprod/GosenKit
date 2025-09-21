@@ -91,9 +91,9 @@ extension ClosedRange {
 }
 
 /// Volume (0...127).
-public struct Volume: RangedInt {
+public struct Volume: RangedInt, Equatable {
     public var value: Int
-    public static let range: ClosedRange<Int> = 0...127
+    public static let range = 0...127
     public static let defaultValue = 0
 
     public init(_ value: Int) {
@@ -102,9 +102,9 @@ public struct Volume: RangedInt {
 }
 
 /// Level (0...127)
-public struct Level: RangedInt {
+public struct Level: RangedInt, Equatable {
     public var value: Int
-    public static let range: ClosedRange<Int> = 0...127
+    public static let range = 0...127
     public static let defaultValue = 0
 
     public init(_ value: Int) {
@@ -113,9 +113,9 @@ public struct Level: RangedInt {
 }
 
 /// Time (0...127)
-public struct Time: RangedInt {
+public struct Time: RangedInt, Equatable {
     public var value: Int
-    public static let range: ClosedRange<Int> = 0...127
+    public static let range = 0...127
     public static let defaultValue = 0
 
     public init(_ value: Int) {
@@ -124,9 +124,9 @@ public struct Time: RangedInt {
 }
 
 /// Depth (-63...+63).
-public struct Depth: RangedInt {
+public struct Depth: RangedInt, Equatable {
     public var value: Int
-    public static let range: ClosedRange<Int> = -63...63
+    public static let range = -63...63
     public static let defaultValue = 0
 
     public init(_ value: Int) {
@@ -135,9 +135,9 @@ public struct Depth: RangedInt {
 }
 
 /// Pan (-63...+63).
-public struct Pan: RangedInt {
+public struct Pan: RangedInt, Equatable {
     public var value: Int
-    public static let range: ClosedRange<Int> = -63...63
+    public static let range = -63...63
     public static let defaultValue = 0
 
     public init(_ value: Int) {
@@ -148,7 +148,7 @@ public struct Pan: RangedInt {
 /// MIDI channel (1...16).
 public struct MIDIChannel: RangedInt, Equatable {
     public var value: Int
-    public static let range: ClosedRange<Int> = 1...16
+    public static let range = 1...16
     public static let defaultValue = 1
     
     public init(_ value: Int) {
@@ -157,9 +157,9 @@ public struct MIDIChannel: RangedInt, Equatable {
 }
 
 /// Velocity curve (1...12).
-public struct VelocityCurve: RangedInt {
+public struct VelocityCurve: RangedInt, Equatable {
     public var value: Int
-    public static let range: ClosedRange<Int> = 1...12
+    public static let range = 1...12
     public static let defaultValue = 1
     
     public init(_ value: Int) {
@@ -168,9 +168,9 @@ public struct VelocityCurve: RangedInt {
 }
 
 /// Control depth (-63...+63).
-public struct ControlDepth: RangedInt {
+public struct ControlDepth: RangedInt, Equatable {
     public var value: Int
-    public static let range: ClosedRange<Int> = -63...63
+    public static let range = -63...63
     public static let defaultValue = 0
     
     public init(_ value: Int) {
@@ -179,9 +179,9 @@ public struct ControlDepth: RangedInt {
 }
 
 /// Coarse tuning (-24...+24).
-public struct Coarse: RangedInt {
+public struct Coarse: RangedInt, Equatable {
     public var value: Int
-    public static let range: ClosedRange<Int> = -24...24
+    public static let range = -24...24
     public static let defaultValue = 0
         
     public init(_ value: Int) {
@@ -190,9 +190,9 @@ public struct Coarse: RangedInt {
 }
 
 /// Fine tuning (-63...63).
-public struct Fine: RangedInt {
+public struct Fine: RangedInt, Equatable {
     public var value: Int
-    public static let range: ClosedRange<Int> = -63...63
+    public static let range = -63...63
     public static let defaultValue = 0
 
     public init(_ value: Int) {
@@ -201,9 +201,9 @@ public struct Fine: RangedInt {
 }
 
 /// Effect depth (0...100).
-public struct EffectDepth: RangedInt {
+public struct EffectDepth: RangedInt, Equatable {
     public var value: Int
-    public static let range: ClosedRange<Int> = 0...100
+    public static let range = 0...100
     public static let defaultValue = 0
 
     public init(_ value: Int) {
@@ -212,9 +212,9 @@ public struct EffectDepth: RangedInt {
 }
 
 /// Effect path (1...4).
-public struct EffectPath: RangedInt {
+public struct EffectPath: RangedInt, Equatable {
     public var value: Int
-    public static let range: ClosedRange<Int> = 1...4
+    public static let range = 1...4
     public static let defaultValue = 1
 
     public init(_ value: Int) {
@@ -223,9 +223,9 @@ public struct EffectPath: RangedInt {
 }
 
 /// Resonance (0...31).
-public struct Resonance: RangedInt {
+public struct Resonance: RangedInt, Equatable {
     public var value: Int
-    public static let range: ClosedRange<Int> = 0...31
+    public static let range = 0...31
     public static let defaultValue = 0
 
     public init(_ value: Int) {
@@ -234,9 +234,9 @@ public struct Resonance: RangedInt {
 }
 
 /// Gain (1...63).
-public struct Gain: RangedInt {
+public struct Gain: RangedInt, Equatable {
     public var value: Int
-    public static let range: ClosedRange<Int> = 1...63
+    public static let range = 1...63
     public static let defaultValue = 1
 
     public init(_ value: Int) {
@@ -245,9 +245,9 @@ public struct Gain: RangedInt {
 }
 
 /// Bender pitch (-12...12).
-public struct BenderPitch: RangedInt {
+public struct BenderPitch: RangedInt, Equatable {
     public var value: Int
-    public static let range: ClosedRange<Int> = -12...12
+    public static let range = -12...12
     public static let defaultValue = 0
 
     public init(_ value: Int) {
@@ -256,9 +256,9 @@ public struct BenderPitch: RangedInt {
 }
 
 /// Bender cutoff (0...31).
-public struct BenderCutoff: RangedInt {
+public struct BenderCutoff: RangedInt, Equatable {
     public var value: Int
-    public static let range: ClosedRange<Int> = 0...31
+    public static let range = 0...31
     public static let defaultValue = 0
 
     public init(_ value: Int) {
@@ -267,9 +267,9 @@ public struct BenderCutoff: RangedInt {
 }
 
 /// MIDI note (0...127).
-public struct MIDINote: RangedInt {
+public struct MIDINote: RangedInt, Equatable {
     public var value: Int
-    public static let range: ClosedRange<Int> = 0...127
+    public static let range = 0...127
     public static let defaultValue = 60
 
     public init(_ value: Int) {
@@ -278,9 +278,9 @@ public struct MIDINote: RangedInt {
 }
 
 /// Patch number (0...127).
-public struct PatchNumber: RangedInt {
+public struct PatchNumber: RangedInt, Equatable {
     public var value: Int
-    public static let range: ClosedRange<Int> = 0...127
+    public static let range = 0...127
     public static let defaultValue = 0
 
     public init(_ value: Int) {
@@ -289,9 +289,9 @@ public struct PatchNumber: RangedInt {
 }
 
 /// Transpose (-24...24).
-public struct Transpose: RangedInt {
+public struct Transpose: RangedInt, Equatable {
     public var value: Int
-    public static let range: ClosedRange<Int> = -24...24
+    public static let range = -24...24
     public static let defaultValue = 0
 
     public init(_ value: Int) {

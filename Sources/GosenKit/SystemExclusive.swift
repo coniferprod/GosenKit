@@ -236,23 +236,14 @@ public struct DumpCommand {
 
         // We have already checked that the patch kind byte is valid with a guard above.
         dumpCommand.kind = kind
-        
-        // Short dump command, must be dr kit, dr inst, or single multi/combi
-        if data.count < 6 {
-            if dumpCommand.kind == .multi {
-                dumpCommand.bank = .multi
-            }
-            else {
-                dumpCommand.bank = .none
-            }
-        }
-        else {
-            if dumpCommand.kind == .drumInstrument {
-                dumpCommand.bank = .none
-            }
-            else {
-                dumpCommand.bank = BankIdentifier(index: data[5])!
-            }
+
+        switch dumpCommand.kind {
+        case .multi:
+            dumpCommand.bank = .multi
+        case .drumInstrument, .drumKit:
+            dumpCommand.bank = .none
+        default:
+            dumpCommand.bank = BankIdentifier(index: data[5])!
         }
         
         // Match the patterns in the order they appear in the
