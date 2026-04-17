@@ -1,19 +1,8 @@
 import SyxPack
 import ByteKit
 
-/// Wave number for DCO.
-public struct WaveNumber: RangedInt, Equatable {
-    public var value: Int
-    public static let range = 1...464
-    public static let defaultValue = 1
-
-    public init(_ value: Int) {
-        self.value = Self.range.clamp(value)
-    }
-}
-
 /// Wave for PCM sources, with special case for additive.
-public enum Wave: Equatable {
+public enum Wave {
     case additive
     case pcm(WaveNumber)
     
@@ -44,7 +33,16 @@ public enum Wave: Equatable {
             return Wave.names[number.value]
         }
     }
-        
+    
+    public var number: Int {
+        switch self {
+        case .additive:
+            return Wave.additiveWaveNumber
+        case .pcm(let number):
+            return number.value
+        }
+    }
+
     private func asBytes() -> (msb: Byte, lsb: Byte) {
         var num : Int
         switch self {
@@ -69,18 +67,6 @@ public enum Wave: Equatable {
         return (msb, lsb)
     }
 
-    /// Tests the equality of two waves.
-    public static func == (lhs: Wave, rhs: Wave) -> Bool {
-        switch (lhs, rhs) {
-        case (.additive, .additive):
-            return true
-        case (.pcm(let lhsNumber), .pcm(let rhsNumber)):
-            return lhsNumber.value == rhsNumber.value
-        default:
-            return false
-        }
-    }
-    
     static let names = [
         "N/A",  // to align with one-based numbering
         /*  1 */ "OldUprit1",
@@ -568,6 +554,18 @@ public enum Wave: Equatable {
         /* 463 */ "Omnibus Loop 7",
         /* 464 */ "Omnibus Loop 8"
     ]
+}
+
+/// Tests the equality of two waves.
+public func == (lhs: Wave, rhs: Wave) -> Bool {
+    switch (lhs, rhs) {
+    case (.additive, .additive):
+        return true
+    case (.pcm(let lhsNumber), .pcm(let rhsNumber)):
+        return lhsNumber.value == rhsNumber.value
+    default:
+        return false
+    }
 }
 
 // MARK: - SystemExclusiveData

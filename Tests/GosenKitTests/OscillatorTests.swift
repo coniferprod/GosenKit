@@ -10,7 +10,7 @@ final class OscillatorTests: XCTestCase {
         
         switch Wave.parse(msb: msb, lsb: lsb) {
         case .success(let wave):
-            XCTAssertEqual(Wave.pcm(359), wave)
+            XCTAssertEqual(Wave.pcm(359).number, wave.number)
         case .failure(let error):
             XCTFail("\(error)")
         }

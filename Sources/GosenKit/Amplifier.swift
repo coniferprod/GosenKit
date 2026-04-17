@@ -6,25 +6,16 @@ public struct Amplifier {
     /// Amplifier envelope
     public struct Envelope: Equatable {
         /// Amplifier envelope time (0...127)
-        public struct Time: RangedInt, Equatable {
-            public var value: Int
-            public static let range = 0...127
-            public static let defaultValue = 0
-
-            public init(_ value: Int) {
-                self.value = Self.range.clamp(value)
-            }
+        public class Time: Integer {
+            override class var minimumValue: Int { 0 }
+            override class var maximumValue: Int { 127 }
+            override class var defaultValue: Int { 0 }
         }
 
-        /// Amplifier envelope level (0...127)
-        public struct Level: RangedInt, Equatable {
-            public var value: Int
-            public static let range = 0...127
-            public static let defaultValue = 0
-
-            public init(_ value: Int) {
-                self.value = Self.range.clamp(value)
-            }
+        public class Level: Integer {
+            override class var minimumValue: Int { 0 }
+            override class var maximumValue: Int { 127 }
+            override class var defaultValue: Int { 0 }
         }
 
         // All values are 0...127
@@ -98,26 +89,18 @@ public struct Amplifier {
     public struct Modulation {
         /// Key scaling control for amplifier modulation.
         public struct KeyScalingControl {
-            public struct Time: RangedInt, Equatable {
-                public var value: Int
-                public static let range = -63...63
-                public static let defaultValue = 0
-
-                public init(_ value: Int) {
-                    self.value = Self.range.clamp(value)
-                }
+            public class Time: Integer {
+                override class var minimumValue: Int { -63 }
+                override class var maximumValue: Int { 63 }
+                override class var defaultValue: Int { 0 }
             }
-
-            public struct Level: RangedInt, Equatable {
-                public var value: Int
-                public static let range = -63...63
-                public static let defaultValue = 0
-
-                public init(_ value: Int) {
-                    self.value = Self.range.clamp(value)
-                }
+            
+            public class Level: Integer {
+                override class var minimumValue: Int { -63 }
+                override class var maximumValue: Int { 63 }
+                override class var defaultValue: Int { 0 }
             }
-
+            
             // All values are -63...+63
             public var level: Level
             public var attackTime: Time
@@ -164,27 +147,19 @@ public struct Amplifier {
         /// Velocity control for amplifier modulation.
         public struct VelocityControl {
             /// Velocity control level (0...63)
-            public struct Level: RangedInt, Equatable {
-                public var value: Int
-                public static let range = 0...63
-                public static let defaultValue = 0
-
-                public init(_ value: Int) {
-                    self.value = Self.range.clamp(value)
-                }
+            public class Level: Integer {
+                override class var minimumValue: Int { 0 }
+                override class var maximumValue: Int { 63 }
+                override class var defaultValue: Int { 0 }
             }
 
             /// Velocity control time (-63...63)
-            public struct Time: RangedInt, Equatable {
-                public var value: Int
-                public static let range = -63...63
-                public static let defaultValue = 0
-
-                public init(_ value: Int) {
-                    self.value = Self.range.clamp(value)
-                }
+            public class Time: Integer {
+                override class var minimumValue: Int { -63 }
+                override class var maximumValue: Int { 63 }
+                override class var defaultValue: Int { 0 }
             }
-
+            
             // Almost the same as KeyScalingControl, but the level
             // is positive only (0...63), others are -63...+63.
             // So these are types defined inside this struct,

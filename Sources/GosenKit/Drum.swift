@@ -2,18 +2,16 @@ import SyxPack
 import ByteKit
 
 /// Drum wave number (0...285).
-public struct DrumWave: RangedInt, Equatable {
-    public var value: Int
-    public static let range = 0...285 // (9 bits)
-    public static let defaultValue = 0
+public class DrumWave: Integer {
+    override class var minimumValue: Int { -0 }
+    override class var maximumValue: Int { 285 } // (9 bits)
+    override class var defaultValue: Int { 0 }
+}
 
-    public init(_ value: Int) {
-        self.value = Self.range.clamp(value)
-    }
-    
+extension DrumWave {
     /// Initialize drum wave number from two bytes.
-    public init(msb: Byte, lsb: Byte) {
-        self.value = DrumWave.fromBytes(msb, lsb)!
+    public convenience init(msb: Byte, lsb: Byte) {
+        self.init(DrumWave.fromBytes(msb, lsb)!)
     }
     
     /// Gets the drum wave number from `msb` and ` lsb`.
@@ -24,7 +22,7 @@ public struct DrumWave: RangedInt, Equatable {
         // Now we should have a 9-bit binary string, convert it to a decimal number.
         // The wave number is zero-based in the SysEx file, but treated as one-based. (0=MUTE)
         let number = Int(waveString, radix: 2)!
-        if Self.isValid(value: number) {
+        if Self.isValid(number) {
             return number + 1
         }
         return nil
@@ -328,26 +326,10 @@ public struct DrumSource {
     /// Pitch envelope for a drum source.
     public struct PitchEnvelope {
         /// Drum source pitch envelope level (-63...63)
-        public struct Level: RangedInt, Equatable {
-            public var value: Int
-            public static let range = -63...63
-            public static let defaultValue = 0
-
-            public init(_ value: Int) {
-                self.value = Self.range.clamp(value)
-            }
-        }
+        public class Level: GosenKit.Depth { }
 
         /// Drum source pitch envelope time (0...127)
-        public struct Time: RangedInt, Equatable {
-            public var value: Int
-            public static let range = 0...127
-            public static let defaultValue = 0
-
-            public init(_ value: Int) {
-                self.value = Self.range.clamp(value)
-            }
-        }
+        public class Time: GosenKit.Level { }
 
         var startLevel: Level // (-63)1~(+63)127
         var attackTime: Time // 0~127
@@ -379,27 +361,11 @@ public struct DrumSource {
     
     /// Velocity control for drum source DCA.
     public struct VelocityControl {
-        /// Drum source velocity control level
-        public struct Level: RangedInt, Equatable {
-            public var value: Int
-            public static let range = 0...63
-            public static let defaultValue = 0
+        /// Drum source velocity control level (0...63)
+        public class Level: GosenKit.ControlLevel { }
 
-            public init(_ value: Int) {
-                self.value = Self.range.clamp(value)
-            }
-        }
-
-        /// Drum source velocity control time
-        public struct Time: RangedInt, Equatable {
-            public var value: Int
-            public static let range = -63...63
-            public static let defaultValue = 0
-
-            public init(_ value: Int) {
-                self.value = Self.range.clamp(value)
-            }
-        }
+        /// Drum source velocity control time (-63...63)
+        public class Time: GosenKit.ControlDepth { }
 
         public var level: Level  // 0~63
         public var attackTime: Time  // (-63)1~(+63)127

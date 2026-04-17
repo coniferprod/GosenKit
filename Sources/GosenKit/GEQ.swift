@@ -6,14 +6,10 @@ import SyxPack
 public struct GEQ {
     public static let bandCount = 7
 
-    public struct Level: RangedInt, Equatable {
-        public var value: Int
-        public static let range = -6...6
-        public static let defaultValue = 0
-
-        public init(_ value: Int) {
-            self.value = Self.range.clamp(value)
-        }
+    public class Level: Integer {
+        override class var minimumValue: Int { -6 }
+        override class var maximumValue: Int { 6 }
+        override class var defaultValue: Int { 0 }
     }
 
     public var levels: [Level]  // 58(-6) ~ 70(+6), so 64 is zero

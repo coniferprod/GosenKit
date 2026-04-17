@@ -185,7 +185,7 @@ public struct DumpCommand {
     /// Parse the dump command from MIDI System Exclusive data.
     public static func parse(from data: ByteArray) -> Result<DumpCommand, ParseError> {
         guard
-            MIDIChannel.range.contains(Int(data[0] + 1))
+            MIDIChannel.isValid(Int(data[0] + 1))
         else {
             return .failure(.invalidData(0, "Invalid MIDI channel byte: \(data[0].toHexString())H"))
         }
@@ -347,7 +347,15 @@ extension DumpCommand: CustomStringConvertible {
     }
 }
 
-extension DumpCommand: Equatable { }
+extension DumpCommand: Equatable {
+    public static func == (lhs: DumpCommand, rhs: DumpCommand) -> Bool {
+        lhs.channel == rhs.channel &&
+        lhs.cardinality == rhs.cardinality &&
+        lhs.kind == rhs.kind &&
+        lhs.bank == rhs.bank &&
+        lhs.subBytes == rhs.subBytes
+    }
+}
 
 public struct ParameterChange {
     /// MIDI channel (1...16)
@@ -364,7 +372,7 @@ public struct ParameterChange {
     public var dataLow: Byte
 }
 
-extension ParameterChange: Equatable { }
+//extension ParameterChange: Equatable { }
 
 extension SystemExclusive.Header: SystemExclusiveData {
     public func asData() -> ByteArray {

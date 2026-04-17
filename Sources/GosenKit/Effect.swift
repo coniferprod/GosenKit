@@ -220,15 +220,11 @@ public struct EffectDefinition {
     }
 }
 
-/// Effect algorithm (1...4).
-public struct EffectAlgorithm: RangedInt, Equatable {
-    public var value: Int
-    public static let range = 1...4
-    public static let defaultValue = 1
-
-    public init(_ value: Int) {
-        self.value = Self.range.clamp(value)
-    }
+/// Effect algorithm (1...4, default 1)
+public class EffectAlgorithm: Integer {
+    override class var minimumValue: Int { 1 }
+    override class var maximumValue: Int { 4 }
+    override class var defaultValue: Int { 1 }
 }
 
 /// Represents the effect settings for a patch.

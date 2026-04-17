@@ -176,7 +176,7 @@ public struct Source {
             }
             
             b = data.next(&offset)
-            temp.effectPath = EffectPath(Int(b))
+            temp.effectPath = EffectPath(Int(b) + 1)  // 0...3 to 1...4
             
             b = data.next(&offset)
             temp.volume = Volume(Int(b))

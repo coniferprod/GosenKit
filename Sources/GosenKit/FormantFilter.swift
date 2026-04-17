@@ -1,32 +1,20 @@
 import SyxPack
 import ByteKit
 
+/// Formant filter envelope rate (0~127).
+//typealias FormantFilterEnvelopeRate = Rate
+
+/// Format filter envelope level (-63~+63).
+//typealias FormantFilterEnvelopeLevel = Depth
+
 /// Represents a formant filter.
 public struct FormantFilter {
     /// Formant filter envelope.
     public struct Envelope {
-        /// Formant filter envelope rate (0~127).
-        public struct Rate: RangedInt, Equatable {
-            public var value: Int
-            public static let range = 0...127
-            public static let defaultValue = 0
-
-            public init(_ value: Int) {
-                self.value = Self.range.clamp(value)
-            }
-        }
-
-        /// Format filter envelope level (-63~+63).
-        public struct Level: RangedInt, Equatable {
-            public var value: Int
-            public static let range = -63...63
-            public static let defaultValue = 0
-
-            public init(_ value: Int) {
-                self.value = Self.range.clamp(value)
-            }
-        }
-
+        
+        public class Rate: GosenKit.Level { }  // 0~127
+        public class Level: GosenKit.Depth { } // -63(1)~+63(127)
+        
         /// Formant filter envelope segment.
         public struct Segment {
             public var rate: Rate  // 0~127
@@ -147,14 +135,10 @@ public struct FormantFilter {
         }
 
         /// Format filter LFO depth (0~63).
-        public struct Depth: RangedInt, Equatable {
-            public var value: Int
-            public static let range = 0...63
-            public static let defaultValue = 0
-
-            public init(_ value: Int) {
-                self.value = Self.range.clamp(value)
-            }
+        public class Depth: Integer {
+            override class var minimumValue: Int { 0 }
+            override class var maximumValue: Int { 63 }
+            override class var defaultValue: Int { 0 }
         }
 
         public var speed: Level  // 0~127
@@ -448,13 +432,6 @@ extension FormantFilter.LFO.Shape: CustomStringConvertible {
     }
 }
 
-extension FormantFilter.LFO.Depth: CustomStringConvertible {
-    /// Gets a string representation of the formant filter LFO depth.
-    public var description: String {
-        return "\(self.value)"
-    }
-}
-
 extension FormantFilter.LFO: CustomStringConvertible {
     /// Gets a string representation of this formant filter LFO.
     public var description: String {
@@ -463,19 +440,5 @@ extension FormantFilter.LFO: CustomStringConvertible {
         s += "Shape: \(self.shape) "
         s += "Depth: \(self.depth)"
         return s
-    }
-}
-
-extension FormantFilter.Envelope.Rate: CustomStringConvertible {
-    /// Gets a string representation of the formant filter envelope rate.
-    public var description: String {
-        return "\(self.value)"
-    }
-}
-
-extension FormantFilter.Envelope.Level: CustomStringConvertible {
-    /// Generates a string representation of the value.
-    public var description: String {
-        return "\(self.value)"
     }
 }

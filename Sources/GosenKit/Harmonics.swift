@@ -69,25 +69,17 @@ public struct HarmonicCommon {
 /// Harmonic envelope.
 public struct HarmonicEnvelope {
     /// Harmonic envelope rate (0~127).
-    public struct Rate: RangedInt, Equatable {
-        public var value: Int
-        public static let range = 0...127
-        public static let defaultValue = 0
-
-        public init(_ value: Int) {
-            self.value = Self.range.clamp(value)
-        }
+    public class Rate: Integer {
+        override class var minimumValue: Int { 0 }
+        override class var maximumValue: Int { 127 }
+        override class var defaultValue: Int { 0 }
     }
 
     /// Harmonic envelope level (0~63).
-    public struct Level: RangedInt, Equatable {
-        public var value: Int
-        public static let range = 0...63
-        public static let defaultValue = 0
-
-        public init(_ value: Int) {
-            self.value = Self.range.clamp(value)
-        }
+    public class Level: Integer {
+        override class var minimumValue: Int { 0 }
+        override class var maximumValue: Int { 63 }
+        override class var defaultValue: Int { 0 }
     }
 
     /// One segment of harmonic envelope.
@@ -425,20 +417,6 @@ extension HarmonicEnvelope.Segment: CustomStringConvertible {
     /// Gets a printable representation of this harmonic envelope segment.
     public var description: String {
         return "L\(self.level) R\(self.rate)"
-    }
-}
-
-extension HarmonicEnvelope.Level: CustomStringConvertible {
-    /// Generates a string representation of the value.
-    public var description: String {
-        return "\(self.value)"
-    }
-}
-
-extension HarmonicEnvelope.Rate: CustomStringConvertible {
-    /// Generates a string representation of the value.
-    public var description: String {
-        return "\(self.value)"
     }
 }
 

@@ -6,27 +6,19 @@ public struct Oscillator {
     /// Pitch envelope of an oscillator.
     public struct PitchEnvelope {
         /// Pitch envelope time 0~127
-        public struct Time: RangedInt, Equatable {
-            public var value: Int
-            public static let range = 0...127
-            public static let defaultValue = 0
-
-            public init(_ value: Int) {
-                self.value = Self.range.clamp(value)
-            }
+        public class Time: Integer {
+            override class var minimumValue: Int { 0 }
+            override class var maximumValue: Int { 127 }
+            override class var defaultValue: Int { 0 }
         }
 
         /// Pitch envelope level -63~+63
-        public struct Level: RangedInt, Equatable {
-            public var value: Int
-            public static let range = -63...63
-            public static let defaultValue = 0
-
-            public init(_ value: Int) {
-                self.value = Self.range.clamp(value)
-            }
+        public class Level: Integer {
+            override class var minimumValue: Int { -63 }
+            override class var maximumValue: Int { 63 }
+            override class var defaultValue: Int { 0 }
         }
-
+        
         public var start: Level
         public var attackTime: Time
         public var attackLevel: Level
@@ -38,7 +30,7 @@ public struct Oscillator {
         public init() {
             start = 0
             attackTime = 0
-            attackLevel = 127
+            attackLevel = Level(Level.maximumValue)
             decayTime = 0
             timeVelocitySensitivity = 0
             levelVelocitySensitivity = 0
@@ -129,10 +121,10 @@ public struct Oscillator {
         }
         
         b = data.next(&offset)
-        temp.coarse = Coarse(Int(b) - 24)
+        temp.coarse = Coarse(Int(b) - 64)  // (-24)40 ~ (+24)88
 
         b = data.next(&offset)
-        temp.fine = Fine(Int(b) - 64)
+        temp.fine = Fine(Int(b) - 64)  // (-63)1 ~ (+63)127
 
         b = data.next(&offset)
         if b == 0 {

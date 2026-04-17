@@ -112,16 +112,12 @@ public enum ControlDestination: String, Codable, CaseIterable {
 
 public struct MacroController {
     /// Macro depth (-31...31).
-    public struct Depth: RangedInt, Equatable {
-        public var value: Int
-        public static let range = -31...31
-        public static let defaultValue = 0
-
-        public init(_ value: Int) {
-            self.value = Self.range.clamp(value)
-        }
+    public class Depth: Integer {
+        override class var minimumValue: Int { -31 }
+        override class var maximumValue: Int { 31 }
+        override class var defaultValue: Int { 0 }
     }
-
+    
     public var destination1: ControlDestination
     public var depth1: Depth
     public var destination2: ControlDestination
@@ -322,7 +318,11 @@ public struct EffectControl {
             temp.destination = EffectDestination(index: Int(b))!
             
             b = data.next(&offset)
-            temp.depth = ControlDepth(Int(b) - 64)
+            
+            // Control depth is -31..0..+31, in SysEx 33..64..95.
+            
+            let value: Int = Int(b) - 64  // bring to -31..31
+            temp.depth = ControlDepth(value)
             
             return .success(temp)
         }

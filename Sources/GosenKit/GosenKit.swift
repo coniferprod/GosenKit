@@ -1,11 +1,25 @@
+import Foundation
+
 import SyxPack
 import ByteKit
 
+struct StandardError: TextOutputStream, Sendable {
+    private static let handle = FileHandle.standardError
+
+    public func write(_ string: String) {
+        Self.handle.write(Data(string.utf8))
+    }
+}
+
+var standardError = StandardError()
+
+/*
 public struct GosenKit {
     public private(set) var text = "GosenKit"
     
     public init() { }
 }
+*/
 
 /// Error type for parsing data from MIDI System Exclusive bytes.
 public enum ParseError: Error {
@@ -28,275 +42,195 @@ extension ParseError: CustomStringConvertible {
     }
 }
 
-/// Protocol to wrap an Int guaranteed to be contained
-/// in the given closed range.
-protocol RangedInt: CustomStringConvertible, ExpressibleByIntegerLiteral {
-    /// The current value of the wrapped `Int`.
-    var value: Int { get }
+/// Wraps an immutable `Int`, retrievable with `value`.
+/// Specifies minimum, maximum, and default values.
+/// When an instance is constructed, the new value is
+/// checked by asserting it is within the min / max limits.
+/// The no-argument initializer uses the default value.
+public class Integer: ExpressibleByIntegerLiteral, CustomStringConvertible {
+    class var minimumValue: Int { Int.min }
+    class var maximumValue: Int { Int.max }
+    class var defaultValue: Int { 0 }
     
-    /// The range where the `Int` must be in.
-    static var range: ClosedRange<Int> { get }
+    public private(set) var value: Int
     
-    /// The default value for the `Int`.
-    static var defaultValue: Int { get }
-
-    /// Initialization with the default value.
-    init()
-    
-    /// Initialization with a value (will be clamped).
-    init(_ value: Int)
-    
-    /// Initialize with an integer literal.
-    init(integerLiteral value: Int)
-}
-
-extension RangedInt {
-    /// Gets a random Int value that is inside the range.
-    /// This is a default implementation.
-    static var randomValue: Int {
-        return Int.random(in: Self.range)
+    public init(_ value: Int) {
+        assert(Self.isValid(value))
+        self.value = value
     }
     
-    /// Predicate for checking if a potential value would
-    /// be inside the range. This is a default implementation.
-    static func isValid(value: Int) -> Bool {
-        return Self.range.contains(value)
+    public static func isValid(_ value: Int) -> Bool {
+        return (Self.minimumValue ... Self.maximumValue).contains(value)
     }
 
-    /// Generates a string representation of the value.
-    /// Satisfies CustomStringConvertible conformance.
-    public var description: String {
-        String(self.value)
-    }
-    
-    /// Initialize with an integer literal.
-    /// Satisfies ExpressibleByIntegerLiteral conformance.
-    public init(integerLiteral value: Int) {
+    required public convenience init(integerLiteral value: Int) {
         self.init(value)
     }
     
-    public init() {
-        assert(Self.range.contains(Self.defaultValue),
-               "Default value must be in range \(Self.range)")
+    public convenience init() {
         self.init(Self.defaultValue)
     }
-}
-
-extension ClosedRange {
-    func clamp(_ value : Bound) -> Bound {
-        return self.lowerBound > value ? self.lowerBound
-            : self.upperBound < value ? self.upperBound
-            : value
-    }
-}
-
-/// Volume (0...127).
-public struct Volume: RangedInt, Equatable {
-    public var value: Int
-    public static let range = 0...127
-    public static let defaultValue = 0
-
-    public init(_ value: Int) {
-        self.value = Self.range.clamp(value)
-    }
-}
-
-/// Level (0...127)
-public struct Level: RangedInt, Equatable {
-    public var value: Int
-    public static let range = 0...127
-    public static let defaultValue = 0
-
-    public init(_ value: Int) {
-        self.value = Self.range.clamp(value)
-    }
-}
-
-/// Time (0...127)
-public struct Time: RangedInt, Equatable {
-    public var value: Int
-    public static let range = 0...127
-    public static let defaultValue = 0
-
-    public init(_ value: Int) {
-        self.value = Self.range.clamp(value)
-    }
-}
-
-/// Depth (-63...+63).
-public struct Depth: RangedInt, Equatable {
-    public var value: Int
-    public static let range = -63...63
-    public static let defaultValue = 0
-
-    public init(_ value: Int) {
-        self.value = Self.range.clamp(value)
-    }
-}
-
-/// Pan (-63...+63).
-public struct Pan: RangedInt, Equatable {
-    public var value: Int
-    public static let range = -63...63
-    public static let defaultValue = 0
-
-    public init(_ value: Int) {
-        self.value = Self.range.clamp(value)
-    }
-}
-
-/// MIDI channel (1...16).
-public struct MIDIChannel: RangedInt, Equatable {
-    public var value: Int
-    public static let range = 1...16
-    public static let defaultValue = 1
     
-    public init(_ value: Int) {
-        self.value = Self.range.clamp(value)
+    /// Gets a random value within min and max (inclusive).
+    public static var randomValue: Int {
+        let range: ClosedRange<Int> = Self.minimumValue ... Self.maximumValue
+        return Int.random(in: range)
     }
-}
-
-/// Velocity curve (1...12).
-public struct VelocityCurve: RangedInt, Equatable {
-    public var value: Int
-    public static let range = 1...12
-    public static let defaultValue = 1
     
-    public init(_ value: Int) {
-        self.value = Self.range.clamp(value)
+    public var description: String {
+        return "\(value)"
     }
 }
 
-/// Control depth (-63...+63).
-public struct ControlDepth: RangedInt, Equatable {
-    public var value: Int
-    public static let range = -63...63
-    public static let defaultValue = 0
-    
-    public init(_ value: Int) {
-        self.value = Self.range.clamp(value)
-    }
+func == (lhs: Integer, rhs: Integer) -> Bool {
+    return lhs.value == rhs.value
 }
 
-/// Coarse tuning (-24...+24).
-public struct Coarse: RangedInt, Equatable {
-    public var value: Int
-    public static let range = -24...24
-    public static let defaultValue = 0
-        
-    public init(_ value: Int) {
-        self.value = Self.range.clamp(value)
-    }
+/// Volume level (0...127, default 0)
+public class Volume: Integer {
+    override class var minimumValue: Int { 0 }
+    override class var maximumValue: Int { 127 }
+    override class var defaultValue: Int { 0 }
 }
 
-/// Fine tuning (-63...63).
-public struct Fine: RangedInt, Equatable {
-    public var value: Int
-    public static let range = -63...63
-    public static let defaultValue = 0
-
-    public init(_ value: Int) {
-        self.value = Self.range.clamp(value)
-    }
+/// Level (0...127, default 0)
+public class Level: Integer {
+    override class var minimumValue: Int { 0 }
+    override class var maximumValue: Int { 127 }
+    override class var defaultValue: Int { 0 }
 }
 
-/// Effect depth (0...100).
-public struct EffectDepth: RangedInt, Equatable {
-    public var value: Int
-    public static let range = 0...100
-    public static let defaultValue = 0
-
-    public init(_ value: Int) {
-        self.value = Self.range.clamp(value)
-    }
+/// Time (0...127, default 0)
+public class Time: Integer {
+    override class var minimumValue: Int { 0 }
+    override class var maximumValue: Int { 127 }
+    override class var defaultValue: Int { 0 }
 }
 
-/// Effect path (1...4).
-public struct EffectPath: RangedInt, Equatable {
-    public var value: Int
-    public static let range = 1...4
-    public static let defaultValue = 1
-
-    public init(_ value: Int) {
-        self.value = Self.range.clamp(value)
-    }
+/// Depth (-63...63, default 0)
+public class Depth: Integer {
+    override class var minimumValue: Int { -63 }
+    override class var maximumValue: Int { 63 }
+    override class var defaultValue: Int { 0 }
 }
 
-/// Resonance (0...31).
-public struct Resonance: RangedInt, Equatable {
-    public var value: Int
-    public static let range = 0...31
-    public static let defaultValue = 0
-
-    public init(_ value: Int) {
-        self.value = Self.range.clamp(value)
-    }
+/// Pan (-63...63, default 0)
+public class Pan: Integer {
+    override class var minimumValue: Int { -63 }
+    override class var maximumValue: Int { 63 }
+    override class var defaultValue: Int { 0 }
 }
 
-/// Gain (1...63).
-public struct Gain: RangedInt, Equatable {
-    public var value: Int
-    public static let range = 1...63
-    public static let defaultValue = 1
-
-    public init(_ value: Int) {
-        self.value = Self.range.clamp(value)
-    }
+/// MIDI channel (1...16, default 1)
+public class MIDIChannel: Integer {
+    override class var minimumValue: Int { 1 }
+    override class var maximumValue: Int { 16 }
+    override class var defaultValue: Int { 1 }
 }
 
-/// Bender pitch (-12...12).
-public struct BenderPitch: RangedInt, Equatable {
-    public var value: Int
-    public static let range = -12...12
-    public static let defaultValue = 0
-
-    public init(_ value: Int) {
-        self.value = Self.range.clamp(value)
-    }
+/// Velocity curve (1...12, default 1)
+public class VelocityCurve: Integer {
+    override class var minimumValue: Int { 1 }
+    override class var maximumValue: Int { 12 }
+    override class var defaultValue: Int { 1 }
 }
 
-/// Bender cutoff (0...31).
-public struct BenderCutoff: RangedInt, Equatable {
-    public var value: Int
-    public static let range = 0...31
-    public static let defaultValue = 0
-
-    public init(_ value: Int) {
-        self.value = Self.range.clamp(value)
-    }
+/// Control depth (-31...31, default 0)
+public class ControlDepth: Integer {
+    override class var minimumValue: Int { -31 }
+    override class var maximumValue: Int { 31 }
+    override class var defaultValue: Int { 0 }
 }
 
-/// MIDI note (0...127).
-public struct MIDINote: RangedInt, Equatable {
-    public var value: Int
-    public static let range = 0...127
-    public static let defaultValue = 60
-
-    public init(_ value: Int) {
-        self.value = Self.range.clamp(value)
-    }
+/// Control level (0...63, default 0)
+public class ControlLevel: Integer {
+    override class var minimumValue: Int { 0 }
+    override class var maximumValue: Int { 63 }
+    override class var defaultValue: Int { 0 }
 }
 
-/// Patch number (0...127).
-public struct PatchNumber: RangedInt, Equatable {
-    public var value: Int
-    public static let range = 0...127
-    public static let defaultValue = 0
-
-    public init(_ value: Int) {
-        self.value = Self.range.clamp(value)
-    }
+/// Coarse tuning (-24...24, default 0)
+public class Coarse: Integer {
+    override class var minimumValue: Int { -24 }
+    override class var maximumValue: Int { 24 }
+    override class var defaultValue: Int { 0 }
 }
 
-/// Transpose (-24...24).
-public struct Transpose: RangedInt, Equatable {
-    public var value: Int
-    public static let range = -24...24
-    public static let defaultValue = 0
+/// Fine tuning (-63...63, default 0)
+public class Fine: Integer {
+    override class var minimumValue: Int { -63 }
+    override class var maximumValue: Int { 63 }
+    override class var defaultValue: Int { 0 }
+}
 
-    public init(_ value: Int) {
-        self.value = Self.range.clamp(value)
-    }
+/// Effect depth (0...100, default 0)
+public class EffectDepth: Integer {
+    override class var minimumValue: Int { 0 }
+    override class var maximumValue: Int { 100 }
+    override class var defaultValue: Int { 0 }
+}
+
+/// Effect path (1...4, default 1)
+public class EffectPath: Integer {
+    override class var minimumValue: Int { 1 }
+    override class var maximumValue: Int { 4 }
+    override class var defaultValue: Int { 1 }
+}
+
+/// Resonance (0...31, default 0)
+public class Resonance: Integer {
+    override class var minimumValue: Int { 0 }
+    override class var maximumValue: Int { 31 }
+    override class var defaultValue: Int { 0 }
+}
+
+/// Gain (1...63, default 1)
+public class Gain: Integer {
+    override class var minimumValue: Int { 1 }
+    override class var maximumValue: Int { 63 }
+    override class var defaultValue: Int { 1 }
+}
+
+/// Bender pitch (-12...12, default 0)
+public class BenderPitch: Integer {
+    override class var minimumValue: Int { -12 }
+    override class var maximumValue: Int { 12 }
+    override class var defaultValue: Int { 0 }
+}
+
+/// Bender cutoff (0...31, default 0)
+public class BenderCutoff: Integer {
+    override class var minimumValue: Int { 0 }
+    override class var maximumValue: Int { 31 }
+    override class var defaultValue: Int { 0 }
+}
+
+/// MIDI note (0...127, default 60)
+public class MIDINote: Integer {
+    override class var minimumValue: Int { 0 }
+    override class var maximumValue: Int { 127 }
+    override class var defaultValue: Int { 60 }
+}
+
+/// Patch number (0...127, default 0)
+public class PatchNumber: Integer {
+    override class var minimumValue: Int { 0 }
+    override class var maximumValue: Int { 127 }
+    override class var defaultValue: Int { 0 }
+}
+
+/// Transpose (-24...24, default 0)
+public class Transpose: Integer {
+    override class var minimumValue: Int { -24 }
+    override class var maximumValue: Int { 24 }
+    override class var defaultValue: Int { 0 }
+}
+
+/// Wave number for DCO (1...464, default 1).
+public class WaveNumber: Integer {
+    override class var minimumValue: Int { 1 }
+    override class var maximumValue: Int { 464 }
+    override class var defaultValue: Int { 1 }
 }
 
 /// Fixed key setting.
