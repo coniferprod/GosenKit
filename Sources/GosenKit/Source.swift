@@ -157,7 +157,8 @@ public struct Source {
         /// Parse the control settings from MIDI System Exclusive data.
         public static func parse(from data: ByteArray) -> Result<Control, ParseError> {
             var offset: Int = 0
-            var b: Byte = 0
+            var b: Byte = 0     // last byte read (will be reused)
+            var value: Int = 0  // tentative calue (will be reused)
             
             var temp = Control()
             
@@ -176,13 +177,28 @@ public struct Source {
             }
             
             b = data.next(&offset)
-            temp.effectPath = EffectPath(Int(b) + 1)  // 0...3 to 1...4
+            value = EffectPath.valueFromByte(byte: b, adjuster: EffectPath.incoming)
+            if EffectPath.isValid(value) {
+                temp.effectPath = EffectPath(value)
+            } else {
+                return .failure(.invalidData(value, "Invalid data for EffectPath: \(value))"))
+            }
             
             b = data.next(&offset)
-            temp.volume = Volume(Int(b))
-            
+            value = Volume.valueFromByte(byte: b, adjuster: Volume.incoming)
+            if Volume.isValid(value) {
+                temp.volume = Volume(value)
+            } else {
+                return .failure(.invalidData(value, "Invalid data for Volume: \(value))"))
+            }
+                        
             b = data.next(&offset)
-            temp.benderPitch = BenderPitch(Int(b) - 12)  // adjust 0...24 to -12...+12
+            value = BenderPitch.valueFromByte(byte: b, adjuster: BenderPitch.incoming)
+            if BenderPitch.isValid(value) {
+                temp.benderPitch = BenderPitch(value)
+            } else {
+                return .failure(.invalidData(value, "Invalid data for BenderPitch: \(value))"))
+            }
             
             b = data.next(&offset)
             temp.benderCutoff = BenderCutoff(Int(b))

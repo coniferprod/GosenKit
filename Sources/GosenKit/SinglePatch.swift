@@ -189,7 +189,8 @@ public struct SinglePatch {
             var macroDepths = [Int]()
             for _ in 0..<8 {
                 b = data.next(&offset)
-                macroDepths.append(Int(b) - 64)
+                //macroDepths.append(Int(b) - 64)
+                macroDepths.append(Int(b))
             }
 
             temp.macros = [MacroController]()

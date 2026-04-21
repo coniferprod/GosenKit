@@ -80,6 +80,16 @@ public class Integer: ExpressibleByIntegerLiteral, CustomStringConvertible {
     public var description: String {
         return "\(value)"
     }
+    
+    /*
+    convenience init(_ b: UInt8) {
+        self.init(Self.valueFromByte(b))
+    }
+    */
+    
+    public static func valueFromByte(byte: UInt8, adjuster: (UInt8) -> Int) -> Int {
+        adjuster(byte)
+    }
 }
 
 func == (lhs: Integer, rhs: Integer) -> Bool {
@@ -91,6 +101,15 @@ public class Volume: Integer {
     override class var minimumValue: Int { 0 }
     override class var maximumValue: Int { 127 }
     override class var defaultValue: Int { 0 }
+    
+/*
+    convenience init(_ b: UInt8) {
+        self.init(Volume.valueFromByte(b))
+    }
+*/
+    public static func incoming(byte: UInt8) -> Int {
+        Int(byte) + 1
+    }
 }
 
 /// Level (0...127, default 0)
@@ -140,6 +159,10 @@ public class ControlDepth: Integer {
     override class var minimumValue: Int { -31 }
     override class var maximumValue: Int { 31 }
     override class var defaultValue: Int { 0 }
+    
+    public static func incoming(byte: UInt8) -> Int {
+        Int(byte) - 31
+    }
 }
 
 /// Control level (0...63, default 0)
@@ -175,6 +198,14 @@ public class EffectPath: Integer {
     override class var minimumValue: Int { 1 }
     override class var maximumValue: Int { 4 }
     override class var defaultValue: Int { 1 }
+    
+    public static func incoming(byte: UInt8) -> Int {
+        Int(byte) + 1  // 0...3 to 1...4
+    }
+    
+    public static func outgoing(byte: UInt8) -> Int {
+        Int(byte) - 1
+    }
 }
 
 /// Resonance (0...31, default 0)
@@ -196,6 +227,20 @@ public class BenderPitch: Integer {
     override class var minimumValue: Int { -12 }
     override class var maximumValue: Int { 12 }
     override class var defaultValue: Int { 0 }
+
+    /*
+    convenience init(_ b: UInt8) {
+        self.init(BenderPitch.valueFromByte(b))
+    }
+     */
+    
+    public static func incoming(byte: UInt8) -> Int {
+        Int(byte) - 12
+    }
+    
+    public static func outgoing(byte: UInt8) -> Int {
+        Int(byte) + 12
+    }
 }
 
 /// Bender cutoff (0...31, default 0)

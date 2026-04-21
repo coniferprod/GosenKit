@@ -111,17 +111,10 @@ public enum ControlDestination: String, Codable, CaseIterable {
 }
 
 public struct MacroController {
-    /// Macro depth (-31...31).
-    public class Depth: Integer {
-        override class var minimumValue: Int { -31 }
-        override class var maximumValue: Int { 31 }
-        override class var defaultValue: Int { 0 }
-    }
-    
     public var destination1: ControlDestination
-    public var depth1: Depth
+    public var depth1: ControlDepth
     public var destination2: ControlDestination
-    public var depth2: Depth
+    public var depth2: ControlDepth
     
     public init() {
         destination1 = .cutoffOffset
@@ -136,14 +129,15 @@ public struct MacroController {
         destination2: ControlDestination,
         depth2: Int) {
         self.destination1 = destination1
-        self.depth1 = Depth(depth1)
+        self.depth1 = ControlDepth(depth1)
         self.destination2 = destination2
-        self.depth2 = Depth(depth2)
+        self.depth2 = ControlDepth(depth2)
     }
     
     public static func parse(from data: ByteArray) -> Result<MacroController, ParseError> {
         var offset: Int = 0
         var b: Byte = 0
+        var value: Int = 0
         
         var temp = MacroController()  // initialize with defaults, then fill in
         
@@ -151,14 +145,24 @@ public struct MacroController {
         temp.destination1 = ControlDestination(index: Int(b))!
 
         b = data.next(&offset)
-        temp.depth1 = Depth(Int(b) - 64)
-        
+        value = ControlDepth.valueFromByte(byte: b, adjuster: ControlDepth.incoming)
+        if ControlDepth.isValid(value) {
+            temp.depth1 = ControlDepth(value)
+        } else {
+            return .failure(.invalidData(value, "Invalid data for ControlDepth: \(value))"))
+        }
+
         b = data.next(&offset)
         temp.destination2 = ControlDestination(index: Int(b))!
 
         b = data.next(&offset)
-        temp.depth2 = Depth(Int(b) - 64)
-        
+        value = ControlDepth.valueFromByte(byte: b, adjuster: ControlDepth.incoming)
+        if ControlDepth.isValid(value) {
+            temp.depth2 = ControlDepth(value)
+        } else {
+            return .failure(.invalidData(value, "Invalid data for ControlDepth: \(value))"))
+        }
+
         return .success(temp)
     }
 }
@@ -308,6 +312,7 @@ public struct EffectControl {
         public static func parse(from data: ByteArray) -> Result<Source, ParseError> {
             var offset: Int = 0
             var b: Byte = 0
+            var value: Int = 0
 
             var temp = Source()  // initialize with defaults, then fill in
             
@@ -321,9 +326,13 @@ public struct EffectControl {
             
             // Control depth is -31..0..+31, in SysEx 33..64..95.
             
-            let value: Int = Int(b) - 64  // bring to -31..31
-            temp.depth = ControlDepth(value)
-            
+            value = ControlDepth.valueFromByte(byte: b, adjuster: ControlDepth.incoming)
+            if ControlDepth.isValid(value) {
+                temp.depth = ControlDepth(value)
+            } else {
+                return .failure(.invalidData(value, "Invalid data for ControlDepth: \(value))"))
+            }
+
             return .success(temp)
         }
     }
