@@ -13,7 +13,7 @@ public struct MultiPatch {
         public var effects: EffectSettings
         public var geq: GEQ
         public var name: PatchName
-        public var volume: Level
+        public var volume: Int // 0...127
         public var sectionMutes: [Bool]
         public var effectControl: EffectControl
 
@@ -77,7 +77,7 @@ public struct MultiPatch {
             //print("After name parsed, offset = \(String(format: "%d", offset)) (data length = \(data.count))")
 
             b = data.next(&offset)
-            temp.volume = Level(Int(b))
+            temp.volume = Int(b)
             
             //print("After volume parsed, offset = \(String(format: "%d", offset)) (data length = \(data.count))")
 
@@ -110,14 +110,14 @@ public struct MultiPatch {
     /// One section of a multi patch.
     public struct Section {
         public var single: InstrumentNumber
-        public var volume: Level  // 0~127
+        public var volume: Int  // 0~127
         public var pan: Int  // 0~127  // *really?*
-        public var effectPath: EffectPath  // 0~3 in SysEx, store as 1~4
-        public var transpose: Transpose  // SysEx 40~88 = -24~+24
+        public var effectPath: Int  // 0~3 in SysEx, store as 1~4
+        public var transpose: Int  // SysEx 40~88 = -24~+24
         public var tune: Int  // SysEx 1~127 = -63~+63
         public var zone: Zone
         public var velocitySwitch: VelocitySwitch
-        public var receiveChannel: MIDIChannel  // SysEx 0~15 = 1~16
+        public var receiveChannel: Int  // SysEx 0~15 = 1~16
         
         /// Initializes a multi section with defaults.
         public init() {
@@ -125,11 +125,11 @@ public struct MultiPatch {
             volume = 127
             pan = 0
             effectPath = 1
-            transpose = Transpose(0)
+            transpose = 0
             tune = 0
             zone = Zone(low: Key(note: 0), high: Key(note: 127))
             velocitySwitch = VelocitySwitch(kind: .off, threshold: 0)  // TODO: check these
-            receiveChannel = MIDIChannel(1)
+            receiveChannel = 1
         }
         
         /// Parses one section of a multi patch from System Exclusive data.
@@ -149,27 +149,27 @@ public struct MultiPatch {
             temp.single = InstrumentNumber(msb: instrumentMSB, lsb: instrumentLSB)
             
             b = data.next(&offset)
-            temp.volume = Level(Int(b))
+            temp.volume = Int(b)
             
             b = data.next(&offset)
             temp.pan = Int(b)
 
             b = data.next(&offset)
-            temp.effectPath = EffectPath(Int(b) + 1)
+            temp.effectPath = Int(b) + descriptors[.effectPath]!.incomingOffset
             
             b = data.next(&offset)
-            temp.transpose = Transpose(Int(b) - 64)  // SysEx 40~88 to -24~+24
+            temp.transpose = Int(b) + descriptors[.transpose]!.incomingOffset  // SysEx 40~88 to -24~+24
 
             b = data.next(&offset)
-            temp.tune = Int(b) - 64  // SysEx 1~127 to -63...+63  // offset 1?
+            temp.tune = Int(b) + descriptors[.depth]!.incomingOffset  // SysEx 1~127 to -63...+63  // offset 1?
             
             b = data.next(&offset)
             let zoneLow = b
             b = data.next(&offset)
             let zoneHigh = b
             temp.zone = Zone(
-                low: Key(note: MIDINote(Int(zoneLow))),
-                high: Key(note: MIDINote(Int(zoneHigh)))
+                low: Key(note: Int(zoneLow)),
+                high: Key(note: Int(zoneHigh))
             )
 
             var velocitySwitchBytes = ByteArray()
@@ -186,7 +186,7 @@ public struct MultiPatch {
             }
             
             b = data.next(&offset)
-            temp.receiveChannel = MIDIChannel(Int(b + 1))  // adjust channel to 1~16
+            temp.receiveChannel = Int(b) + descriptors[.midiChannel]!.incomingOffset // adjust channel to 1~16
             
             return .success(temp)
         }
@@ -265,7 +265,7 @@ public struct MultiPatch {
     /// Generates a MIDI System Exclusive message from this patch.
     /// - Parameter channel: the MIDI channel to use
     /// - Parameter instrument: 00...3F
-    public func asSystemExclusiveMessage(channel: MIDIChannel, instrument: Byte) -> ByteArray {
+    public func asSystemExclusiveMessage(channel: Int, instrument: Byte) -> ByteArray {
         var data = ByteArray()
         
         let header = SystemExclusive.Header(
@@ -305,12 +305,12 @@ extension MultiPatch.Common: CustomStringConvertible {
         var result = ""
         
         result += "Name: \(self.name.value)\n"
-        result += "Volume: \(self.volume.value)\n"
+        result += "Volume: \(self.volume)\n"
         result += "\(self.effects)\n"
         
         result += "GEQ: "
         for band in geq.levels {
-            result += "\(band.value) "
+            result += "\(band) "
         }
         result += "\n"
         
@@ -332,14 +332,14 @@ extension MultiPatch.Section: CustomStringConvertible {
         var result = ""
         
         result += "Instrument: \(self.single)\n"
-        result += "Volume: \(self.volume.value)\n"
+        result += "Volume: \(self.volume)\n"
         result += "Pan: \(self.pan)\n"
-        result += "Effect path: \(self.effectPath.value)\n"
-        result += "Transpose: \(self.transpose.value)\n"
+        result += "Effect path: \(self.effectPath)\n"
+        result += "Transpose: \(self.transpose)\n"
         result += "Tune: \(self.tune)\n"
         result += "Zone: \(self.zone)\n"
         result += "Vel SW: \(self.velocitySwitch)\n"
-        result += "Receive Ch: \(self.receiveChannel.value)"
+        result += "Receive Ch: \(self.receiveChannel)"
         
         return result
     }
@@ -368,7 +368,10 @@ extension MultiPatch: SystemExclusiveData {
     /// The length of multi patch System Exclusive data.
     public var dataLength: Int { MultiPatch.dataSize }
     
-    public static let dataSize = 1 + Common.dataSize + 4 * Section.dataSize
+    public static let dataSize =
+        1
+        + Common.dataSize
+        + 4 * Section.dataSize
 }
 
 extension MultiPatch.Common: SystemExclusiveData {
@@ -380,7 +383,7 @@ extension MultiPatch.Common: SystemExclusiveData {
         data.append(contentsOf: effects.asData())
         data.append(contentsOf: geq.asData())
         data.append(contentsOf: name.asData())
-        data.append(Byte(volume.value))
+        data.append(Byte(volume))
                 
         return data
     }
@@ -399,21 +402,25 @@ extension MultiPatch.Section: SystemExclusiveData {
         
         data.append(contentsOf: single.asData())
         
+        let effectPathOffset = descriptors[.effectPath]!.outgoingOffset
+        let transposeOffset = descriptors[.transpose]!.outgoingOffset
+        let tuneOffset = descriptors[.depth]!.outgoingOffset
+        
         [
-            volume.value,
+            volume,
             pan,
-            effectPath.value - 1,  // adjust to 0~3
-            transpose.value + 64,
-            tune + 64,
-            zone.low.note.value,
-            zone.high.note.value
+            effectPath + effectPathOffset,  // adjust to 0~3
+            transpose + transposeOffset,
+            tune + tuneOffset,
+            zone.low.note,
+            zone.high.note
         ]
         .forEach {
             data.append(Byte($0))
         }
         
         data.append(contentsOf: velocitySwitch.asData())
-        data.append(Byte(receiveChannel.value - 1))  // adjust to 0~15
+        data.append(Byte(receiveChannel + descriptors[.midiChannel]!.outgoingOffset))  // adjust to 0~15
         
         return data
     }

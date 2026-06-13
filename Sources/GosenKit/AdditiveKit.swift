@@ -132,7 +132,7 @@ public struct AdditiveKit {
         // HCcode1 sum:
         var hc1Sum = 0
         for h in levels.soft {
-            hc1Sum += h.value & 0xFF
+            hc1Sum += h & 0xFF
             byteCount += 1
         }
         totalSum += hc1Sum & 0xFF
@@ -141,7 +141,7 @@ public struct AdditiveKit {
         // HCcode2 sum:
         var hc2Sum = 0
         for h in levels.loud {
-            hc2Sum += h.value & 0xFF
+            hc2Sum += h & 0xFF
             byteCount += 1
         }
         totalSum += hc2Sum & 0xFF
@@ -150,7 +150,7 @@ public struct AdditiveKit {
         // FF sum:
         var ffSum = 0
         for f in bands.levels {
-            ffSum += f.value & 0xFF
+            ffSum += f & 0xFF
             byteCount += 1
         }
         totalSum += ffSum & 0xFF

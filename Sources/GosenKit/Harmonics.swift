@@ -20,12 +20,12 @@ public struct HarmonicCommon {
 
     public var isMorfEnabled: Bool
     
-    public var totalGain: Gain // 1~63
+    public var totalGain: Int // 1~63
     
     public var group: Group
-    public var keyScalingToGain: Depth // -63(1)~+63(127)
-    public var velocityCurve: VelocityCurve  // 1~12 (stored in SysEx as 0~11)
-    public var velocityDepth: Level  // 0~127
+    public var keyScalingToGain: Int // -63(1)~+63(127)
+    public var velocityCurve: Int  // 1~12 (stored in SysEx as 0~11)
+    public var velocityDepth: Int  // 0~127
     
     /// Initializes default harmonic common settings.
     public init() {
@@ -48,19 +48,19 @@ public struct HarmonicCommon {
         temp.isMorfEnabled = (b == 1)
         
         b = data.next(&offset)
-        temp.totalGain = Gain(Int(b))
+        temp.totalGain = Int(b) + descriptors[.gain]!.incomingOffset
 
         b = data.next(&offset)
         temp.group = Group(index: Int(b))!
         
         b = data.next(&offset)
-        temp.keyScalingToGain = Depth(Int(b) - 64)
+        temp.keyScalingToGain = Int(b) + descriptors[.depth]!.incomingOffset
         
         b = data.next(&offset)
-        temp.velocityCurve = VelocityCurve(Int(b) + 1) // 0~11 to 1~12
+        temp.velocityCurve = Int(b) + descriptors[.velocityCurve]!.incomingOffset // 0~11 to 1~12
         
         b = data.next(&offset)
-        temp.velocityDepth = Level(Int(b))
+        temp.velocityDepth = Int(b)
 
         return .success(temp)
     }
@@ -68,24 +68,10 @@ public struct HarmonicCommon {
 
 /// Harmonic envelope.
 public struct HarmonicEnvelope {
-    /// Harmonic envelope rate (0~127).
-    public class Rate: Integer {
-        override class var minimumValue: Int { 0 }
-        override class var maximumValue: Int { 127 }
-        override class var defaultValue: Int { 0 }
-    }
-
-    /// Harmonic envelope level (0~63).
-    public class Level: Integer {
-        override class var minimumValue: Int { 0 }
-        override class var maximumValue: Int { 63 }
-        override class var defaultValue: Int { 0 }
-    }
-
     /// One segment of harmonic envelope.
     public struct Segment {
-        public var rate: Rate
-        public var level: Level
+        public var rate: Int  // 0...127
+        public var level: Int  // 0...63
 
         /// Initialize the harmonic envelope segment with default values.
         public init() {
@@ -94,7 +80,7 @@ public struct HarmonicEnvelope {
         }
         
         /// Initializes the segment with rate and level.
-        public init(rate: Rate, level: Level) {
+        public init(rate: Int, level: Int) {
             self.rate = rate
             self.level = level
         }
@@ -107,10 +93,10 @@ public struct HarmonicEnvelope {
             var temp = Segment()
             
             b = data.next(&offset)
-            temp.rate = Rate(Int(b))
+            temp.rate = Int(b)
             
             b = data.next(&offset)
-            temp.level = Level(Int(b))
+            temp.level = Int(b)
             
             return .success(temp)
         }
@@ -164,33 +150,33 @@ public struct HarmonicEnvelope {
         var temp = HarmonicEnvelope()
         
         b = data.next(&offset)
-        let segment0Rate = Rate(Int(b))
+        let segment0Rate = Int(b)
 
         b = data.next(&offset)
-        let segment0Level = Level(Int(b))
+        let segment0Level = Int(b)
         
         b = data.next(&offset)
-        let segment1Rate = Rate(Int(b))
+        let segment1Rate = Int(b)
         
         b = data.next(&offset)
         let segment1LevelBit6 = b.isBitSet(6)
         
         b.clearBit(6)
-        let segment1Level = Level(Int(b))
+        let segment1Level = Int(b)
 
         b = data.next(&offset)
-        let segment2Rate = Rate(Int(b))
+        let segment2Rate = Int(b)
         
         b = data.next(&offset)
         let segment2LevelBit6 = b.isBitSet(6)
         b.clearBit(6)
-        let segment2Level = Level(Int(b))
+        let segment2Level = Int(b)
         
         b = data.next(&offset)
-        let segment3Rate = Rate(Int(b))
+        let segment3Rate = Int(b)
 
         b = data.next(&offset)
-        let segment3Level = Level(Int(b))
+        let segment3Level = Int(b)
         
         temp.segments = [
             Segment(rate: segment0Rate, level: segment0Level),
@@ -218,8 +204,8 @@ public struct HarmonicEnvelope {
 
 /// Harmonic levels.
 public struct HarmonicLevels {
-    public var soft: [Level]  // 1~64
-    public var loud: [Level]  // 65~128
+    public var soft: [Int]  // 1~64
+    public var loud: [Int]  // 65~128
     // all values are 0~127
     
     /// Number of harmonics in a set.
@@ -228,13 +214,13 @@ public struct HarmonicLevels {
     /// Initializes default harmonic levels. For both soft and loud,
     /// the first level is initialized to 127 and the rest to zero.
     public init() {
-        soft = [Level]()
+        soft = [Int]()
         soft.append(127)
         for _ in 1..<HarmonicLevels.harmonicCount {
             soft.append(0)
         }
         
-        loud = [Level]()
+        loud = [Int]()
         loud.append(127)
         for _ in 1..<HarmonicLevels.harmonicCount {
             loud.append(0)
@@ -243,23 +229,17 @@ public struct HarmonicLevels {
     
     /// Initializes harmonic levels with soft and loud harmonics.
     public init(soft: [Int], loud: [Int]) {
-        self.soft = [Level]()
+        self.soft = [Int]()
         for level in soft {
-            self.soft.append(Level(level))
+            self.soft.append(level)
         }
         
-        self.loud = [Level]()
+        self.loud = [Int]()
         for level in loud {
-            self.loud.append(Level(level))
+            self.loud.append(level)
         }
     }
 
-    /// Initialize harmonic levels with actual level values.
-    public init(soft: [Level], loud: [Level]) {
-        self.soft = soft
-        self.loud = loud
-    }
-    
     /// Parse the harmonic levels from MIDI System Exclusive data bytes.
     public static func parse(from data: ByteArray) -> Result<HarmonicLevels, ParseError> {
         var temp = HarmonicLevels()
@@ -268,19 +248,19 @@ public struct HarmonicLevels {
         var b: Byte = 0
 
         var i = 0
-        var soft = [Level]()
+        var soft = [Int]()
         while i < HarmonicLevels.harmonicCount {
             b = data.next(&offset)
-            soft.append(Level(Int(b)))
+            soft.append(Int(b))
             i += 1
         }
         temp.soft = soft
         
         i = 0
-        var loud = [Level]()
+        var loud = [Int]()
         while i < HarmonicLevels.harmonicCount {
             b = data.next(&offset)
-            loud.append(Level(Int(b)))
+            loud.append(Int(b))
             i += 1
         }
         temp.loud = loud
@@ -301,8 +281,8 @@ extension HarmonicEnvelope: SystemExclusiveData {
         // When emitting segment1 and segment2 data,
         // we need to bake the loop type into the levels.
         
-        var segment1Level = Byte(segments[1].level.value)
-        var segment2Level = Byte(segments[2].level.value)
+        var segment1Level = Byte(segments[1].level)
+        var segment2Level = Byte(segments[2].level)
 
         if loopKind == .loop2 {  // bit pattern from bits 6 of L1 and L2 = "01"
             segment1Level.clearBit(6)
@@ -343,8 +323,8 @@ extension HarmonicLevels: SystemExclusiveData {
     /// Gets the MIDI System Exclusive data bytes for the harmonic levels.
     public func asData() -> ByteArray {
         var data = ByteArray()
-        soft.forEach { data.append(Byte($0.value)) }
-        loud.forEach { data.append(Byte($0.value)) }
+        soft.forEach { data.append(Byte($0)) }
+        loud.forEach { data.append(Byte($0)) }
         return data
     }
     
@@ -359,13 +339,16 @@ extension HarmonicCommon: SystemExclusiveData {
     public func asData() -> ByteArray {
         var data = ByteArray()
         
+        let totalGainOffset = descriptors[.gain]!.outgoingOffset
+        let ksOffset = descriptors[.depth]!.outgoingOffset
+        let velocityCurveOffset = descriptors[.velocityCurve]!.outgoingOffset
         [
             isMorfEnabled ? 1 : 0,
-            totalGain.value,
+            totalGain + totalGainOffset,
             group.index,
-            keyScalingToGain.value + 64,
-            velocityCurve.value - 1,
-            velocityDepth.value
+            keyScalingToGain + ksOffset,
+            velocityCurve + velocityCurveOffset,
+            velocityDepth
         ]
         .forEach {
             data.append(Byte($0))
@@ -383,7 +366,7 @@ extension HarmonicCommon: SystemExclusiveData {
 extension HarmonicEnvelope.Segment: SystemExclusiveData {
     /// Gets the MIDI System Exclusive data bytes for this harmonic envelope segment.
     public func asData() -> ByteArray {
-        return ByteArray(arrayLiteral: Byte(rate.value), Byte(level.value))
+        return ByteArray(arrayLiteral: Byte(rate), Byte(level))
     }
     
     /// The number of data bytes in this harmonic envelope segment.
@@ -479,5 +462,13 @@ extension HarmonicCommon.Group: CustomStringConvertible {
         case .high:
             return "HI"
         }
+    }
+}
+
+// MARK: - XML output
+
+extension HarmonicEnvelope.LoopKind {
+    public var xml: String {
+        "<loop-kind>\(self.description)</loop-kind>"
     }
 }

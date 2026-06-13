@@ -15,11 +15,13 @@ let package = Package(
     ],
     dependencies: [
         .package(url: "https://github.com/coniferprod/SyxPack", from: "0.9.0"),
+        .package(url: "https://github.com/mesqueeb/CaseAnything", from: "0.1.8"),
+        .package(url: "https://github.com/CoreOffice/XMLCoder.git", from: "0.15.0"),
     ],
     targets: [
         .target(
             name: "GosenKit",
-            dependencies: ["SyxPack"]),
+            dependencies: ["SyxPack", "CaseAnything", "XMLCoder"]),
         .testTarget(
             name: "GosenKitTests",
             dependencies: ["GosenKit", "SyxPack"]),

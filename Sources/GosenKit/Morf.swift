@@ -3,7 +3,7 @@ import ByteKit
 
 public struct Morf {
     public struct CopyParameters {
-        public var patchNumber: PatchNumber  // 0~127
+        public var patchNumber: Int  // 0~127
         public var sourceNumber: Int  // 0~11 (0~5:soft, 6~11:loud)
         
         public init() {
@@ -18,7 +18,7 @@ public struct Morf {
             var temp = CopyParameters()
             
             b = data.next(&offset)
-            temp.patchNumber = PatchNumber(Int(b))
+            temp.patchNumber = Int(b)
             
             b = data.next(&offset)
             temp.sourceNumber = Int(b)
@@ -28,10 +28,10 @@ public struct Morf {
     }
 
     public struct Envelope {
-        public var time1: Level  // all times 0~127
-        public var time2: Level
-        public var time3: Level
-        public var time4: Level
+        public var time1: Int  // all times 0~127
+        public var time2: Int
+        public var time3: Int
+        public var time4: Int
         public var loopKind: HarmonicEnvelope.LoopKind
         
         public init() {
@@ -49,16 +49,16 @@ public struct Morf {
             var temp = Envelope()
             
             b = data.next(&offset)
-            temp.time1 = Level(Int(b))
+            temp.time1 = Int(b)
             
             b = data.next(&offset)
-            temp.time2 = Level(Int(b))
+            temp.time2 = Int(b)
 
             b = data.next(&offset)
-            temp.time3 = Level(Int(b))
+            temp.time3 = Int(b)
             
             b = data.next(&offset)
-            temp.time4 = Level(Int(b))
+            temp.time4 = Int(b)
 
             b = data.next(&offset)
             temp.loopKind = HarmonicEnvelope.LoopKind(index: Int(b))!
@@ -134,7 +134,10 @@ public struct Morf {
 
 extension Morf.CopyParameters: SystemExclusiveData {
     public func asData() -> ByteArray {
-        return [Byte(patchNumber.value), Byte(sourceNumber)]
+        [
+            Byte(patchNumber),
+            Byte(sourceNumber)
+        ]
     }
     
     public var dataLength: Int { Morf.CopyParameters.dataSize }
@@ -171,10 +174,10 @@ extension Morf.Envelope: SystemExclusiveData {
         var data = ByteArray()
         
         [
-            time1.value,
-            time2.value,
-            time3.value,
-            time4.value,
+            time1,
+            time2,
+            time3,
+            time4,
             loopKind.index
         ]
         .forEach {

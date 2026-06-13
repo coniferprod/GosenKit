@@ -5,32 +5,18 @@ import ByteKit
 public struct Oscillator {
     /// Pitch envelope of an oscillator.
     public struct PitchEnvelope {
-        /// Pitch envelope time 0~127
-        public class Time: Integer {
-            override class var minimumValue: Int { 0 }
-            override class var maximumValue: Int { 127 }
-            override class var defaultValue: Int { 0 }
-        }
-
-        /// Pitch envelope level -63~+63
-        public class Level: Integer {
-            override class var minimumValue: Int { -63 }
-            override class var maximumValue: Int { 63 }
-            override class var defaultValue: Int { 0 }
-        }
-        
-        public var start: Level
-        public var attackTime: Time
-        public var attackLevel: Level
-        public var decayTime: Time
-        public var timeVelocitySensitivity: Level
-        public var levelVelocitySensitivity: Level
+        public var start: Int  // -63...63
+        public var attackTime: Int // 0...127
+        public var attackLevel: Int // -63...63
+        public var decayTime: Int // 0...127
+        public var timeVelocitySensitivity: Int   // -63...63
+        public var levelVelocitySensitivity: Int  // -63...63
         
         /// Initializes a default pitch envelope.
         public init() {
             start = 0
             attackTime = 0
-            attackLevel = Level(Level.maximumValue)
+            attackLevel = 127
             decayTime = 0
             timeVelocitySensitivity = 0
             levelVelocitySensitivity = 0
@@ -43,23 +29,25 @@ public struct Oscillator {
 
             var temp = PitchEnvelope()
             
-            b = data.next(&offset)
-            temp.start = Level(Int(b) - 64)
+            let descriptor = descriptors[.pitchEnvelopeLevel]!
             
             b = data.next(&offset)
-            temp.attackTime = Time(Int(b))
+            temp.start = Int(b) + descriptor.incomingOffset
             
             b = data.next(&offset)
-            temp.attackLevel = Level(Int(b) - 64)
+            temp.attackTime = Int(b)
             
             b = data.next(&offset)
-            temp.decayTime = Time(Int(b))
+            temp.attackLevel = Int(b) + descriptor.incomingOffset
             
             b = data.next(&offset)
-            temp.timeVelocitySensitivity = Level(Int(b) - 64)
+            temp.decayTime = Int(b)
             
             b = data.next(&offset)
-            temp.levelVelocitySensitivity = Level(Int(b) - 64)
+            temp.timeVelocitySensitivity = Int(b) + descriptor.incomingOffset
+            
+            b = data.next(&offset)
+            temp.levelVelocitySensitivity = Int(b) + descriptor.incomingOffset
 
             return .success(temp)
         }
@@ -85,8 +73,8 @@ public struct Oscillator {
     }
 
     public var wave: Wave
-    public var coarse: Coarse
-    public var fine: Fine
+    public var coarse: Int
+    public var fine: Int
     public var keyScalingToPitch: KeyScaling
     public var fixedKey: FixedKey
     public var pitchEnvelope: PitchEnvelope
@@ -121,10 +109,10 @@ public struct Oscillator {
         }
         
         b = data.next(&offset)
-        temp.coarse = Coarse(Int(b) - 64)  // (-24)40 ~ (+24)88
+        temp.coarse = Int(b) + descriptors[.coarse]!.incomingOffset  // (-24)40 ~ (+24)88
 
         b = data.next(&offset)
-        temp.fine = Fine(Int(b) - 64)  // (-63)1 ~ (+63)127
+        temp.fine = Int(b) + descriptors[.fine]!.incomingOffset  // (-63)1 ~ (+63)127
 
         b = data.next(&offset)
         if b == 0 {
@@ -135,7 +123,7 @@ public struct Oscillator {
             // With Middle C defined as C4, A0=21 and C8=108.
             // So it seems like the K5000 wants to use the Yamaha convention,
             // where Middle C is C3, so that A-1=21 and C7=108.
-            temp.fixedKey = .on(Key(note: MIDINote(Int(b))))
+            temp.fixedKey = .on(Key(note: Int(b)))
         }
 
         b = data.next(&offset)
@@ -159,13 +147,16 @@ extension Oscillator.PitchEnvelope: SystemExclusiveData {
     public func asData() -> ByteArray {
         var data = ByteArray()
         
+        let descriptor = descriptors[.pitchEnvelopeLevel]!
+        let offset = descriptor.outgoingOffset
+
         [
-            start.value + 64,
-            attackTime.value,
-            attackLevel.value + 64,
-            decayTime.value,
-            timeVelocitySensitivity.value + 64,
-            levelVelocitySensitivity.value + 64
+            start + offset,
+            attackTime,
+            attackLevel + offset,
+            decayTime,
+            timeVelocitySensitivity + offset,
+            levelVelocitySensitivity + offset
         ]
         .forEach {
             data.append(Byte($0))
@@ -189,12 +180,12 @@ extension Oscillator: SystemExclusiveData {
         
         var fixedKeyByte = 0x00
         if case .on(let key) = fixedKey {
-            fixedKeyByte = key.note.value
+            fixedKeyByte = key.note
         }
         
         [
-            coarse.value + 24,
-            fine.value + 64,
+            coarse + descriptors[.coarse]!.outgoingOffset,
+            fine + descriptors[.fine]!.outgoingOffset,
             fixedKeyByte,
             keyScalingToPitch.index
         ]
@@ -219,7 +210,7 @@ extension Oscillator: CustomStringConvertible {
     /// Gets a text representation of the oscillator.
     public var description: String {
         var s = "Wave: '\(wave)' "
-        s += "Coarse=\(coarse.value) Fine=\(fine.value) KStoPitch=\(keyScalingToPitch.rawValue) FixedKey=\(fixedKey)\n"
+        s += "Coarse=\(coarse) Fine=\(fine) KStoPitch=\(keyScalingToPitch.rawValue) FixedKey=\(fixedKey)\n"
         s += "Pitch Envelope = \(pitchEnvelope)"
         return s
     }
@@ -229,8 +220,8 @@ extension Oscillator.PitchEnvelope: CustomStringConvertible {
     /// Gets a text representation of the pitch envelope.
     public var description: String {
         var s = ""
-        s += "start=\(start.value), attackTime=\(attackTime.value), attackLevel=\(attackLevel.value), decayTime=\(decayTime.value)\n"
-        s += "timeVelSens=\(timeVelocitySensitivity.value) levelVelSens=\(levelVelocitySensitivity.value)\n"
+        s += "start=\(start), attackTime=\(attackTime), attackLevel=\(attackLevel), decayTime=\(decayTime)\n"
+        s += "timeVelSens=\(timeVelocitySensitivity) levelVelSens=\(levelVelocitySensitivity)\n"
         return s
     }
 }
@@ -250,5 +241,35 @@ extension Oscillator.KeyScaling: CustomStringConvertible {
             result = "50cent"
         }
         return result
+    }
+}
+
+// MARK: - XML output
+
+extension Oscillator.PitchEnvelope: XMLRepresentable {
+    public var xml: String {
+"""
+<pitch-envelope>
+    <start>\(self.start)</start>
+
+</pitch-envelope>
+"""
+/*
+        public var start: Level
+        public var attackTime: Time
+        public var attackLevel: Level
+        public var decayTime: Time
+        public var timeVelocitySensitivity: Level
+        public var levelVelocitySensitivity: Level
+*/
+    }
+}
+
+extension Oscillator: XMLRepresentable {
+    public var xml: String {
+"""
+<oscillator>\(description)
+</oscillator>
+"""
     }
 }

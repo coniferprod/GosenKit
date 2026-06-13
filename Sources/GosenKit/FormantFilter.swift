@@ -1,35 +1,30 @@
+import Foundation
+
 import SyxPack
 import ByteKit
-
-/// Formant filter envelope rate (0~127).
-//typealias FormantFilterEnvelopeRate = Rate
-
-/// Format filter envelope level (-63~+63).
-//typealias FormantFilterEnvelopeLevel = Depth
 
 /// Represents a formant filter.
 public struct FormantFilter {
     /// Formant filter envelope.
     public struct Envelope {
-        
-        public class Rate: GosenKit.Level { }  // 0~127
-        public class Level: GosenKit.Depth { } // -63(1)~+63(127)
-        
-        /// Formant filter envelope segment.
+        /// Formant filter envelope segment with rate and level.
         public struct Segment {
-            public var rate: Rate  // 0~127
-            public var level: Level // -63(1)~+63(127)
+            public var rate: Int  // 0~127
+            public var level: Int // -63(1)~+63(127)
             
+            /// Initializes a formant filter envelope segment with default values.
             public init() {
                 self.rate = 0
                 self.level = 0
             }
             
+            /// Initializes a formant filter envelope segment with specific `Int` values.
             public init(rate: Int, level: Int) {
-                self.rate = Rate(rate)
-                self.level = Level(level)
+                self.rate = rate
+                self.level = level
             }
-            
+
+            /// Parses formant filter envelope segment from System Exclusive data.
             public static func parse(from data: ByteArray) -> Result<Segment, ParseError> {
                 var offset: Int = 0
                 var b: Byte = 0
@@ -37,12 +32,16 @@ public struct FormantFilter {
                 var temp = Segment()
                 
                 b = data.next(&offset)
-                temp.rate = Rate(Int(b))
+                temp.rate = Int(b)
                 
                 b = data.next(&offset)
-                temp.level = Level(Int(b) - 64)
+                temp.level = Int(b) + descriptors[.filterEnvelopeLevel]!.incomingOffset
                 
                 return .success(temp)
+            }
+            
+            public var xml: String {
+                "<rate>\(rate)</rate></level>\(level)</level>"
             }
         }
 
@@ -51,9 +50,10 @@ public struct FormantFilter {
         public var decay2: Segment
         public var release: Segment
         public var decayLoop: HarmonicEnvelope.LoopKind
-        public var velocityDepth: Depth // -63(1)~+63(127)
-        public var keyScalingDepth: Depth // -63(1)~+63(127)
+        public var velocityDepth: Int // -63(1)~+63(127)
+        public var keyScalingDepth: Int // -63(1)~+63(127)
         
+        /// Initializes formant filter envelope with default values.
         public init() {
             attack = Segment(rate: 127, level: 63)
             decay1 = Segment(rate: 127, level: 63)
@@ -64,6 +64,7 @@ public struct FormantFilter {
             keyScalingDepth = 0
         }
         
+        /// Parses formant filter envelope from System Exclusive data.
         public static func parse(from data: ByteArray) -> Result<Envelope, ParseError> {
             var offset: Int = 0
             var b: Byte = 0
@@ -107,11 +108,12 @@ public struct FormantFilter {
             b = data.next(&offset)
             temp.decayLoop = HarmonicEnvelope.LoopKind(index: Int(b))!
             
+            let descriptor = descriptors[.depth]!
             b = data.next(&offset)
-            temp.velocityDepth = Depth(Int(b) - 64)
+            temp.velocityDepth = Int(b) + descriptor.incomingOffset
 
             b = data.next(&offset)
-            temp.keyScalingDepth = Depth(Int(b) - 64)
+            temp.keyScalingDepth = Int(b) + descriptor.incomingOffset
 
             return .success(temp)
         }
@@ -119,6 +121,7 @@ public struct FormantFilter {
     
     /// Formant filter LFO.
     public struct LFO {
+        /// Formant filter LFO shape.
         public enum Shape: String, Codable, CaseIterable {
             case triangle
             case sawtooth
@@ -134,23 +137,18 @@ public struct FormantFilter {
             }
         }
 
-        /// Format filter LFO depth (0~63).
-        public class Depth: Integer {
-            override class var minimumValue: Int { 0 }
-            override class var maximumValue: Int { 63 }
-            override class var defaultValue: Int { 0 }
-        }
-
-        public var speed: Level  // 0~127
+        public var speed: Int  // 0~127
         public var shape: Shape
-        public var depth: Depth  // 0~63
-        
+        public var depth: Int  // 0~63
+
+        /// Initializes formant filter LFO with default values.
         public init() {
             shape = .triangle
             speed = 0
             depth = 0
         }
         
+        /// Parses formant filter LFO from System Exclusive data.
         public static func parse(from data: ByteArray) -> Result<LFO, ParseError> {
             var offset: Int = 0
             var b: Byte = 0
@@ -158,13 +156,13 @@ public struct FormantFilter {
             var temp = LFO()
             
             b = data.next(&offset)
-            temp.speed = Level(Int(b))
+            temp.speed = Int(b)
 
             b = data.next(&offset)
             temp.shape = Shape(index: Int(b))!
             
             b = data.next(&offset)
-            temp.depth = Depth(Int(b))
+            temp.depth = Int(b)
 
             return .success(temp)
         }
@@ -182,25 +180,30 @@ public struct FormantFilter {
             default: return nil
             }
         }
+        
+        public var xml: String {
+            "<mode>\(self.rawValue)</mode>"
+        }
     }
 
     /// Formant filter bands.
     public struct Bands {
-        public var levels: [Level]  // all values are 0~127
+        public var levels: [Int]  // all values are 0~127
 
         public static let bandCount = 128
 
+        /// Initializes the formant filter bands with default values.
         public init() {
-            levels = Array(repeating: Level(Level.defaultValue), count: Bands.bandCount)
+            levels = Array(repeating: 0, count: Bands.bandCount)
         }
         
-        /// Initialize the formant filter bands with default values.
-        public init(levels: [Level]) {
+        /// Initializes the formant filter bands with specific levels.
+        public init(levels: [Int]) {
             // Make sure that there are at max 128 levels
-            self.levels = [Level](levels.prefix(upTo: Bands.bandCount))
+            self.levels = [Int](levels.prefix(upTo: Bands.bandCount))
         }
         
-        /// Parse the formant filter bands from MIDI System Exclusive data.
+        /// Parses the formant filter bands from MIDI System Exclusive data.
         public static func parse(from data: ByteArray) -> Result<Bands, ParseError> {
             guard
                 data.count == Bands.bandCount
@@ -213,10 +216,10 @@ public struct FormantFilter {
             var offset: Int = 0
             var b: Byte = 0
             
-            var levels = [Level]()
+            var levels = [Int]()
             for _ in 0 ..< Bands.bandCount {
                 b = data.next(&offset)
-                levels.append(Level(Int(b)))
+                levels.append(Int(b))
             }
             
             temp.levels = levels
@@ -224,9 +227,9 @@ public struct FormantFilter {
         }
     }
     
-    public var bias: Depth  // -63(1)~+63(127)
+    public var bias: Int  // -63(1)~+63(127)
     public var mode: Mode  // 0=ENV, 1=LFO
-    public var envelopeDepth: Depth // -63(1)~+63(127)
+    public var envelopeDepth: Int // -63(1)~+63(127)
     public var envelope: Envelope
     public var lfo: LFO
     
@@ -246,14 +249,16 @@ public struct FormantFilter {
 
         var temp = FormantFilter()
         
+        let descriptor = descriptors[.depth]!
+        
         b = data.next(&offset)
-        temp.bias = Depth(Int(b) - 64)
+        temp.bias = Int(b) + descriptor.incomingOffset
         
         b = data.next(&offset)
         temp.mode = Mode(index: Int(b))!
         
         b = data.next(&offset)
-        temp.envelopeDepth = Depth(Int(b) - 64)
+        temp.envelopeDepth = Int(b) + descriptor.incomingOffset
         
         var size = Envelope.dataSize
         switch Envelope.parse(from: data.slice(from: offset, length: size)) {
@@ -287,10 +292,11 @@ extension FormantFilter.Envelope: SystemExclusiveData {
         data.append(contentsOf: decay2.asData())
         data.append(contentsOf: release.asData())
         
+        let descriptor = descriptors[.depth]!
         [
             decayLoop.index,
-            velocityDepth.value + 64,
-            keyScalingDepth.value + 64
+            velocityDepth + descriptor.outgoingOffset,
+            keyScalingDepth + descriptor.outgoingOffset,
         ]
         .forEach {
             data.append(Byte($0))
@@ -306,7 +312,7 @@ extension FormantFilter.Envelope: SystemExclusiveData {
 
 extension FormantFilter.Envelope.Segment: SystemExclusiveData {
     public func asData() -> ByteArray {
-        return ByteArray(arrayLiteral: Byte(rate.value), Byte(level.value + 64))
+        return ByteArray(arrayLiteral: Byte(rate), Byte(level + descriptors[.filterEnvelopeLevel]!.outgoingOffset))
     }
     
     public var dataLength: Int { FormantFilter.Envelope.Segment.dataSize }
@@ -318,10 +324,11 @@ extension FormantFilter: SystemExclusiveData {
     public func asData() -> ByteArray {
         var data = ByteArray()
 
+        let descriptor = descriptors[.depth]!
         [
-            bias.value + 64,
+            bias + descriptor.outgoingOffset,
             mode.index,
-            envelopeDepth.value + 64
+            envelopeDepth + descriptor.outgoingOffset,
         ]
         .forEach {
             data.append(Byte($0))
@@ -340,7 +347,7 @@ extension FormantFilter: SystemExclusiveData {
 
 extension FormantFilter.Bands: SystemExclusiveData {
     public func asData() -> ByteArray {
-        return levels.map { Byte($0.value) }
+        return levels.map { Byte($0) }
     }
 
     public var dataLength: Int { FormantFilter.Bands.dataSize }
@@ -353,9 +360,9 @@ extension FormantFilter.LFO: SystemExclusiveData {
         var data = ByteArray()
         
         [
-            speed.value,
+            speed,
             shape.index,
-            depth.value
+            depth
         ]
         .forEach {
             data.append(Byte($0))
@@ -440,5 +447,40 @@ extension FormantFilter.LFO: CustomStringConvertible {
         s += "Shape: \(self.shape) "
         s += "Depth: \(self.depth)"
         return s
+    }
+}
+
+// MARK: - XML output
+
+extension FormantFilter.LFO {
+    public var xml: String {
+        return "<lfo speed=\"\(speed)\" shape=\"\(shape)\" depth=\"\(depth)\"/>"
+    }
+}
+
+extension FormantFilter.Envelope {
+    public var xml: String {
+"""
+<envelope>
+    <attack>\(self.attack)</attack>
+    <decay1>\(self.decay1)</decay1>
+    <decay2>\(self.decay2)</decay2>
+    <release>\(self.release)</release>
+    \(self.decayLoop.xml)
+    <velocity-depth>\(self.velocityDepth)</velocity-depth>
+    <key-scaling-depth>\(self.keyScalingDepth)</key-scaling-depth>
+</envelope>
+"""
+    }
+}
+
+extension FormantFilter {
+    public var xml: String {
+"""
+<formant-filter bias=\"\(bias)\" mode=\"\(mode)\" envelope-depth=\"\(envelopeDepth)\">
+    \(lfo.xml)
+    \(envelope.xml)
+</formant-filter>
+"""
     }
 }

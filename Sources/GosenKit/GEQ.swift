@@ -6,24 +6,18 @@ import SyxPack
 public struct GEQ {
     public static let bandCount = 7
 
-    public class Level: Integer {
-        override class var minimumValue: Int { -6 }
-        override class var maximumValue: Int { 6 }
-        override class var defaultValue: Int { 0 }
-    }
-
-    public var levels: [Level]  // 58(-6) ~ 70(+6), so 64 is zero
+    public var levels: [Int]  // 58(-6) ~ 70(+6), so 64 is zero
     
     /// Initialize this GEQ with default values.
     public init() {
-        self.levels = [Level](repeating: Level(0), count: GEQ.bandCount)
+        self.levels = [Int](repeating: 0, count: GEQ.bandCount)
     }
     
     /// Initialize this GEQ with integer values.
     public init(levels: [Int]) {
-        self.levels = [Level]()
+        self.levels = [Int]()
         levels.forEach {
-            self.levels.append(GEQ.Level($0))
+            self.levels.append($0)
         }
     }
     
@@ -32,10 +26,10 @@ public struct GEQ {
         var offset: Int = 0
         var b: Byte = 0
         var temp = GEQ()
-        var levels = [Level]()
+        var levels = [Int]()
         for _ in 0..<GEQ.bandCount {
             b = data.next(&offset)
-            let v = Level(Int(b) - 64)  // 58(-6) ~ 70(+6), so 64 is zero
+            let v = Int(b) + descriptors[.geqLevel]!.incomingOffset // 58(-6) ~ 70(+6), so 64 is zero
             //print("GEQ band \(i + 1): \(b) --> \(v)")
             levels.append(v)
         }
@@ -51,8 +45,9 @@ extension GEQ: SystemExclusiveData {
     public func asData() -> ByteArray {
         var data = ByteArray()
         
+        let offset = descriptors[.geqLevel]!.outgoingOffset
         self.levels.forEach {
-            data.append(Byte($0.value + 64)) // 58(-6)~70(+6)
+            data.append(Byte($0 + offset)) // 58(-6)~70(+6)
         }
         
         return data
@@ -62,3 +57,13 @@ extension GEQ: SystemExclusiveData {
     
     public static let dataSize = GEQ.bandCount
 }
+
+// MARK: - XML output
+
+/*
+extension GEQ: XMLRepresentable {
+    public var xml: String {
+        "<geq>\(levels.map(\.xml).joined())</geq>"
+    }
+}
+*/

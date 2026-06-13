@@ -99,7 +99,7 @@ public struct Source {
             }
             
             public var kind: Kind
-            public var value: Pan  // only when kind=.normal
+            public var value: Int  // only when kind=.normal
             
             /// Initializes default pan settings.
             public init() {
@@ -108,7 +108,7 @@ public struct Source {
             }
             
             /// Initializes pan settings from kind and value.
-            public init(kind: Kind, value: Pan) {
+            public init(kind: Kind, value: Int) {
                 self.kind = kind
                 self.value = value
             }
@@ -124,7 +124,7 @@ public struct Source {
                 temp.kind = Kind(index: Int(b))!
                 
                 b = data.next(&offset)
-                temp.value = Pan(Int(b) - 64)
+                temp.value = Int(b) + descriptors[.pan]!.incomingOffset
                 
                 return .success(temp)
             }
@@ -133,12 +133,12 @@ public struct Source {
         public var zone: Zone
         
         public var velocitySwitch: VelocitySwitch
-        public var effectPath: EffectPath
-        public var volume: Volume
-        public var benderPitch: BenderPitch
-        public var benderCutoff: BenderCutoff
+        public var effectPath: Int
+        public var volume: Int
+        public var benderPitch: Int
+        public var benderCutoff: Int
         public var modulation: Modulation
-        public var keyOnDelay: Level
+        public var keyOnDelay: Int
         public var pan: PanSettings
         
         /// Initializes default control settings.
@@ -151,7 +151,7 @@ public struct Source {
             benderCutoff = 0
             modulation = Modulation()
             keyOnDelay = 0
-            pan = PanSettings(kind: .normal, value: Pan(0))
+            pan = PanSettings(kind: .normal, value: 0)
         }
         
         /// Parse the control settings from MIDI System Exclusive data.
@@ -163,9 +163,9 @@ public struct Source {
             var temp = Control()
             
             b = data.next(&offset)
-            let zoneLow = Key(note: MIDINote(Int(b)))
+            let zoneLow = Key(note: Int(b))
             b = data.next(&offset)
-            let zoneHigh = Key(note: MIDINote(Int(b)))
+            let zoneHigh = Key(note: Int(b))
             temp.zone = Zone(low: zoneLow, high: zoneHigh)
             
             b = data.next(&offset)
@@ -177,31 +177,16 @@ public struct Source {
             }
             
             b = data.next(&offset)
-            value = EffectPath.valueFromByte(byte: b, adjuster: EffectPath.incoming)
-            if EffectPath.isValid(value) {
-                temp.effectPath = EffectPath(value)
-            } else {
-                return .failure(.invalidData(value, "Invalid data for EffectPath: \(value))"))
-            }
+            temp.effectPath = Int(b) + descriptors[.effectPath]!.incomingOffset
             
             b = data.next(&offset)
-            value = Volume.valueFromByte(byte: b, adjuster: Volume.incoming)
-            if Volume.isValid(value) {
-                temp.volume = Volume(value)
-            } else {
-                return .failure(.invalidData(value, "Invalid data for Volume: \(value))"))
-            }
+            temp.volume = Int(b)
                         
             b = data.next(&offset)
-            value = BenderPitch.valueFromByte(byte: b, adjuster: BenderPitch.incoming)
-            if BenderPitch.isValid(value) {
-                temp.benderPitch = BenderPitch(value)
-            } else {
-                return .failure(.invalidData(value, "Invalid data for BenderPitch: \(value))"))
-            }
+            temp.benderPitch = Int(b) + descriptors[.benderPitch]!.incomingOffset
             
             b = data.next(&offset)
-            temp.benderCutoff = BenderCutoff(Int(b))
+            temp.benderCutoff = Int(b)
             
             var size = Modulation.dataSize
             switch Modulation.parse(from: data.slice(from: offset, length: size)) {
@@ -212,11 +197,10 @@ public struct Source {
             }
             offset += size
             
-            size = PanSettings.dataSize
             b = data.next(&offset)
-            temp.keyOnDelay = Level(Int(b))
+            temp.keyOnDelay = Int(b)
             
-            switch PanSettings.parse(from: data.slice(from: offset, length: size)) {
+            switch PanSettings.parse(from: data.slice(from: offset, length: PanSettings.dataSize)) {
             case .success(let pan):
                 temp.pan = pan
             case .failure(let error):
@@ -323,7 +307,7 @@ extension Source.Control.PanSettings: SystemExclusiveData {
         var data = ByteArray()
         
         data.append(Byte(kind.index))
-        data.append(Byte(value.value + 64))
+        data.append(Byte(value + descriptors[.pan]!.outgoingOffset))
         
         return data
     }
@@ -338,15 +322,15 @@ extension Source.Control: SystemExclusiveData {
     public func asData() -> ByteArray {
         var data = ByteArray()
         
-        data.append(Byte(zone.low.note.value))
-        data.append(Byte(zone.high.note.value))
+        data.append(Byte(zone.low.note))
+        data.append(Byte(zone.high.note))
         data.append(contentsOf: velocitySwitch.asData())
-        data.append(Byte(effectPath.value - 1))  // adjust to 0~3
-        data.append(Byte(volume.value))
-        data.append(Byte(benderPitch.value + 12))  // adjust -12...+12 to 0...24
-        data.append(Byte(benderCutoff.value))
+        data.append(Byte(effectPath + descriptors[.effectPath]!.outgoingOffset))  // adjust to 0~3
+        data.append(Byte(volume))
+        data.append(Byte(benderPitch + descriptors[.benderPitch]!.outgoingOffset))  // adjust -12...+12 to 0...24
+        data.append(Byte(benderCutoff))
         data.append(contentsOf: modulation.asData())
-        data.append(Byte(keyOnDelay.value))
+        data.append(Byte(keyOnDelay))
         data.append(contentsOf: pan.asData())
 
         return data
@@ -404,9 +388,9 @@ extension Source.Control: CustomStringConvertible {
         var s = ""
         s += "Zone = \(zone.low.name) ... \(zone.high.name)\n"
         s += "Velocity Switch: \(velocitySwitch)\n"
-        s += "Effect Path = \(effectPath.value)\n"
-        s += "Volume = \(volume.value)\n"
-        s += "Bender: pitch = \(benderPitch.value), cutoff = \(benderCutoff.value)\n"
+        s += "Effect Path = \(effectPath)\n"
+        s += "Volume = \(volume)\n"
+        s += "Bender: pitch = \(benderPitch), cutoff = \(benderCutoff)\n"
         s += "Modulation:\n\(modulation)\n"
         s += "Key On Delay = \(keyOnDelay)\n"
         s += "Pan Settings: \(pan)\n"
@@ -429,7 +413,7 @@ extension Source.Control.Modulation: CustomStringConvertible {
 extension Source.Control.PanSettings: CustomStringConvertible {
     public var description: String {
         var s = ""
-        s += "kind=\(kind), value=\(value.value)"
+        s += "kind=\(kind), value=\(value)"
         return s
     }
 }
@@ -448,5 +432,40 @@ extension Source.Control.PanSettings.Kind: CustomStringConvertible {
             result = "Random"
         }
         return result
+    }
+}
+
+// MARK: - XML output
+
+extension Source.Control: XMLRepresentable {
+    public var xml: String {
+        return ""
+    }
+}
+
+extension Source.Control.Modulation: XMLRepresentable {
+    public var xml: String {
+"""
+<control>
+    <pressure>\(self.pressure.xml)</pressure>
+    <wheel>\(self.wheel.xml)</wheel>
+    <expression>\(self.expression.xml)</expression>
+
+</control>
+"""
+    }
+}
+
+extension Source: XMLRepresentable {
+    public var xml: String {
+"""
+<source>
+    <oscillator>\(self.oscillator.xml)</oscillator>
+    <filter>\(self.filter.xml)</filter>
+    <amplifier>\(self.amplifier.xml)</amplifier>
+    <lfo>***TODO: LFO***</lfo>
+    <control>\(self.control.xml)</control>
+</source>
+"""
     }
 }

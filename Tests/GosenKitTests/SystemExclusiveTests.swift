@@ -37,7 +37,7 @@ import ByteKit
 final class SystemExclusiveTests: XCTestCase {
     func testSystemExclusive_header() {
         let header = SystemExclusive.Header(
-            channel: MIDIChannel(1),
+            channel: 1,
             function: SystemExclusive.Function.oneBlockDump,
             substatus1: 0x00,
             substatus2: BankIdentifier.a.rawValue)
@@ -47,7 +47,7 @@ final class SystemExclusiveTests: XCTestCase {
     
     func testSinglePatch_asSystemExclusiveMessage() {
         let single = SinglePatch()
-        let data = single.asSystemExclusiveMessage(channel: MIDIChannel(1), bank: .a)
+        let data = single.asSystemExclusiveMessage(channel: 1, bank: .a)
         
         XCTAssertEqual(data.count, 254 + 6)
     }
@@ -377,7 +377,7 @@ final class SystemExclusiveTests: XCTestCase {
     func testDump_a() {
         switch DumpCommand.parse(from: blockSingleA) {
         case .success(let actual):
-            let expected = DumpCommand(channel: MIDIChannel(1), cardinality: .block, bank: .a, kind: .single, subBytes: ByteArray(repeating: 0x00, count: ToneMap.dataSize))
+            let expected = DumpCommand(channel: 1, cardinality: .block, bank: .a, kind: .single, subBytes: ByteArray(repeating: 0x00, count: ToneMap.dataSize))
             XCTAssertEqual(actual, expected)
         case .failure(let error):
             XCTFail("\(error)")
@@ -387,7 +387,7 @@ final class SystemExclusiveTests: XCTestCase {
     func testDump_b() {
         switch DumpCommand.parse(from: oneSingleA) {
         case .success(let actual):
-            let expected = DumpCommand(channel: MIDIChannel(1), cardinality: .one, bank: .a, kind: .single, subBytes: [0x00])
+            let expected = DumpCommand(channel: 1, cardinality: .one, bank: .a, kind: .single, subBytes: [0x00])
             XCTAssertEqual(actual, expected)
         case .failure(let error):
             XCTFail("\(error)")
@@ -397,7 +397,7 @@ final class SystemExclusiveTests: XCTestCase {
     func testDump_c() {
         switch DumpCommand.parse(from: blockSingleB) {
         case .success(let actual):
-            let expected = DumpCommand(channel: MIDIChannel(1), cardinality: .block, bank: .b, kind: .single, subBytes: [])
+            let expected = DumpCommand(channel: 1, cardinality: .block, bank: .b, kind: .single, subBytes: [])
             XCTAssertEqual(actual, expected)
         case .failure(let error):
             XCTFail("\(error)")
@@ -407,7 +407,7 @@ final class SystemExclusiveTests: XCTestCase {
     func testDump_d() {
         switch DumpCommand.parse(from: oneSingleB) {
         case .success(let actual):
-            let expected = DumpCommand(channel: MIDIChannel(1), cardinality: .one, bank: .b, kind: .single, subBytes: [0x00])
+            let expected = DumpCommand(channel: 1, cardinality: .one, bank: .b, kind: .single, subBytes: [0x00])
             XCTAssertEqual(actual, expected)
         case .failure(let error):
             XCTFail("\(error)")
@@ -417,7 +417,7 @@ final class SystemExclusiveTests: XCTestCase {
     func testDump_e() {
         switch DumpCommand.parse(from: drumKitB) {
         case .success(let actual):
-            let expected = DumpCommand(channel: MIDIChannel(1), cardinality: .one, bank: .none, kind: .drumKit, subBytes: [])
+            let expected = DumpCommand(channel: 1, cardinality: .one, bank: .none, kind: .drumKit, subBytes: [])
             XCTAssertEqual(actual, expected)
         case .failure(let error):
             XCTFail("\(error)")
@@ -427,7 +427,7 @@ final class SystemExclusiveTests: XCTestCase {
     func testDump_f() {
         switch DumpCommand.parse(from: blockDrumInst) {
         case .success(let actual):
-            let expected = DumpCommand(channel: MIDIChannel(1), cardinality: .block, bank: .none, kind: .drumInstrument, subBytes: [])
+            let expected = DumpCommand(channel: 1, cardinality: .block, bank: .none, kind: .drumInstrument, subBytes: [])
             XCTAssertEqual(actual, expected)
         case .failure(let error):
             XCTFail("\(error)")
@@ -437,7 +437,7 @@ final class SystemExclusiveTests: XCTestCase {
     func testDump_g() {
         switch DumpCommand.parse(from: oneDrumInst) {
         case .success(let actual):
-            let expected = DumpCommand(channel: MIDIChannel(1), cardinality: .one, bank: .none, kind: .drumInstrument, subBytes: [0x00])
+            let expected = DumpCommand(channel: 1, cardinality: .one, bank: .none, kind: .drumInstrument, subBytes: [0x00])
             XCTAssertEqual(actual, expected)
         case .failure(let error):
             XCTFail("\(error)")
@@ -447,7 +447,7 @@ final class SystemExclusiveTests: XCTestCase {
     func testDump_h() {
         switch DumpCommand.parse(from: blockCombi) {
         case .success(let actual):
-            let expected = DumpCommand(channel: MIDIChannel(1), cardinality: .block, bank: .multi, kind: .multi, subBytes: [])
+            let expected = DumpCommand(channel: 1, cardinality: .block, bank: .multi, kind: .multi, subBytes: [])
             XCTAssertEqual(actual, expected)
         case .failure(let error):
             XCTFail("\(error)")
@@ -457,7 +457,7 @@ final class SystemExclusiveTests: XCTestCase {
     func testDump_i() {
         switch DumpCommand.parse(from: blockCombi) {
         case .success(let actual):
-            let expected = DumpCommand(channel: MIDIChannel(1), cardinality: .block, bank: .multi, kind: .multi, subBytes: [])
+            let expected = DumpCommand(channel: 1, cardinality: .block, bank: .multi, kind: .multi, subBytes: [])
             XCTAssertEqual(actual, expected)
         case .failure(let error):
             XCTFail("\(error)")
@@ -467,7 +467,7 @@ final class SystemExclusiveTests: XCTestCase {
     func testDump_j() {
         switch DumpCommand.parse(from: blockSingleD) {
         case .success(let actual):
-            let expected = DumpCommand(channel: MIDIChannel(1), cardinality: .block, bank: .d, kind: .single, subBytes: ByteArray(repeating: 0x00, count: ToneMap.dataSize))
+            let expected = DumpCommand(channel: 1, cardinality: .block, bank: .d, kind: .single, subBytes: ByteArray(repeating: 0x00, count: ToneMap.dataSize))
             XCTAssertEqual(actual, expected)
         case .failure(let error):
             XCTFail("\(error)")
@@ -477,7 +477,7 @@ final class SystemExclusiveTests: XCTestCase {
     func testDump_k() {
         switch DumpCommand.parse(from: oneSingleD) {
         case .success(let actual):
-            let expected = DumpCommand(channel: MIDIChannel(1), cardinality: .one, bank: .d, kind: .single, subBytes: [0x00])
+            let expected = DumpCommand(channel: 1, cardinality: .one, bank: .d, kind: .single, subBytes: [0x00])
             XCTAssertEqual(actual, expected)
         case .failure(let error):
             XCTFail("\(error)")
@@ -487,7 +487,7 @@ final class SystemExclusiveTests: XCTestCase {
     func testDump_l() {
         switch DumpCommand.parse(from: blockSingleE) {
         case .success(let actual):
-            let expected = DumpCommand(channel: MIDIChannel(1), cardinality: .block, bank: .e, kind: .single, subBytes: ByteArray(repeating: 0x00, count: ToneMap.dataSize))
+            let expected = DumpCommand(channel: 1, cardinality: .block, bank: .e, kind: .single, subBytes: ByteArray(repeating: 0x00, count: ToneMap.dataSize))
             XCTAssertEqual(actual, expected)
         case .failure(let error):
             XCTFail("\(error)")
@@ -497,7 +497,7 @@ final class SystemExclusiveTests: XCTestCase {
     func testDump_m() {
         switch DumpCommand.parse(from: oneSingleE) {
         case .success(let actual):
-            let expected = DumpCommand(channel: MIDIChannel(1), cardinality: .one, bank: .e, kind: .single, subBytes: [0x00])
+            let expected = DumpCommand(channel: 1, cardinality: .one, bank: .e, kind: .single, subBytes: [0x00])
             XCTAssertEqual(actual, expected)
         case .failure(let error):
             XCTFail("\(error)")
@@ -507,7 +507,7 @@ final class SystemExclusiveTests: XCTestCase {
     func testDump_n() {
         switch DumpCommand.parse(from: blockSingleF) {
         case .success(let actual):
-            let expected = DumpCommand(channel: MIDIChannel(1), cardinality: .block, bank: .f, kind: .single, subBytes: ByteArray(repeating: 0x00, count: ToneMap.dataSize))
+            let expected = DumpCommand(channel: 1, cardinality: .block, bank: .f, kind: .single, subBytes: ByteArray(repeating: 0x00, count: ToneMap.dataSize))
             XCTAssertEqual(actual, expected)
         case .failure(let error):
             XCTFail("\(error)")
@@ -517,7 +517,7 @@ final class SystemExclusiveTests: XCTestCase {
     func testDump_o() {
         switch DumpCommand.parse(from: oneSingleF) {
         case .success(let actual):
-            let expected = DumpCommand(channel: MIDIChannel(1), cardinality: .one, bank: .f, kind: .single, subBytes: [0x00])
+            let expected = DumpCommand(channel: 1, cardinality: .one, bank: .f, kind: .single, subBytes: [0x00])
             XCTAssertEqual(actual, expected)
         case .failure(let error):
             XCTFail("\(error)")

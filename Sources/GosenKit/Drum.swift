@@ -2,16 +2,16 @@ import SyxPack
 import ByteKit
 
 /// Drum wave number (0...285).
-public class DrumWave: Integer {
-    override class var minimumValue: Int { -0 }
-    override class var maximumValue: Int { 285 } // (9 bits)
-    override class var defaultValue: Int { 0 }
-}
-
-extension DrumWave {
+public struct DrumWave {
+    let number: Int
+    
+    public init(number: Int) {
+        self.number = number
+    }
+    
     /// Initialize drum wave number from two bytes.
-    public convenience init(msb: Byte, lsb: Byte) {
-        self.init(DrumWave.fromBytes(msb, lsb)!)
+    public init(msb: Byte, lsb: Byte) {
+        self.number = DrumWave.fromBytes(msb, lsb)!
     }
     
     /// Gets the drum wave number from `msb` and ` lsb`.
@@ -22,17 +22,17 @@ extension DrumWave {
         // Now we should have a 9-bit binary string, convert it to a decimal number.
         // The wave number is zero-based in the SysEx file, but treated as one-based. (0=MUTE)
         let number = Int(waveString, radix: 2)!
-        if Self.isValid(number) {
+        if (0...285).contains(number) {
             return number + 1
         }
         return nil
     }
     
     /// Gets the name of this drum wave.
-    public var name: String { DrumWave.names[self.value] }
+    public var name: String { DrumWave.names[self.number] }
     
     private func asBytes() -> (msb: Byte, lsb: Byte) {
-        let num = self.value - 1  // make wave number zero-based
+        let num = self.number - 1  // make wave number zero-based
         
         // Convert wave kit number to binary string with 9 digits
         // using a String extension (see Helpers.swift).
@@ -325,15 +325,9 @@ extension DrumWave {
 public struct DrumSource {
     /// Pitch envelope for a drum source.
     public struct PitchEnvelope {
-        /// Drum source pitch envelope level (-63...63)
-        public class Level: GosenKit.Depth { }
-
-        /// Drum source pitch envelope time (0...127)
-        public class Time: GosenKit.Level { }
-
-        var startLevel: Level // (-63)1~(+63)127
-        var attackTime: Time // 0~127
-        var levelVelocitySensitivity: Level // (-63)1~(+63)127
+        var startLevel: Int // (-63)1~(+63)127
+        var attackTime: Int // 0~127
+        var levelVelocitySensitivity: Int // (-63)1~(+63)127
         
         /// Initialize a drum source pitch envelope with default values.
         public init() {
@@ -349,11 +343,15 @@ public struct DrumSource {
             
             var temp = PitchEnvelope()
             b = data.next(&offset)
-            temp.startLevel = Level(Int(b) - 64)
+
+            let descriptor = descriptors[.pitchEnvelopeLevel]!
+            temp.startLevel = Int(b) + descriptor.incomingOffset
+            
             b = data.next(&offset)
-            temp.attackTime = Time(Int(b))
+            temp.attackTime = Int(b)
+            
             b = data.next(&offset)
-            temp.levelVelocitySensitivity = Level(Int(b) - 64)
+            temp.levelVelocitySensitivity = Int(b) + descriptor.incomingOffset
             
             return .success(temp)
         }
@@ -361,15 +359,9 @@ public struct DrumSource {
     
     /// Velocity control for drum source DCA.
     public struct VelocityControl {
-        /// Drum source velocity control level (0...63)
-        public class Level: GosenKit.ControlLevel { }
-
-        /// Drum source velocity control time (-63...63)
-        public class Time: GosenKit.ControlDepth { }
-
-        public var level: Level  // 0~63
-        public var attackTime: Time  // (-63)1~(+63)127
-        public var decay1Time: Time  // (-63)1~(+63)127
+        public var level: Int  // 0~63
+        public var attackTime: Int  // (-63)1~(+63)127
+        public var decay1Time: Int  // (-63)1~(+63)127
         
         /// Initalize velocity control settings with default values.
         public init() {
@@ -380,9 +372,9 @@ public struct DrumSource {
         
         /// Initialize velocity control settings.
         public init(level: Int, attackTime: Int, decay1Time: Int) {
-            self.level = Level(level)
-            self.attackTime = Time(attackTime)
-            self.decay1Time = Time(decay1Time)
+            self.level = level
+            self.attackTime = attackTime
+            self.decay1Time = decay1Time
         }
         
         /// Parse velocity control settings from MIDI System Exclusive data.
@@ -393,13 +385,14 @@ public struct DrumSource {
             var temp = VelocityControl()
             
             b = data.next(&offset)
-            temp.level = Level(Int(b))
+            temp.level = Int(b)
+            
+            let descriptor = descriptors[.pitchEnvelopeLevel]!
+            b = data.next(&offset)
+            temp.attackTime = Int(b) + descriptor.incomingOffset
             
             b = data.next(&offset)
-            temp.attackTime = Time(Int(b) - 64)
-            
-            b = data.next(&offset)
-            temp.decay1Time = Time(Int(b) - 64)
+            temp.decay1Time = Int(b) + descriptor.incomingOffset
             
             return .success(temp)
         }
@@ -407,10 +400,10 @@ public struct DrumSource {
     
     /// Amplifier envelope for drum source.
     public struct AmplifierEnvelope {
-        var attackTime: Level   // 0~127
-        var decay1Time: Level   // 0~127
-        var decay1Level: Level  // 0~127
-        var releaseTime: Level  // 0~127
+        var attackTime: Int   // 0~127
+        var decay1Time: Int   // 0~127
+        var decay1Level: Int  // 0~127
+        var releaseTime: Int  // 0~127
         
         /// Initialize drum source amplifier envelope with default values.
         public init() {
@@ -428,26 +421,26 @@ public struct DrumSource {
             var temp = AmplifierEnvelope()
             
             b = data.next(&offset)
-            temp.attackTime = Level(Int(b))
+            temp.attackTime = Int(b)
             b = data.next(&offset)
-            temp.decay1Time = Level(Int(b))
+            temp.decay1Time = Int(b)
             b = data.next(&offset)
-            temp.decay1Level = Level(Int(b))
+            temp.decay1Level = Int(b)
             b = data.next(&offset)
-            temp.releaseTime = Level(Int(b))
+            temp.releaseTime = Int(b)
 
             return .success(temp)
         }
     }
     
-    public var volume: Level  // 0~127
-    public var pan: Pan  // (63L)1 ~ (63R)127
+    public var volume: Int  // 0~127
+    public var pan: Int  // (63L)1 ~ (63R)127
     public var wave: DrumWave  // 0~224
-    public var coarse: Coarse  // (-24)40~(+24)88
-    public var fine: Fine  // (-63)1~(+63)127
+    public var coarse: Int  // (-24)40~(+24)88
+    public var fine: Int  // (-63)1~(+63)127
     public var pitchEnvelope: PitchEnvelope
-    public var filterCutoff: Level  // 0~127
-    public var filterCutoffVelocityDepth: Depth  // (-63)1~(+63)127
+    public var filterCutoff: Int  // 0~127
+    public var filterCutoffVelocityDepth: Int  // (-63)1~(+63)127
     public var amplifierEnvelope: AmplifierEnvelope
     public var amplifierVelocitySensitivity: VelocityControl
     
@@ -455,12 +448,12 @@ public struct DrumSource {
     public init() {
         self.volume = 100
         self.pan = 0
-        self.wave = DrumWave(1)
+        self.wave = DrumWave(number: 1)
         self.coarse = 0
-        self.fine = Fine(0)
+        self.fine = 0
         self.pitchEnvelope = PitchEnvelope()
-        self.filterCutoff = Level(0)
-        self.filterCutoffVelocityDepth = Depth(0)
+        self.filterCutoff = 0
+        self.filterCutoffVelocityDepth = 0
         self.amplifierEnvelope = AmplifierEnvelope()
         self.amplifierVelocitySensitivity = VelocityControl()
     }
@@ -473,10 +466,10 @@ public struct DrumSource {
         var temp = DrumSource()
         
         b = data.next(&offset)
-        temp.volume = Level(Int(b))
+        temp.volume = Int(b)
         
         b = data.next(&offset)
-        temp.pan = Pan(Int(b) - 64)
+        temp.pan = Int(b) + descriptors[.pan]!.incomingOffset
 
         b = data.next(&offset)
         let waveMSB = b
@@ -485,10 +478,10 @@ public struct DrumSource {
         temp.wave = DrumWave(msb: waveMSB, lsb: waveLSB)
 
         b = data.next(&offset)
-        temp.coarse = Coarse(Int(b) - 64)
+        temp.coarse = Int(b) + descriptors[.coarse]!.incomingOffset
         
         b = data.next(&offset)
-        temp.fine = Fine(Int(b) - 64)
+        temp.fine = Int(b) + descriptors[.fine]!.incomingOffset
         
         var size = PitchEnvelope.dataSize
         let pitchEnvData = data.slice(from: offset, length: size)
@@ -501,9 +494,10 @@ public struct DrumSource {
         offset += size
         
         b = data.next(&offset)
-        temp.filterCutoff = Level(Int(b))
+        temp.filterCutoff = Int(b)
+        
         b = data.next(&offset)
-        temp.filterCutoffVelocityDepth = Depth(Int(b) - 64)
+        temp.filterCutoffVelocityDepth = Int(b) + descriptors[.depth]!.incomingOffset
 
         size = AmplifierEnvelope.dataSize
         let ampEnvData = data.slice(from: offset, length: size)
@@ -542,10 +536,10 @@ public struct DrumInstrument {
     
     /// Drum instrument common data.
     public struct Common {
-        public var volume: Level  // 0~127
+        public var volume: Int  // 0~127
         public var gate: Gate
         public var exclusionGroup: ExclusionGroup
-        public var effectPath: EffectPath  // 1~4 (in SysEx 0~3)
+        public var effectPath: Int  // 1~4 (in SysEx 0~3)
         
         /// Initialize drum instrument common data with default values.
         public init() {
@@ -565,7 +559,7 @@ public struct DrumInstrument {
             var temp = Common()
             
             b = data.next(&offset)
-            temp.volume = Level(Int(b))
+            temp.volume = Int(b)
             
             b = data.next(&offset)
             if b == 0x00 {
@@ -580,11 +574,11 @@ public struct DrumInstrument {
                 temp.exclusionGroup = .off
             }
             else {
-                temp.exclusionGroup = .on(Int(b))
+                temp.exclusionGroup = .on(Int(b))  // TODO: Check that group is 1...8
             }
             
             b = data.next(&offset)
-            temp.effectPath = EffectPath(Int(b + 1))  // adjust to 1...4
+            temp.effectPath = Int(b) + descriptors[.effectPath]!.incomingOffset  // adjust to 1...4
             
             b = data.next(&offset)  // src_mute is fixed to 0x01, so don't care
             
@@ -696,7 +690,7 @@ public struct DrumKit {
         public var effects: EffectSettings
         public var geq: GEQ
         public var name: PatchName
-        public var volume: Level
+        public var volume: Int
         public var effectControl: EffectControl
         
         /// Initialize drum kit common settings from default values.
@@ -754,7 +748,7 @@ public struct DrumKit {
 
             print("Next: Drum Kit Common, Volume, offset = \(offset)")
             b = data.next(&offset)
-            temp.volume = Level(Int(b))
+            temp.volume = Int(b)
             
             print("Next: Drum Kit Common, EffectControl, offset = \(offset)")
             size = EffectControl.dataSize
@@ -827,7 +821,7 @@ extension DrumInstrument.Common: SystemExclusiveData {
         var data = ByteArray()
         
         data.append(0)  // dummy
-        data.append(Byte(self.volume.value))
+        data.append(Byte(self.volume))
         
         switch self.gate {
         case .off:
@@ -855,9 +849,10 @@ extension DrumSource.PitchEnvelope {
     public func asData() -> ByteArray {
         var data = ByteArray()
         
-        data.append(Byte(self.startLevel.value + 64))
-        data.append(Byte(self.attackTime.value))
-        data.append(Byte(self.levelVelocitySensitivity.value + 64))
+        let descriptor = descriptors[.pitchEnvelopeLevel]!
+        data.append(Byte(self.startLevel + descriptor.outgoingOffset))
+        data.append(Byte(self.attackTime))
+        data.append(Byte(self.levelVelocitySensitivity + descriptor.outgoingOffset))
         
         return data
     }
@@ -885,14 +880,14 @@ extension DrumSource {
     public func asData() -> ByteArray {
         var data = ByteArray()
 
-        data.append(Byte(self.volume.value))
-        data.append(Byte(self.pan.value))
+        data.append(Byte(self.volume))
+        data.append(Byte(self.pan + descriptors[.pan]!.outgoingOffset))
         data.append(contentsOf: self.wave.asData())
-        data.append(Byte(self.coarse.value + 64))
-        data.append(Byte(self.fine.value + 64))
+        data.append(Byte(self.coarse + descriptors[.coarse]!.outgoingOffset))
+        data.append(Byte(self.fine + descriptors[.fine]!.outgoingOffset))
         data.append(contentsOf: self.pitchEnvelope.asData())
-        data.append(Byte(self.filterCutoff.value))
-        data.append(Byte(self.filterCutoffVelocityDepth.value + 64))
+        data.append(Byte(self.filterCutoff))
+        data.append(Byte(self.filterCutoffVelocityDepth + descriptors[.depth]!.outgoingOffset))
         data.append(contentsOf: self.amplifierEnvelope.asData())
         data.append(contentsOf: self.amplifierVelocitySensitivity.asData())
         
@@ -906,14 +901,15 @@ extension DrumSource {
 
 extension DrumSource.AmplifierEnvelope: SystemExclusiveData {
     public func asData() -> ByteArray {
-        var data = ByteArray()
-        
-        [attackTime, decay1Time, decay1Level, releaseTime]
-        .forEach {
-            data.append(Byte($0.value))
+        [
+            attackTime,
+            decay1Time,
+            decay1Level,
+            releaseTime
+        ]
+        .map {
+            Byte($0)
         }
-
-        return data
     }
     
     public var dataLength: Int { DrumSource.AmplifierEnvelope.dataSize }
@@ -925,9 +921,9 @@ extension DrumSource.VelocityControl: SystemExclusiveData {
     public func asData() -> ByteArray {
         var data = ByteArray()
         
-        data.append(Byte(self.level.value))
-        data.append(Byte(self.attackTime.value + 64))
-        data.append(Byte(self.decay1Time.value + 64))
+        data.append(Byte(self.level))
+        data.append(Byte(self.attackTime + descriptors[.velocityControlTime]!.outgoingOffset))
+        data.append(Byte(self.decay1Time + descriptors[.velocityControlTime]!.outgoingOffset))
         
         return data
     }

@@ -26,8 +26,8 @@ public struct LFO {
 
     /// LFO control settings.
     public struct Control {
-        public var depth: Depth
-        public var keyScaling: Depth
+        public var depth: Int  // -63...63
+        public var keyScaling: Int  // -63...63
         
         /// Initialize the LFO control settings with default values.
         public init() {
@@ -36,7 +36,7 @@ public struct LFO {
         }
         
         /// Initialize the LFO control settings from given values.
-        public init(depth: Depth, keyScaling: Depth) {
+        public init(depth: Int, keyScaling: Int) {
             self.depth = depth
             self.keyScaling = keyScaling
         }
@@ -45,24 +45,25 @@ public struct LFO {
         public static func parse(from data: ByteArray) -> Result<Control, ParseError> {
             var offset: Int = 0
             var b: Byte = 0
+            var descriptor = descriptors[.depth]!
 
             var temp = Control()
             
             b = data.next(&offset)
-            temp.depth = Depth(Int(b))
+            temp.depth = Int(b) + descriptor.incomingOffset
 
             b = data.next(&offset)
-            temp.keyScaling = Depth(Int(b) - 64)
+            temp.keyScaling = Int(b) + descriptor.incomingOffset
 
             return .success(temp)
         }
     }
     
     public var waveform: Waveform
-    public var speed: Level
-    public var fadeInTime: Level
-    public var fadeInToSpeed: Depth
-    public var delayOnset: Level
+    public var speed: Int   // 0...127
+    public var fadeInTime: Int  // 0...127
+    public var fadeInToSpeed: Int  // -63...63
+    public var delayOnset: Int  // 0...127
     
     public var vibrato: Control
     public var growl: Control
@@ -93,16 +94,17 @@ public struct LFO {
         temp.waveform = Waveform(index: Int(b))!
         
         b = data.next(&offset)
-        temp.speed = Level(Int(b))
+        temp.speed = Int(b)
         
         b = data.next(&offset)
-        temp.delayOnset = Level(Int(b))
+        temp.delayOnset = Int(b)
 
         b = data.next(&offset)
-        temp.fadeInTime = Level(Int(b))
+        temp.fadeInTime = Int(b)
 
         b = data.next(&offset)
-        temp.fadeInToSpeed = Depth(Int(b))
+        let descriptor = descriptors[.depth]!
+        temp.fadeInToSpeed = Int(b) + descriptor.incomingOffset
 
         let size = Control.dataSize
         switch Control.parse(from: data.slice(from: offset, length: size)) {
@@ -137,14 +139,16 @@ public struct LFO {
 
 extension LFO: SystemExclusiveData {
     public func asData() -> ByteArray {
+        let descriptor = descriptors[.depth]!
+
         var data = ByteArray()
         
         [
             waveform.index,
-            speed.value,
-            delayOnset.value,
-            fadeInTime.value,
-            fadeInToSpeed.value
+            speed,
+            delayOnset,
+            fadeInTime,
+            fadeInToSpeed + descriptor.outgoingOffset
         ]
         .forEach {
             data.append(Byte($0))
@@ -169,7 +173,7 @@ extension LFO: SystemExclusiveData {
 
 extension LFO.Control: SystemExclusiveData {
     public func asData() -> ByteArray {
-        return ByteArray(arrayLiteral: Byte(depth.value), Byte(keyScaling.value + 64))
+        return ByteArray(arrayLiteral: Byte(depth), Byte(keyScaling + descriptors[.keyScalingControl]!.outgoingOffset))
     }
 
     public var dataLength: Int { LFO.Control.dataSize }
@@ -182,7 +186,7 @@ extension LFO.Control: SystemExclusiveData {
 extension LFO: CustomStringConvertible {
     public var description: String {
         var result = ""
-        result += "Waveform=\(self.waveform) Speed=\(self.speed.value) FadeInTime=\(self.fadeInTime.value) FadeInToSpeed=\(self.fadeInToSpeed.value) DelayOnset=\(self.delayOnset.value)\n"
+        result += "Waveform=\(self.waveform) Speed=\(self.speed) FadeInTime=\(self.fadeInTime) FadeInToSpeed=\(self.fadeInToSpeed) DelayOnset=\(self.delayOnset)\n"
         result += "Vibrato: \(self.vibrato)\nGrowl: \(self.growl)\nTremolo: \(self.tremolo)"
         return result
     }
@@ -210,7 +214,7 @@ extension LFO.Waveform: CustomStringConvertible {
 extension LFO.Control: CustomStringConvertible {
     public var description: String {
         var result = ""
-        result += "Depth=\(self.depth.value) KeyScaling=\(self.keyScaling.value)"
+        result += "Depth=\(self.depth) KeyScaling=\(self.keyScaling)"
         return result
     }
 }

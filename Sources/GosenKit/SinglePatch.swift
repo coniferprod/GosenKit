@@ -53,13 +53,13 @@ public struct SinglePatch {
     /// Portamento setting.
     public enum Portamento {
         case off
-        case on(speed: Level)
+        case on(speed: Int)
     }
     
     /// Single patch common settings.
     public struct Common {
         public var name: PatchName
-        public var volume: Volume
+        public var volume: Int
         public var polyphony: Polyphony
         public var sourceCount: Int
         public var sourceMutes: [Bool]
@@ -77,7 +77,7 @@ public struct SinglePatch {
         /// Initializes the common part with default values.
         public init() {
             name = PatchName("NewSound")
-            volume = 115  // conforms to ExpressibleByIntegerLiteral
+            volume = 115
             polyphony = .poly
             
             sourceCount = 2
@@ -98,7 +98,7 @@ public struct SinglePatch {
             effectControl = EffectControl()
         }
         
-        /// Parse from binary data.
+        /// Parse source common settings from binary data.
         public static func parse(from data: ByteArray) -> Result<Common, ParseError> {
             var offset: Int = 0
             var b: Byte = 0
@@ -137,7 +137,7 @@ public struct SinglePatch {
             offset += size
             
             b = data.next(&offset)
-            temp.volume = Volume(Int(b))
+            temp.volume = Int(b)
             
             b = data.next(&offset)
             temp.polyphony = Polyphony(index: Int(b))!
@@ -178,7 +178,7 @@ public struct SinglePatch {
             b = data.next(&offset)
             let portamentoSpeed = Int(b)
 
-            temp.portamento = isPortamentoActive ? .on(speed: Level(portamentoSpeed)) : .off
+            temp.portamento = isPortamentoActive ? .on(speed: portamentoSpeed) : .off
             
             var macroDestinations = [Int]()
             for _ in 0..<8 {
@@ -239,7 +239,7 @@ public struct SinglePatch {
         additiveKits = AdditiveKitDictionary()
     }
     
-    /// Parse the SinglePatch from MIDI System Exclusive data.
+    /// Parse the single patch from MIDI System Exclusive data.
     public static func parse(from data: ByteArray) -> Result<SinglePatch, ParseError> {
         var offset: Int = 0
         
@@ -291,7 +291,7 @@ public struct SinglePatch {
     /// Generates a MIDI System Exclusive message from this patch.
     /// - Parameter channel: the MIDI channel to use
     /// - Parameter bank: the K5000 bank identifier
-    public func asSystemExclusiveMessage(channel: MIDIChannel, bank: BankIdentifier) -> ByteArray {
+    public func asSystemExclusiveMessage(channel: Int, bank: BankIdentifier) -> ByteArray {
         var data = ByteArray()
         
         let header = SystemExclusive.Header(
@@ -378,7 +378,9 @@ extension SinglePatch: SystemExclusiveData {
 
     /// The length of single patch System Exclusive data.
     public var dataLength: Int {
-        1 + Common.dataSize + self.sources.count * Source.dataSize
+        1
+        + Common.dataSize
+        + self.sources.count * Source.dataSize
     }
 }
 
@@ -388,14 +390,18 @@ extension SinglePatch.Common: SystemExclusiveData {
     public func asData() -> ByteArray {
         var data = ByteArray()
         
-        // The MIDI System Exclusive specification determines the order and format.
-        
         data.append(contentsOf: effects.asData())
         data.append(contentsOf: geq.asData())
         data.append(0)  // drum_mark
         data.append(contentsOf: name.asData())
 
-        [volume.value, polyphony.index, 0, sourceCount].forEach {
+        [
+            volume,
+            polyphony.index,
+            0,
+            sourceCount
+        ]
+        .forEach {
             data.append(Byte($0))
         }
         
@@ -413,7 +419,7 @@ extension SinglePatch.Common: SystemExclusiveData {
         switch portamento {
         case .on(let speed):
             data.append(1)
-            data.append(Byte(speed.value))
+            data.append(Byte(speed))
         case .off:
             data.append(0)
             data.append(0)
@@ -426,9 +432,11 @@ extension SinglePatch.Common: SystemExclusiveData {
             data.append(Byte(macro.destination2.index))
         }
 
+        let descriptor = descriptors[.controlDepth]!
+        
         for macro in macros {
-            data.append(Byte(macro.depth1.value + 64))  // -31(33)~+31(95)
-            data.append(Byte(macro.depth2.value + 64))  // -31(33)~+31(95)
+            data.append(Byte(macro.depth1 + descriptor.outgoingOffset))  // -31(33)~+31(95)
+            data.append(Byte(macro.depth2 + descriptor.outgoingOffset))  // -31(33)~+31(95)
         }
         
         data.append(contentsOf: switches.asData())
@@ -473,12 +481,12 @@ extension SinglePatch.Common: CustomStringConvertible {
     /// Printable description of the patch common settings.
     public var description: String {
         var s = ""
-        s += "Name = '\(name.value)' Volume = \(volume.value) Polyphony = \(polyphony)\n"
+        s += "Name = '\(name.value)' Volume = \(volume) Polyphony = \(polyphony)\n"
         
         s += "Portamento: "
         switch portamento {
         case .on(let speed):
-            s += "ON, speed \(speed.value)"
+            s += "ON, speed \(speed)"
         case .off:
             s += "OFF"
         }
@@ -488,7 +496,7 @@ extension SinglePatch.Common: CustomStringConvertible {
         
         s += "GEQ: "
         for band in geq.levels {
-            s += "\(band.value) "
+            s += "\(band) "
         }
         s += "\n"
         
@@ -532,5 +540,23 @@ extension SinglePatch.AmplitudeModulation: CustomStringConvertible {
         case .source6:
             return "5->6"
         }
+    }
+}
+
+// MARK: - XML output
+
+extension SinglePatch.Common: XMLRepresentable {
+    public var xml: String {
+        "<common name=\"\(self.name.value)\" volume=\"\(self.volume)\" polyphony-mode=\"\(self.polyphony.rawValue)\" portamento=\"\(self.portamento)\" amplitude-modulation=\"\(self.amplitudeModulation.rawValue)\">***TODO: GEQ***</common>"
+    }
+}
+
+extension SinglePatch: XMLRepresentable {
+    public var xml: String {
+"""
+<single>
+    \(self.common.xml)
+</single>
+"""
     }
 }

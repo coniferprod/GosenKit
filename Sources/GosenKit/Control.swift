@@ -2,15 +2,20 @@ import Foundation
 
 import SyxPack
 import ByteKit
+import CaseAnything
 
 
 /// Velocity switch settings.
 public struct VelocitySwitch: Codable {
-    // On the synth, the threshold value goes from 4 to 127 in steps of four! (last step is from 124 to 127)
-    // So as the SysEx spec says, the value of 0 means 4, 1 means 8, and so on... and 31 means 127.
-    // I guess that 30 must mean 124 then. So the actual value in the SysEx should be 0...31, but it should be
-    // translated on input from 0...31 to 4...127, and on output from 4...127 to 0...31 again.
+    // On the synth, the threshold value goes from 4 to 127 in steps of four!
+    // (Last step is from 124 to 127.)
+    // So as the SysEx spec says, the value of 0 means 4, 1 means 8, and so on...
+    // and 31 means 127.
+    // I guess that 30 must mean 124 then. So the actual value in the SysEx
+    // should be 0...31, but it should be translated on input from 0...31 to 4...127,
+    // and on output from 4...127 to 0...31 again.
 
+    /// Velocity switch kind.
     public enum Kind: String, Codable, CaseIterable {
         case off
         case loud
@@ -112,9 +117,9 @@ public enum ControlDestination: String, Codable, CaseIterable {
 
 public struct MacroController {
     public var destination1: ControlDestination
-    public var depth1: ControlDepth
+    public var depth1: Int // -31...31
     public var destination2: ControlDestination
-    public var depth2: ControlDepth
+    public var depth2: Int // -31...31
     
     public init() {
         destination1 = .cutoffOffset
@@ -129,39 +134,30 @@ public struct MacroController {
         destination2: ControlDestination,
         depth2: Int) {
         self.destination1 = destination1
-        self.depth1 = ControlDepth(depth1)
+        self.depth1 = depth1
         self.destination2 = destination2
-        self.depth2 = ControlDepth(depth2)
+        self.depth2 = depth2
     }
     
     public static func parse(from data: ByteArray) -> Result<MacroController, ParseError> {
         var offset: Int = 0
         var b: Byte = 0
-        var value: Int = 0
         
         var temp = MacroController()  // initialize with defaults, then fill in
         
         b = data.next(&offset)
         temp.destination1 = ControlDestination(index: Int(b))!
 
-        b = data.next(&offset)
-        value = ControlDepth.valueFromByte(byte: b, adjuster: ControlDepth.incoming)
-        if ControlDepth.isValid(value) {
-            temp.depth1 = ControlDepth(value)
-        } else {
-            return .failure(.invalidData(value, "Invalid data for ControlDepth: \(value))"))
-        }
+        let descriptor = descriptors[.controlDepth]!
 
+        b = data.next(&offset)
+        temp.depth1 = Int(b) + descriptor.incomingOffset
+        
         b = data.next(&offset)
         temp.destination2 = ControlDestination(index: Int(b))!
 
         b = data.next(&offset)
-        value = ControlDepth.valueFromByte(byte: b, adjuster: ControlDepth.incoming)
-        if ControlDepth.isValid(value) {
-            temp.depth2 = ControlDepth(value)
-        } else {
-            return .failure(.invalidData(value, "Invalid data for ControlDepth: \(value))"))
-        }
+        temp.depth2 = Int(b) + descriptor.outgoingOffset
 
         return .success(temp)
     }
@@ -301,7 +297,7 @@ public struct EffectControl {
     public struct Source {
         public var source: ControlSource
         public var destination: EffectDestination
-        public var depth: ControlDepth
+        public var depth: Int  // -31...31
         
         public init() {
             source = .bender
@@ -312,7 +308,6 @@ public struct EffectControl {
         public static func parse(from data: ByteArray) -> Result<Source, ParseError> {
             var offset: Int = 0
             var b: Byte = 0
-            var value: Int = 0
 
             var temp = Source()  // initialize with defaults, then fill in
             
@@ -325,13 +320,8 @@ public struct EffectControl {
             b = data.next(&offset)
             
             // Control depth is -31..0..+31, in SysEx 33..64..95.
-            
-            value = ControlDepth.valueFromByte(byte: b, adjuster: ControlDepth.incoming)
-            if ControlDepth.isValid(value) {
-                temp.depth = ControlDepth(value)
-            } else {
-                return .failure(.invalidData(value, "Invalid data for ControlDepth: \(value))"))
-            }
+            let descriptor = descriptors[.controlDepth]!
+            temp.depth = Int(b) + descriptor.incomingOffset
 
             return .success(temp)
         }
@@ -373,7 +363,7 @@ public struct EffectControl {
 public struct AssignableController {
     public var source: ControlSource
     public var destination: ControlDestination
-    public var depth: ControlDepth
+    public var depth: Int  // -31...31
     
     public init() {
         source = .bender
@@ -394,7 +384,8 @@ public struct AssignableController {
         temp.destination = ControlDestination(index: Int(b))!
         
         b = data.next(&offset)
-        temp.depth = ControlDepth(Int(b) - 64)
+        let descriptor = descriptors[.controlDepth]!
+        temp.depth = Int(b) + descriptor.incomingOffset
 
         return .success(temp)
     }
@@ -404,17 +395,13 @@ public struct AssignableController {
 
 extension MacroController: SystemExclusiveData {
     public func asData() -> ByteArray {
-        var data = ByteArray()
-        [
-            destination1.index,
-            depth1.value + 64,
-            destination2.index,
-            depth2.value + 64
-        ]
-        .forEach {
-            data.append(Byte($0))
-        }
-        return data
+        let descriptor = descriptors[.controlDepth]!
+        return [
+            self.destination1.index,
+            self.depth1 + descriptor.outgoingOffset,
+            self.destination2.index,
+            self.depth2 + descriptor.outgoingOffset,
+        ].map { Byte($0) }
     }
 
     public var dataLength: Int { MacroController.dataSize }
@@ -437,16 +424,11 @@ extension VelocitySwitch: SystemExclusiveData {
 
 extension EffectControl.Source: SystemExclusiveData {
     public func asData() -> ByteArray {
-        var data = ByteArray()
         [
-            source.index,
-            destination.index,
-            depth.value + 64
+            Byte(source.index),
+            Byte(destination.index),
+            Byte(depth + descriptors[.controlDepth]!.outgoingOffset),
         ]
-        .forEach {
-            data.append(Byte($0))
-        }
-        return data
     }
     
     public var dataLength: Int { EffectControl.Source.dataSize }
@@ -456,16 +438,11 @@ extension EffectControl.Source: SystemExclusiveData {
 
 extension AssignableController: SystemExclusiveData {
     public func asData() -> ByteArray {
-        var data = ByteArray()
         [
-            source.index,
-            destination.index,
-            depth.value
+            Byte(source.index),
+            Byte(destination.index),
+            Byte(depth + descriptors[.controlDepth]!.outgoingOffset),
         ]
-        .forEach {
-            data.append(Byte($0))
-        }
-        return data
     }
     
     public var dataLength: Int { AssignableController.dataSize }
@@ -490,17 +467,15 @@ extension EffectControl: SystemExclusiveData {
 
 extension SwitchControl: SystemExclusiveData {
     public func asData() -> ByteArray {
-        var data = ByteArray()
         [
             switch1.index,
             switch2.index,
             footSwitch1.index,
             footSwitch2.index
         ]
-        .forEach {
-            data.append(Byte($0))
+        .map {
+            Byte($0)
         }
-        return data
     }
     
     public var dataLength: Int { 4 }
@@ -540,8 +515,8 @@ extension EffectControl: CustomStringConvertible {
 extension MacroController: CustomStringConvertible {
     public var description: String {
         var s = ""
-        s += "  destination1=\(destination1), depth=\(depth1.value)\n"
-        s += "  destination2=\(destination2), depth=\(depth2.value)"
+        s += "  destination1=\(destination1), depth=\(depth1)\n"
+        s += "  destination2=\(destination2), depth=\(depth2)"
         return s
     }
 }
@@ -709,5 +684,44 @@ extension SwitchControl.Kind: CustomStringConvertible {
             result = "DHF COMB2"
         }
         return result
+    }
+}
+
+// MARK: - XML output
+
+extension ControlSource: XMLRepresentable {
+    public var xml: String {
+        kebabCase("\(self.rawValue)")
+    }
+}
+
+extension ControlDestination: XMLRepresentable {
+    public var xml: String {
+        kebabCase(self.rawValue)
+    }
+}
+
+extension AssignableController: XMLRepresentable {
+    public var xml: String {
+"""
+<assignable-controller>
+    <source>\(self.source.xml)</source>
+    <destination>\(self.destination.xml)</destination>
+    <depth>\(self.depth)</depth>
+</assignable-controller>
+"""
+    }
+}
+
+extension MacroController: XMLRepresentable {
+    public var xml: String {
+"""
+<macro-controller>
+    <destination1>\(self.destination1.xml)</destination1>
+    <depth1>\(self.depth1)</depth1>
+    <destination2>\(self.destination2.xml)</destination2>
+    <depth2>\(self.depth2)</depth2>
+</macro-controller>
+"""
     }
 }

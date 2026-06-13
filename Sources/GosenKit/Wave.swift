@@ -2,9 +2,9 @@ import SyxPack
 import ByteKit
 
 /// Wave for PCM sources, with special case for additive.
-public enum Wave {
+public enum Wave: Codable {
     case additive
-    case pcm(WaveNumber)
+    case pcm(Int)
     
     private static let additiveWaveNumber: Int = 512
     
@@ -19,7 +19,7 @@ public enum Wave {
             if number == Wave.additiveWaveNumber {
                 return .success(.additive)
             }
-            return .success(.pcm(WaveNumber(number + 1)))
+            return .success(.pcm(number + 1))
         }
         return .failure(.invalidData(0, "Invalid wave number bytes \(msb.toHexString()) \(lsb.toHexString())"))
     }
@@ -30,7 +30,7 @@ public enum Wave {
         case .additive:
             return "ADD"
         case .pcm(let number):
-            return Wave.names[number.value]
+            return Wave.names[number]
         }
     }
     
@@ -39,7 +39,7 @@ public enum Wave {
         case .additive:
             return Wave.additiveWaveNumber
         case .pcm(let number):
-            return number.value
+            return number
         }
     }
 
@@ -49,7 +49,7 @@ public enum Wave {
         case .additive:
             num = Wave.additiveWaveNumber
         case .pcm(let number):
-            num = number.value - 1  // adjust to 0~463
+            num = number - 1  // adjust to 0~463
         }
         
         // Convert wave kit number to binary string with 10 digits
@@ -562,7 +562,7 @@ public func == (lhs: Wave, rhs: Wave) -> Bool {
     case (.additive, .additive):
         return true
     case (.pcm(let lhsNumber), .pcm(let rhsNumber)):
-        return lhsNumber.value == rhsNumber.value
+        return lhsNumber == rhsNumber
     default:
         return false
     }
@@ -595,7 +595,7 @@ extension Wave: CustomStringConvertible {
         case .additive:
             return "ADD"
         case .pcm(let number):
-            return "\(number.value) \(self.name)"
+            return "\(number) \(self.name)"
         }
     }
 }

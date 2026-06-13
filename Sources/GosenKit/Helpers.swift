@@ -92,17 +92,17 @@ public struct Key {
     private var noteNames = ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"]
     private var octave = Octave.yamaha  // K5000 uses the Yamaha convention (Middle C = C3)
     
-    public var note: MIDINote
+    public var note: Int  // 0...127
     
     /// Gets the note name of this key.
     public var name: String {
-        let octave = self.note.value / 12 + self.octave.rawValue
-        let name = self.noteNames[self.note.value % 12]
+        let octave = self.note / 12 + self.octave.rawValue
+        let name = self.noteNames[self.note % 12]
         return "\(name)\(octave)"
     }
     
     /// Initialize this key with a MIDI note.
-    public init(note: MIDINote) {
+    public init(note: Int) {
         self.note = note
     }
     
@@ -137,10 +137,10 @@ public struct Key {
         }
 
         if let octave = Int(octavePart), let noteIndex = self.noteNames.firstIndex(where: { $0 == notePart }) {
-            self.note = MIDINote((octave - self.octave.rawValue) * 12 + noteIndex)
+            self.note = (octave - self.octave.rawValue) * 12 + noteIndex
         }
         else {
-            self.note = MIDINote(0)
+            self.note = 0
         }
     }
 }

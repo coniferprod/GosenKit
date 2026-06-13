@@ -11,12 +11,30 @@
         }
       },
       {
+        "package": "CaseAnything",
+        "repositoryURL": "https://github.com/mesqueeb/CaseAnything",
+        "state": {
+          "branch": null,
+          "revision": "705f90ad63884871a264009a0544001d63134461",
+          "version": "0.1.8"
+        }
+      },
+      {
         "package": "SyxPack",
         "repositoryURL": "https://github.com/coniferprod/SyxPack",
         "state": {
           "branch": null,
           "revision": "1b1edcf9cf3945fca4052bb68fa43bc7dbe165b4",
           "version": "0.12.3"
+        }
+      },
+      {
+        "package": "XMLCoder",
+        "repositoryURL": "https://github.com/CoreOffice/XMLCoder.git",
+        "state": {
+          "branch": null,
+          "revision": "42f62383dbcd074440cb1f6a750b9c02df9e7325",
+          "version": "0.18.2"
         }
       }
     ]

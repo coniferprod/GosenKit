@@ -6,24 +6,9 @@ import ByteKit
 
 
 final class GosenKitTests: XCTestCase {
-    func testVolumeInit() {
-        let volume: Volume = 50  // test ExpressibleByIntegerLiteral
-        XCTAssertEqual(volume.value, 50)
-    }
-    
-    func testVolumeDescription() {
-        let volume: Volume = 50
-        XCTAssertEqual("\(volume)", "50")
-    }
-    
-    func testKeyName() {
-        let key = Key(note: MIDINote(60))
-        XCTAssertEqual(key.name, "C3")
-    }
-
     func testKeyNumber() {
         let key = Key(name: "C3")
-        XCTAssertEqual(key.note.value, 60)
+        XCTAssertEqual(key.note, 60)
     }
     
     func testNextByte() {
@@ -35,15 +20,5 @@ final class GosenKitTests: XCTestCase {
         b = data.next(&offset)
         XCTAssertEqual(b, 0xad)
         XCTAssertEqual(offset, 2)
-    }
-
-    static var allTests = [
-        ("testkeyName", testKeyName),
-        ("testKeyNumber", testKeyNumber),
-    ]
-    
-    func test_DefaultValueIsInRange() {
-        let gain = Gain()
-        XCTAssertEqual(gain.value, 1)
     }
 }

@@ -8,7 +8,7 @@ public enum SystemExclusive {
     
     /// System Exclusive header.
     public struct Header {
-        public var channel: MIDIChannel
+        public var channel: Int // 1...16
         public var function: Function
         public var substatus1: Byte
         public var substatus2: Byte
@@ -153,7 +153,7 @@ public enum PatchKind: Byte, CaseIterable, CustomStringConvertible {
 /// Dump command header for various patch types.
 public struct DumpCommand {
     /// MIDI channel (1...16)
-    public var channel: MIDIChannel
+    public var channel: Int
     
     /// Cardinality of the patch
     public var cardinality: Cardinality
@@ -169,12 +169,12 @@ public struct DumpCommand {
     
     /// Initialize a default dump command
     public init() {
-        self.init(channel: MIDIChannel(1), cardinality: .one, bank: .a, kind: .single)
+        self.init(channel: 1, cardinality: .one, bank: .a, kind: .single)
     }
     
     /// Initialize a dump command with all values. 
     /// The sub-bytes array can be, and defaults to, empty.
-    public init(channel: MIDIChannel, cardinality: Cardinality, bank: BankIdentifier, kind: PatchKind, subBytes: ByteArray = []) {
+    public init(channel: Int, cardinality: Cardinality, bank: BankIdentifier, kind: PatchKind, subBytes: ByteArray = []) {
         self.channel = channel
         self.cardinality = cardinality
         self.bank = bank
@@ -184,8 +184,9 @@ public struct DumpCommand {
     
     /// Parse the dump command from MIDI System Exclusive data.
     public static func parse(from data: ByteArray) -> Result<DumpCommand, ParseError> {
+        let channel = Int(data[0]) + descriptors[.midiChannel]!.incomingOffset
         guard
-            MIDIChannel.isValid(Int(data[0] + 1))
+            (1...16).contains(channel)
         else {
             return .failure(.invalidData(0, "Invalid MIDI channel byte: \(data[0].toHexString())H"))
         }
@@ -228,7 +229,7 @@ public struct DumpCommand {
         var dumpCommand = DumpCommand()
         
         // We have already checked that the MIDI channel is good.
-        dumpCommand.channel = MIDIChannel(Int(data[0]) + 1)
+        dumpCommand.channel = channel
         
         // We have already checked that the cardinality byte is valid,
         // so we can instantiate the enum and force unwrap.
@@ -359,7 +360,7 @@ extension DumpCommand: Equatable {
 
 public struct ParameterChange {
     /// MIDI channel (1...16)
-    public var channel: MIDIChannel
+    public var channel: Int
     
     // Function is always 0x10 for parameter send
     
@@ -377,7 +378,7 @@ public struct ParameterChange {
 extension SystemExclusive.Header: SystemExclusiveData {
     public func asData() -> ByteArray {
         return [
-            Byte(channel.value - 1),
+            Byte(channel + descriptors[.midiChannel]!.outgoingOffset),
             function.rawValue,
             SystemExclusive.groupIdentifier,
             SystemExclusive.machineIdentifier,
@@ -392,7 +393,7 @@ extension SystemExclusive.Header: SystemExclusiveData {
 extension DumpCommand: SystemExclusiveData {
     private func collectData() -> ByteArray {
         var result: ByteArray = [
-            Byte(self.channel.value - 1),   // adjust 1~16 to 0~15
+            Byte(self.channel + descriptors[.midiChannel]!.outgoingOffset),   // adjust 1~16 to 0~15
             self.cardinality.rawValue,  // either 0x20 or 0x21
             SystemExclusive.groupIdentifier,
             SystemExclusive.machineIdentifier,
@@ -425,7 +426,7 @@ extension DumpCommand: SystemExclusiveData {
 extension ParameterChange: SystemExclusiveData {
     public func asData() -> ByteArray {
         return [
-            Byte(self.channel.value - 1),   // adjust 1~16 to 0~15
+            Byte(self.channel + descriptors[.midiChannel]!.outgoingOffset),   // adjust 1~16 to 0~15
             SystemExclusive.Function.parameterSend.rawValue,
             SystemExclusive.groupIdentifier,
             SystemExclusive.machineIdentifier,
@@ -442,7 +443,7 @@ extension SystemExclusive.Header: CustomStringConvertible {
     /// Provides a printable description for this header.
     public var description: String {
         var s = ""
-        s += "Channel = \(self.channel.value), function = \(self.function) etc."
+        s += "Channel = \(self.channel), function = \(self.function) etc."
         return s
     }
 }

@@ -175,20 +175,20 @@ public struct EffectDefinition {
     ]
 
     public var kind: Kind  // reverb = 0...10, other effects = 11...47
-    public var depth: EffectDepth  // 0~100  // reverb dry/wet1 = depth
-    public var parameter1: Level  // all parameters are 0~127, except reverb param1 = 0~100
-    public var parameter2: Level
-    public var parameter3: Level
-    public var parameter4: Level
+    public var depth: Int  // 0~100  // reverb dry/wet1 = depth
+    public var parameter1: Int  // all parameters are 0~127, except reverb param1 = 0~100
+    public var parameter2: Int
+    public var parameter3: Int
+    public var parameter4: Int
     
     /// Initializes the effect definition with default values.
     public init() {
         kind = .room1
-        depth = EffectDepth(0)
-        parameter1 = Level(0)
-        parameter2 = Level(0)
-        parameter3 = Level(0)
-        parameter4 = Level(0)
+        depth = 0
+        parameter1 = 0
+        parameter2 = 0
+        parameter3 = 0
+        parameter4 = 0
     }
     
     /// Parse the effect definition from MIDI System Exclusive data.
@@ -202,34 +202,27 @@ public struct EffectDefinition {
         temp.kind = Kind(index: Int(b))!
 
         b = data.next(&offset)
-        temp.depth = EffectDepth(Int(b))
+        temp.depth = Int(b)
 
         b = data.next(&offset)
-        temp.parameter1 = Level(Int(b))
+        temp.parameter1 = Int(b)
 
         b = data.next(&offset)
-        temp.parameter2 = Level(Int(b))
+        temp.parameter2 = Int(b)
 
         b = data.next(&offset)
-        temp.parameter3 = Level(Int(b))
+        temp.parameter3 = Int(b)
 
         b = data.next(&offset)
-        temp.parameter4 = Level(Int(b))
+        temp.parameter4 = Int(b)
         
         return .success(temp)
     }
 }
 
-/// Effect algorithm (1...4, default 1)
-public class EffectAlgorithm: Integer {
-    override class var minimumValue: Int { 1 }
-    override class var maximumValue: Int { 4 }
-    override class var defaultValue: Int { 1 }
-}
-
 /// Represents the effect settings for a patch.
 public struct EffectSettings {
-    public var algorithm: EffectAlgorithm  // 1...4
+    public var algorithm: Int  // 1...4
     public var reverb: EffectDefinition
     public var effect1: EffectDefinition
     public var effect2: EffectDefinition
@@ -254,7 +247,7 @@ public struct EffectSettings {
         var temp = EffectSettings()  // initialize with defaults, then fill in
         
         b = data.next(&offset)
-        temp.algorithm = EffectAlgorithm(Int(b + 1))  // adjust 0~3 to 1~4
+        temp.algorithm = Int(b) + descriptors[.effectAlgorithm]!.incomingOffset  // adjust 0~3 to 1~4
         
         let size = EffectDefinition.dataSize
         switch EffectDefinition.parse(from: data.slice(from: offset, length: size)) {
@@ -305,21 +298,17 @@ public struct EffectSettings {
 extension EffectDefinition: SystemExclusiveData {
     /// Gets the effect definition as MIDI System Exclusive data bytes.
     public func asData() -> ByteArray {
-        var data = ByteArray()
-        
         [
             kind.index, 
-            depth.value,
-            parameter1.value, 
-            parameter2.value,
-            parameter3.value,
-            parameter4.value
+            depth,
+            parameter1,
+            parameter2,
+            parameter3,
+            parameter4
         ]
-        .forEach {
-            data.append(Byte($0))
+        .map {
+            Byte($0)
         }
-
-        return data
     }
     
     /// Number of MIDI System Exclusive bytes.
@@ -333,7 +322,7 @@ extension EffectSettings: SystemExclusiveData {
     public func asData() -> ByteArray {
         var data = ByteArray()
         
-        data.append(Byte(algorithm.value - 1))  // offset one to make the value 0~3
+        data.append(Byte(algorithm + descriptors[.effectAlgorithm]!.outgoingOffset))  // offset one to make the value 0~3
         data.append(contentsOf: reverb.asData())
         data.append(contentsOf: effect1.asData())
         data.append(contentsOf: effect2.asData())
@@ -370,22 +359,22 @@ extension EffectSettings: CustomStringConvertible {
         else {
             result += " Depth"
         }
-        result += "=\(effectDefinition.depth.value) "
+        result += "=\(effectDefinition.depth) "
         
         if effectName.parameterNames[0] != "?" {
-            result += "\(effectName.parameterNames[0])=\(effectDefinition.parameter1.value) "
+            result += "\(effectName.parameterNames[0])=\(effectDefinition.parameter1) "
         }
         
         if effectName.parameterNames[1] != "?" {
-            result += "\(effectName.parameterNames[1])=\(effectDefinition.parameter2.value) "
+            result += "\(effectName.parameterNames[1])=\(effectDefinition.parameter2) "
         }
 
         if effectName.parameterNames[2] != "?" {
-            result += "\(effectName.parameterNames[2])=\(effectDefinition.parameter3.value) "
+            result += "\(effectName.parameterNames[2])=\(effectDefinition.parameter3) "
         }
         
         if effectName.parameterNames[3] != "?" {
-            result += "\(effectName.parameterNames[3])=\(effectDefinition.parameter4.value)"
+            result += "\(effectName.parameterNames[3])=\(effectDefinition.parameter4)"
         }
 
         result += "\n"
