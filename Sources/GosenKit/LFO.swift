@@ -45,7 +45,7 @@ public struct LFO {
         public static func parse(from data: ByteArray) -> Result<Control, ParseError> {
             var offset: Int = 0
             var b: Byte = 0
-            var descriptor = descriptors[.depth]!
+            let descriptor = descriptors[.depth]!
 
             var temp = Control()
             
@@ -71,16 +71,16 @@ public struct LFO {
 
     /// Initialize the LFO with default values.
     public init() {
-        waveform = .square
-        speed = 0
-        fadeInTime = 0
-        fadeInToSpeed = 0
-        delayOnset = 0
+        self.waveform = .square
+        self.speed = 0
+        self.fadeInTime = 0
+        self.fadeInToSpeed = 0
+        self.delayOnset = 0
         
         // Initialize controls with default values
-        vibrato = Control()
-        growl = Control()
-        tremolo = Control()
+        self.vibrato = Control()
+        self.growl = Control()
+        self.tremolo = Control()
     }
     
     /// Parse the LFO from MIDI System Exclusive data.
@@ -144,20 +144,20 @@ extension LFO: SystemExclusiveData {
         var data = ByteArray()
         
         [
-            waveform.index,
-            speed,
-            delayOnset,
-            fadeInTime,
-            fadeInToSpeed + descriptor.outgoingOffset
+            self.waveform.index,
+            self.speed,
+            self.delayOnset,
+            self.fadeInTime,
+            self.fadeInToSpeed + descriptor.outgoingOffset
         ]
         .forEach {
             data.append(Byte($0))
         }
         
         [
-            vibrato,
-            growl,
-            tremolo
+            self.vibrato,
+            self.growl,
+            self.tremolo
         ]
         .forEach {
             data.append(contentsOf: $0.asData())
@@ -173,7 +173,7 @@ extension LFO: SystemExclusiveData {
 
 extension LFO.Control: SystemExclusiveData {
     public func asData() -> ByteArray {
-        return ByteArray(arrayLiteral: Byte(depth), Byte(keyScaling + descriptors[.keyScalingControl]!.outgoingOffset))
+        return ByteArray(arrayLiteral: Byte(self.depth), Byte(self.keyScaling + descriptors[.keyScalingControl]!.outgoingOffset))
     }
 
     public var dataLength: Int { LFO.Control.dataSize }

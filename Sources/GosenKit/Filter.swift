@@ -35,17 +35,17 @@ public struct Filter {
 
         /// Initialize filter envelope with default values.
         public init() {
-            attackTime = 0
-            decay1Time = 0
-            decay1Level = 0
-            decay2Time = 0
-            decay2Level = 0
-            releaseTime = 0
-            keyScalingToAttack = 0
-            keyScalingToDecay1 = 0
-            velocityToEnvelope = 0
-            velocityToAttack = 0
-            velocityToDecay1 = 0
+            self.attackTime = 0
+            self.decay1Time = 0
+            self.decay1Level = 0
+            self.decay2Time = 0
+            self.decay2Level = 0
+            self.releaseTime = 0
+            self.keyScalingToAttack = 0
+            self.keyScalingToDecay1 = 0
+            self.velocityToEnvelope = 0
+            self.velocityToAttack = 0
+            self.velocityToDecay1 = 0
         }
         
         /// Parse the filter envelope from MIDI System Exclusive data.
@@ -106,16 +106,16 @@ public struct Filter {
     public var envelope: Envelope
     
     public init() {
-        isActive = false
-        cutoff = 127
-        resonance = 0
-        mode = .lowPass
-        velocityCurve = 1
-        level = 7
-        keyScalingToCutoff = 0
-        velocityToCutoff = 0
-        envelopeDepth = 0
-        envelope = Envelope()
+        self.isActive = false
+        self.cutoff = 127
+        self.resonance = 0
+        self.mode = .lowPass
+        self.velocityCurve = 1
+        self.level = 7
+        self.keyScalingToCutoff = 0
+        self.velocityToCutoff = 0
+        self.envelopeDepth = 0
+        self.envelope = Envelope()
     }
     
     /// Parse the filter from MIDI System Exclusive data.
@@ -175,23 +175,22 @@ extension Filter: SystemExclusiveData {
         
         let velocityCurveOffset = descriptors[.velocityCurve]!.outgoingOffset
         
-        
         [
-            isActive ? 0 : 1,
-            mode.index,
-            velocityCurve + velocityCurveOffset,
-            resonance,
-            level,
-            cutoff,
-            keyScalingToCutoff + offset,
-            velocityToCutoff + offset,
-            envelopeDepth + offset,
+            self.isActive ? 0 : 1,
+            self.mode.index,
+            self.velocityCurve + velocityCurveOffset,
+            self.resonance,
+            self.level,
+            self.cutoff,
+            self.keyScalingToCutoff + offset,
+            self.velocityToCutoff + offset,
+            self.envelopeDepth + offset,
         ]
         .forEach {
             data.append(Byte($0))
         }
 
-        data.append(contentsOf: envelope.asData())
+        data.append(contentsOf: self.envelope.asData())
         
         return data
     }
@@ -209,17 +208,17 @@ extension Filter.Envelope: SystemExclusiveData {
         let offset = descriptor.outgoingOffset
         
         [
-            attackTime,
-            decay1Time,
-            decay1Level + offset,
-            decay2Time,
-            decay2Level + offset,
-            releaseTime,
-            keyScalingToAttack + offset,
-            keyScalingToDecay1 + offset,
-            velocityToEnvelope + offset,
-            velocityToAttack + offset,
-            velocityToDecay1 + offset,
+            self.attackTime,
+            self.decay1Time,
+            self.decay1Level + offset,
+            self.decay2Time,
+            self.decay2Level + offset,
+            self.releaseTime,
+            self.keyScalingToAttack + offset,
+            self.keyScalingToDecay1 + offset,
+            self.velocityToEnvelope + offset,
+            self.velocityToAttack + offset,
+            self.velocityToDecay1 + offset,
         ]
         .forEach {
             data.append(Byte($0))
@@ -238,11 +237,11 @@ extension Filter.Envelope: SystemExclusiveData {
 extension Filter: CustomStringConvertible {
     public var description: String {
         var s = ""
-        s += "Active=" + (isActive ? "YES" : "NO") + " Mode=\(mode)\n"
-        s += "Cutoff=\(cutoff) Resonance=\(resonance) Level=\(level)\n"
-        s += "Vel.Curve=\(velocityCurve) KStoCut=\(keyScalingToCutoff) VelToCut=\(velocityToCutoff)\n"
-        s += "Env.Depth=\(envelopeDepth)\n"
-        s += "\nFilter Envelope:\n\(envelope)\n"
+        s += "Active=" + (self.isActive ? "YES" : "NO") + " Mode=\(self.mode)\n"
+        s += "Cutoff=\(self.cutoff) Resonance=\(self.resonance) Level=\(self.level)\n"
+        s += "Vel.Curve=\(self.velocityCurve) KStoCut=\(self.keyScalingToCutoff) VelToCut=\(self.velocityToCutoff)\n"
+        s += "Env.Depth=\(self.envelopeDepth)\n"
+        s += "\nFilter Envelope:\n\(self.envelope)\n"
         return s
     }
 }
@@ -263,10 +262,10 @@ extension Filter.Mode: CustomStringConvertible {
 extension Filter.Envelope: CustomStringConvertible {
     public var description: String {
         var s = ""
-        s += "attackTime=\(attackTime) decay1Time=\(decay1Time) decay1Level=\(decay1Level)\n"
-        s += "decay2Time=\(decay2Time) decay2Level=\(decay2Level) releaseTime=\(releaseTime)\n"
-        s += "KSToAttack=\(keyScalingToAttack) KSToDecay=\(keyScalingToDecay1)\n"
-        s += "VelToEnv=\(velocityToEnvelope) VelToAttack=\(velocityToAttack) VelToDecay1=\(velocityToDecay1)"
+        s += "attackTime=\(self.attackTime) decay1Time=\(self.decay1Time) decay1Level=\(self.decay1Level)\n"
+        s += "decay2Time=\(self.decay2Time) decay2Level=\(self.decay2Level) releaseTime=\(self.releaseTime)\n"
+        s += "KSToAttack=\(self.keyScalingToAttack) KSToDecay=\(self.keyScalingToDecay1)\n"
+        s += "VelToEnv=\(self.velocityToEnvelope) VelToAttack=\(self.velocityToAttack) VelToDecay1=\(self.velocityToDecay1)"
         return s
     }
 }
@@ -275,7 +274,7 @@ extension Filter.Envelope: CustomStringConvertible {
 
 extension Filter {
     public var xml: String {
-        "<filter mode=\"\(mode.xml)\" cutoff=\"\(cutoff)\" resonance=\"\(resonance)\" level=\"\(level)\">\(envelope.xml)</filter>"
+        "<filter mode=\"\(self.mode.xml)\" cutoff=\"\(self.cutoff)\" resonance=\"\(self.resonance)\" level=\"\(self.level)\">\(self.envelope.xml)</filter>"
     }
 }
 

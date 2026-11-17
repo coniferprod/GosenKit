@@ -29,12 +29,12 @@ public struct HarmonicCommon {
     
     /// Initializes default harmonic common settings.
     public init() {
-        isMorfEnabled = false
-        totalGain = 0x33
-        group = .low
-        keyScalingToGain = 0
-        velocityCurve = 1
-        velocityDepth = 0
+        self.isMorfEnabled = false
+        self.totalGain = 0x33
+        self.group = .low
+        self.keyScalingToGain = 0
+        self.velocityCurve = 1
+        self.velocityDepth = 0
     }
 
     /// Parse the harmonic common settings from MIDI System Exclusive data.
@@ -73,14 +73,8 @@ public struct HarmonicEnvelope {
         public var rate: Int  // 0...127
         public var level: Int  // 0...63
 
-        /// Initialize the harmonic envelope segment with default values.
-        public init() {
-            self.rate = 0
-            self.level = 0
-        }
-        
-        /// Initializes the segment with rate and level.
-        public init(rate: Int, level: Int) {
+        /// Initializes the harmonic envelope segment with rate and level.
+        public init(rate: Int = 0, level: Int = 0) {
             self.rate = rate
             self.level = level
         }
@@ -214,16 +208,16 @@ public struct HarmonicLevels {
     /// Initializes default harmonic levels. For both soft and loud,
     /// the first level is initialized to 127 and the rest to zero.
     public init() {
-        soft = [Int]()
-        soft.append(127)
+        self.soft = [Int]()
+        self.soft.append(127)
         for _ in 1..<HarmonicLevels.harmonicCount {
-            soft.append(0)
+            self.soft.append(0)
         }
         
-        loud = [Int]()
-        loud.append(127)
+        self.loud = [Int]()
+        self.loud.append(127)
         for _ in 1..<HarmonicLevels.harmonicCount {
-            loud.append(0)
+            self.loud.append(0)
         }
     }
     
@@ -276,13 +270,13 @@ extension HarmonicEnvelope: SystemExclusiveData {
     public func asData() -> ByteArray {
         var data = ByteArray()
         
-        data.append(contentsOf: segments[0].asData())
+        data.append(contentsOf: self.segments[0].asData())
         
         // When emitting segment1 and segment2 data,
         // we need to bake the loop type into the levels.
         
-        var segment1Level = Byte(segments[1].level)
-        var segment2Level = Byte(segments[2].level)
+        var segment1Level = Byte(self.segments[1].level)
+        var segment2Level = Byte(self.segments[2].level)
 
         if loopKind == .loop2 {  // bit pattern from bits 6 of L1 and L2 = "01"
             segment1Level.clearBit(6)
@@ -297,17 +291,17 @@ extension HarmonicEnvelope: SystemExclusiveData {
             segment2Level.clearBit(6)
         }
         
-        var segment1Data = segments[1].asData()
+        var segment1Data = self.segments[1].asData()
         //print("< HARM ENV seg1 level = 0x\(String(segment1Level, radix: 16))")
         segment1Data[1] = segment1Level
         data.append(contentsOf: segment1Data)
 
-        var segment2Data = segments[2].asData()
+        var segment2Data = self.segments[2].asData()
         //print("> HARM ENV seg2 level = 0x\(String(segment2Level, radix: 16))")
         segment2Data[1] = segment2Level
         data.append(contentsOf: segment2Data)
 
-        data.append(contentsOf: segments[3].asData())
+        data.append(contentsOf: self.segments[3].asData())
 
         return data
     }
@@ -323,8 +317,8 @@ extension HarmonicLevels: SystemExclusiveData {
     /// Gets the MIDI System Exclusive data bytes for the harmonic levels.
     public func asData() -> ByteArray {
         var data = ByteArray()
-        soft.forEach { data.append(Byte($0)) }
-        loud.forEach { data.append(Byte($0)) }
+        self.soft.forEach { data.append(Byte($0)) }
+        self.loud.forEach { data.append(Byte($0)) }
         return data
     }
     
@@ -343,12 +337,12 @@ extension HarmonicCommon: SystemExclusiveData {
         let ksOffset = descriptors[.depth]!.outgoingOffset
         let velocityCurveOffset = descriptors[.velocityCurve]!.outgoingOffset
         [
-            isMorfEnabled ? 1 : 0,
-            totalGain + totalGainOffset,
-            group.index,
-            keyScalingToGain + ksOffset,
-            velocityCurve + velocityCurveOffset,
-            velocityDepth
+            self.isMorfEnabled ? 1 : 0,
+            self.totalGain + totalGainOffset,
+            self.group.index,
+            self.keyScalingToGain + ksOffset,
+            self.velocityCurve + velocityCurveOffset,
+            self.velocityDepth
         ]
         .forEach {
             data.append(Byte($0))
@@ -423,18 +417,18 @@ extension HarmonicEnvelope: CustomStringConvertible {
         var s = "  Atk  DC1  DC2  RLS\n"
         
         s += "    Lvl  "
-        for seg in segments {
+        for seg in self.segments {
             s += "\(seg.level)   "
         }
         s += "\n"
 
         s += "   Rate  "
-        for seg in segments {
+        for seg in self.segments {
             s += "\(seg.rate)   "
         }
         s += "\n"
 
-        s += "   Decay Loop: \(loopKind)\n"
+        s += "   Decay Loop: \(self.loopKind)\n"
         
         return s
     }

@@ -12,14 +12,8 @@ public struct FormantFilter {
             public var rate: Int  // 0~127
             public var level: Int // -63(1)~+63(127)
             
-            /// Initializes a formant filter envelope segment with default values.
-            public init() {
-                self.rate = 0
-                self.level = 0
-            }
-            
             /// Initializes a formant filter envelope segment with specific `Int` values.
-            public init(rate: Int, level: Int) {
+            public init(rate: Int = 0, level: Int = 0) {
                 self.rate = rate
                 self.level = level
             }
@@ -55,13 +49,13 @@ public struct FormantFilter {
         
         /// Initializes formant filter envelope with default values.
         public init() {
-            attack = Segment(rate: 127, level: 63)
-            decay1 = Segment(rate: 127, level: 63)
-            decay2 = Segment(rate: 127, level: 63)
-            release = Segment(rate: 127, level: 63)
-            decayLoop = .off
-            velocityDepth = 0
-            keyScalingDepth = 0
+            self.attack = Segment(rate: 127, level: 63)
+            self.decay1 = Segment(rate: 127, level: 63)
+            self.decay2 = Segment(rate: 127, level: 63)
+            self.release = Segment(rate: 127, level: 63)
+            self.decayLoop = .off
+            self.velocityDepth = 0
+            self.keyScalingDepth = 0
         }
         
         /// Parses formant filter envelope from System Exclusive data.
@@ -143,9 +137,9 @@ public struct FormantFilter {
 
         /// Initializes formant filter LFO with default values.
         public init() {
-            shape = .triangle
-            speed = 0
-            depth = 0
+            self.shape = .triangle
+            self.speed = 0
+            self.depth = 0
         }
         
         /// Parses formant filter LFO from System Exclusive data.
@@ -194,7 +188,7 @@ public struct FormantFilter {
 
         /// Initializes the formant filter bands with default values.
         public init() {
-            levels = Array(repeating: 0, count: Bands.bandCount)
+            self.levels = Array(repeating: 0, count: Bands.bandCount)
         }
         
         /// Initializes the formant filter bands with specific levels.
@@ -235,11 +229,11 @@ public struct FormantFilter {
     
     /// Initialize the formant filter with default values.
     public init() {
-        bias = -10
-        mode = .envelope
-        envelopeDepth = 0
-        envelope = Envelope()
-        lfo = LFO()
+        self.bias = -10
+        self.mode = .envelope
+        self.envelopeDepth = 0
+        self.envelope = Envelope()
+        self.lfo = LFO()
     }
     
     /// Parse the formant filter from MIDI System Exclusive data.
@@ -287,16 +281,16 @@ extension FormantFilter.Envelope: SystemExclusiveData {
     public func asData() -> ByteArray {
         var data = ByteArray()
         
-        data.append(contentsOf: attack.asData())
-        data.append(contentsOf: decay1.asData())
-        data.append(contentsOf: decay2.asData())
-        data.append(contentsOf: release.asData())
+        data.append(contentsOf: self.attack.asData())
+        data.append(contentsOf: self.decay1.asData())
+        data.append(contentsOf: self.decay2.asData())
+        data.append(contentsOf: self.release.asData())
         
         let descriptor = descriptors[.depth]!
         [
-            decayLoop.index,
-            velocityDepth + descriptor.outgoingOffset,
-            keyScalingDepth + descriptor.outgoingOffset,
+            self.decayLoop.index,
+            self.velocityDepth + descriptor.outgoingOffset,
+            self.keyScalingDepth + descriptor.outgoingOffset,
         ]
         .forEach {
             data.append(Byte($0))
@@ -326,16 +320,16 @@ extension FormantFilter: SystemExclusiveData {
 
         let descriptor = descriptors[.depth]!
         [
-            bias + descriptor.outgoingOffset,
-            mode.index,
-            envelopeDepth + descriptor.outgoingOffset,
+            self.bias + descriptor.outgoingOffset,
+            self.mode.index,
+            self.envelopeDepth + descriptor.outgoingOffset,
         ]
         .forEach {
             data.append(Byte($0))
         }
 
-        data.append(contentsOf: envelope.asData())
-        data.append(contentsOf: lfo.asData())
+        data.append(contentsOf: self.envelope.asData())
+        data.append(contentsOf: self.lfo.asData())
         
         return data
     }
@@ -347,7 +341,7 @@ extension FormantFilter: SystemExclusiveData {
 
 extension FormantFilter.Bands: SystemExclusiveData {
     public func asData() -> ByteArray {
-        return levels.map { Byte($0) }
+        return self.levels.map { Byte($0) }
     }
 
     public var dataLength: Int { FormantFilter.Bands.dataSize }
@@ -360,9 +354,9 @@ extension FormantFilter.LFO: SystemExclusiveData {
         var data = ByteArray()
         
         [
-            speed,
-            shape.index,
-            depth
+            self.speed,
+            self.shape.index,
+            self.depth
         ]
         .forEach {
             data.append(Byte($0))
@@ -454,7 +448,7 @@ extension FormantFilter.LFO: CustomStringConvertible {
 
 extension FormantFilter.LFO {
     public var xml: String {
-        return "<lfo speed=\"\(speed)\" shape=\"\(shape)\" depth=\"\(depth)\"/>"
+        return "<lfo speed=\"\(self.speed)\" shape=\"\(self.shape)\" depth=\"\(self.depth)\"/>"
     }
 }
 
@@ -477,9 +471,9 @@ extension FormantFilter.Envelope {
 extension FormantFilter {
     public var xml: String {
 """
-<formant-filter bias=\"\(bias)\" mode=\"\(mode)\" envelope-depth=\"\(envelopeDepth)\">
-    \(lfo.xml)
-    \(envelope.xml)
+<formant-filter bias=\"\(self.bias)\" mode=\"\(self.mode)\" envelope-depth=\"\(self.envelopeDepth)\">
+    \(self.lfo.xml)
+    \(self.envelope.xml)
 </formant-filter>
 """
     }

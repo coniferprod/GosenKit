@@ -14,12 +14,12 @@ public struct Oscillator {
         
         /// Initializes a default pitch envelope.
         public init() {
-            start = 0
-            attackTime = 0
-            attackLevel = 127
-            decayTime = 0
-            timeVelocitySensitivity = 0
-            levelVelocitySensitivity = 0
+            self.start = 0
+            self.attackTime = 0
+            self.attackLevel = 127
+            self.decayTime = 0
+            self.timeVelocitySensitivity = 0
+            self.levelVelocitySensitivity = 0
         }
         
         /// Parse the pitch envelope from MIDI System Exclusive data.
@@ -81,12 +81,12 @@ public struct Oscillator {
     
     /// Initializes an oscillator with default settings.
     public init() {
-        wave = .pcm(411)
-        coarse = 0
-        fine = 0
-        keyScalingToPitch = .zeroCent
-        fixedKey = .off
-        pitchEnvelope = PitchEnvelope()
+        self.wave = .pcm(411)
+        self.coarse = 0
+        self.fine = 0
+        self.keyScalingToPitch = .zeroCent
+        self.fixedKey = .off
+        self.pitchEnvelope = PitchEnvelope()
     }
 
     /// Parse the oscillator from MIDI System Exclusive data.
@@ -151,12 +151,12 @@ extension Oscillator.PitchEnvelope: SystemExclusiveData {
         let offset = descriptor.outgoingOffset
 
         [
-            start + offset,
-            attackTime,
-            attackLevel + offset,
-            decayTime,
-            timeVelocitySensitivity + offset,
-            levelVelocitySensitivity + offset
+            self.start + offset,
+            self.attackTime,
+            self.attackLevel + offset,
+            self.decayTime,
+            self.timeVelocitySensitivity + offset,
+            self.levelVelocitySensitivity + offset
         ]
         .forEach {
             data.append(Byte($0))
@@ -176,24 +176,24 @@ extension Oscillator: SystemExclusiveData {
     public func asData() -> ByteArray {
         var data = ByteArray()
         
-        data.append(contentsOf: wave.asData())
+        data.append(contentsOf: self.wave.asData())
         
         var fixedKeyByte = 0x00
-        if case .on(let key) = fixedKey {
+        if case .on(let key) = self.fixedKey {
             fixedKeyByte = key.note
         }
         
         [
-            coarse + descriptors[.coarse]!.outgoingOffset,
-            fine + descriptors[.fine]!.outgoingOffset,
+            self.coarse + descriptors[.coarse]!.outgoingOffset,
+            self.fine + descriptors[.fine]!.outgoingOffset,
             fixedKeyByte,
-            keyScalingToPitch.index
+            self.keyScalingToPitch.index
         ]
         .forEach {
             data.append(Byte($0))
         }
         
-        data.append(contentsOf: pitchEnvelope.asData())
+        data.append(contentsOf: self.pitchEnvelope.asData())
         
         return data
     }
@@ -209,9 +209,9 @@ extension Oscillator: SystemExclusiveData {
 extension Oscillator: CustomStringConvertible {
     /// Gets a text representation of the oscillator.
     public var description: String {
-        var s = "Wave: '\(wave)' "
-        s += "Coarse=\(coarse) Fine=\(fine) KStoPitch=\(keyScalingToPitch.rawValue) FixedKey=\(fixedKey)\n"
-        s += "Pitch Envelope = \(pitchEnvelope)"
+        var s = "Wave: '\(self.wave)' "
+        s += "Coarse=\(self.coarse) Fine=\(fine) KStoPitch=\(self.keyScalingToPitch.rawValue) FixedKey=\(self.fixedKey)\n"
+        s += "Pitch Envelope = \(self.pitchEnvelope)"
         return s
     }
 }
@@ -220,8 +220,8 @@ extension Oscillator.PitchEnvelope: CustomStringConvertible {
     /// Gets a text representation of the pitch envelope.
     public var description: String {
         var s = ""
-        s += "start=\(start), attackTime=\(attackTime), attackLevel=\(attackLevel), decayTime=\(decayTime)\n"
-        s += "timeVelSens=\(timeVelocitySensitivity) levelVelSens=\(levelVelocitySensitivity)\n"
+        s += "start=\(self.start), attackTime=\(self.attackTime), attackLevel=\(self.attackLevel), decayTime=\(self.decayTime)\n"
+        s += "timeVelSens=\(self.timeVelocitySensitivity) levelVelSens=\(self.levelVelocitySensitivity)\n"
         return s
     }
 }

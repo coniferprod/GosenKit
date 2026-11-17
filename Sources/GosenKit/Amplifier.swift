@@ -13,18 +13,8 @@ public struct Amplifier {
         public var decay2Level: Int
         public var releaseTime: Int
         
-        /// Initialize amplifier envelope with default values.
-        public init() {
-            attackTime = 0
-            decay1Time = 0
-            decay1Level = 127
-            decay2Time = 0
-            decay2Level = 127
-            releaseTime = 0
-        }
-        
         /// Initialize amplifier envelope with explicit values.
-        public init(attackTime: Int, decay1Time: Int, decay1Level: Int, decay2Time: Int, decay2Level: Int, releaseTime: Int) {
+        public init(attackTime: Int = 0, decay1Time: Int = 0, decay1Level: Int = 127, decay2Time: Int = 0, decay2Level: Int = 127, releaseTime: Int = 0) {
             self.attackTime = attackTime
             self.decay1Time = decay1Time
             self.decay1Level = decay1Level
@@ -72,16 +62,8 @@ public struct Amplifier {
             public var decay1Time: Int
             public var release: Int
             
-            /// Initializes key scaling control with default values.
-            public init() {
-                level = 0
-                attackTime = 0
-                decay1Time = 0
-                release = 0
-            }
-            
             /// Initializes key scaling control with specific `Int` values.
-            public init(level: Int, attackTime: Int, decay1Time: Int, release: Int) {
+            public init(level: Int = 0, attackTime: Int = 0, decay1Time: Int = 0, release: Int = 0) {
                 self.level = level
                 self.attackTime = attackTime
                 self.decay1Time = decay1Time
@@ -92,8 +74,7 @@ public struct Amplifier {
             public static func parse(from data: ByteArray) -> Result<KeyScalingControl, ParseError> {
                 var offset: Int = 0
                 var b: Byte = 0
-                var value: Int = 0
-                var descriptor = descriptors[.keyScalingControl]!
+                let descriptor = descriptors[.keyScalingControl]!
                 
                 var temp = KeyScalingControl()
                 
@@ -127,16 +108,8 @@ public struct Amplifier {
             public var decay1Time: Int
             public var release: Int
             
-            /// Initializes a velocity control with default values.
-            public init() {
-                level = 0
-                attackTime = 0
-                decay1Time = 0
-                release = 0
-            }
-            
             /// Initializes a velocity control with specific `Int` values.
-            public init(level: Int, attackTime: Int, decay1Time: Int, release: Int) {
+            public init(level: Int = 0, attackTime: Int = 0, decay1Time: Int = 0, release: Int = 0) {
                 self.level = level
                 self.attackTime = attackTime
                 self.decay1Time = decay1Time
@@ -147,7 +120,6 @@ public struct Amplifier {
             public static func parse(from data: ByteArray) -> Result<VelocityControl, ParseError> {
                 var offset: Int = 0
                 var b: Byte = 0
-                var value: Int = 0
                 let descriptor = descriptors[.velocityControlTime]!
                 
                 var temp = VelocityControl()
@@ -172,8 +144,8 @@ public struct Amplifier {
         public var velocityToEnvelope: VelocityControl
 
         public init() {
-            keyScalingToEnvelope = KeyScalingControl()
-            velocityToEnvelope = VelocityControl()
+            self.keyScalingToEnvelope = KeyScalingControl()
+            self.velocityToEnvelope = VelocityControl()
         }
         
         /// Parse the modulation from MIDI System Exclusive data.
@@ -209,16 +181,16 @@ public struct Amplifier {
     public var modulation: Modulation
     
     public init() {
-        velocityCurve = 1
-        envelope = Envelope()
-        modulation = Modulation()
+        self.velocityCurve = 1
+        self.envelope = Envelope()
+        self.modulation = Modulation()
     }
 
     /// Parse the amplifier from MIDI System Exclusive data.
     public static func parse(from data: ByteArray) -> Result<Amplifier, ParseError> {
         var offset: Int = 0
         var b: Byte = 0
-        var descriptor = descriptors[.velocityCurve]!
+        let descriptor = descriptors[.velocityCurve]!
         
         var temp = Amplifier()
         
@@ -255,12 +227,12 @@ extension Amplifier.Envelope: SystemExclusiveData {
         // no need for adjustment. Just convert them
         // all to Byte.
         [
-            attackTime,
-            decay1Time,
-            decay1Level,
-            decay2Time,
-            decay2Level,
-            releaseTime,
+            self.attackTime,
+            self.decay1Time,
+            self.decay1Level,
+            self.decay2Time,
+            self.decay2Level,
+            self.releaseTime,
         ]
         .map { Byte($0) }
     }
@@ -277,8 +249,8 @@ extension Amplifier: SystemExclusiveData {
         
         let descriptor = descriptors[.velocityCurve]!
         data.append(Byte(self.velocityCurve + descriptor.outgoingOffset)) // 0~11
-        data.append(contentsOf: envelope.asData())
-        data.append(contentsOf: modulation.asData())
+        data.append(contentsOf: self.envelope.asData())
+        data.append(contentsOf: self.modulation.asData())
         
         return data
     }
@@ -293,8 +265,8 @@ extension Amplifier.Modulation: SystemExclusiveData {
     public func asData() -> ByteArray {
         var data = ByteArray()
         
-        data.append(contentsOf: keyScalingToEnvelope.asData())
-        data.append(contentsOf: velocityToEnvelope.asData())
+        data.append(contentsOf: self.keyScalingToEnvelope.asData())
+        data.append(contentsOf: self.velocityToEnvelope.asData())
 
         return data
     }
@@ -307,14 +279,17 @@ extension Amplifier.Modulation: SystemExclusiveData {
 extension Amplifier.Modulation.KeyScalingControl: SystemExclusiveData {
     /// Gets the MIDI System Exclusive data for this modulation key scaling control.
     public func asData() -> ByteArray {
-        var descriptor = descriptors[.keyScalingControl]!
+        let descriptor = descriptors[.keyScalingControl]!
+        let offset = descriptor.outgoingOffset
 
         return [
-            self.level + descriptor.outgoingOffset,
-            self.attackTime + descriptor.outgoingOffset,
-            self.decay1Time + descriptor.outgoingOffset,
-            self.release + descriptor.outgoingOffset,
-        ].map { Byte($0) }
+            self.level + offset,
+            self.attackTime + offset,
+            self.decay1Time + offset,
+            self.release + offset,
+        ].map {
+            Byte($0)
+        }
     }
     
     public var dataLength: Int { 4 }
@@ -326,11 +301,12 @@ extension Amplifier.Modulation.VelocityControl: SystemExclusiveData {
     /// Gets the MIDI System Exclusive data for this modulation velocity control.
     public func asData() -> ByteArray {
         let descriptor = descriptors[.velocityControlTime]!
+        let offset = descriptor.outgoingOffset
         return [
             self.level,
-            self.attackTime + descriptor.outgoingOffset,
-            self.decay1Time + descriptor.outgoingOffset,
-            self.release + descriptor.outgoingOffset,
+            self.attackTime + offset,
+            self.decay1Time + offset,
+            self.release + offset,
         ].map { Byte($0) }
     }
     
@@ -358,8 +334,8 @@ extension Amplifier.Envelope: CustomStringConvertible {
     /// Gets a printable description of this amplifier envelope.
     public var description: String {
         var s = ""
-        s += "AttackTime=\(attackTime) Decay1Time=\(decay1Time) Decay1Level=\(decay1Level)\n"
-        s += "Decay2Time=\(decay2Time) Decay2Level=\(decay2Level) ReleaseTime=\(releaseTime)\n"
+        s += "AttackTime=\(self.attackTime) Decay1Time=\(self.decay1Time) Decay1Level=\(self.decay1Level)\n"
+        s += "Decay2Time=\(self.decay2Time) Decay2Level=\(self.decay2Level) ReleaseTime=\(self.releaseTime)\n"
         return s
     }
 }

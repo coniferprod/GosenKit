@@ -19,12 +19,12 @@ public struct MultiPatch {
 
         /// Initialize common settings with defaults.
         public init() {
-            effects = EffectSettings()
-            geq = GEQ(levels: [Int](repeating: 0, count: GEQ.bandCount))
-            name = PatchName("NewMulti")
-            volume = 127
-            sectionMutes = [Bool](repeating: false, count: MultiPatch.sectionCount)
-            effectControl = EffectControl()
+            self.effects = EffectSettings()
+            self.geq = GEQ(levels: [Int](repeating: 0, count: GEQ.bandCount))
+            self.name = PatchName("NewMulti")
+            self.volume = 127
+            self.sectionMutes = [Bool](repeating: false, count: MultiPatch.sectionCount)
+            self.effectControl = EffectControl()
         }
         
         /// Parses the common part of a multi patch from System Exclusive data.
@@ -121,15 +121,15 @@ public struct MultiPatch {
         
         /// Initializes a multi section with defaults.
         public init() {
-            single = InstrumentNumber(number: 0)
-            volume = 127
-            pan = 0
-            effectPath = 1
-            transpose = 0
-            tune = 0
-            zone = Zone(low: Key(note: 0), high: Key(note: 127))
-            velocitySwitch = VelocitySwitch(kind: .off, threshold: 0)  // TODO: check these
-            receiveChannel = 1
+            self.single = InstrumentNumber(number: 0)
+            self.volume = 127
+            self.pan = 0
+            self.effectPath = 1
+            self.transpose = 0
+            self.tune = 0
+            self.zone = Zone(low: Key(note: 0), high: Key(note: 127))
+            self.velocitySwitch = VelocitySwitch(kind: .off, threshold: 0)  // TODO: check these
+            self.receiveChannel = 1
         }
         
         /// Parses one section of a multi patch from System Exclusive data.
@@ -200,8 +200,8 @@ public struct MultiPatch {
     
     /// Initializes a default multi patch.
     public init() {
-        common = Common()
-        sections = [Section](repeating: Section(), count: MultiPatch.sectionCount)
+        self.common = Common()
+        self.sections = [Section](repeating: Section(), count: MultiPatch.sectionCount)
     }
     
     /// Parses a multi patch from MIDI System Exclusive data.
@@ -242,7 +242,7 @@ public struct MultiPatch {
     public var checksum: Byte {
         var totalSum: Int = 0
         
-        let commonData = common.asData()
+        let commonData = self.common.asData()
         var commonSum: Int = 0
         for d in commonData {
             commonSum += Int(d) & 0xFF
@@ -250,7 +250,7 @@ public struct MultiPatch {
         totalSum += commonSum
 
         var sectionSum: Int = 0
-        for section in sections {
+        for section in self.sections {
             for b in section.asData() {
                 sectionSum += Int(b) & 0xFF
             }
@@ -309,7 +309,7 @@ extension MultiPatch.Common: CustomStringConvertible {
         result += "\(self.effects)\n"
         
         result += "GEQ: "
-        for band in geq.levels {
+        for band in self.geq.levels {
             result += "\(band) "
         }
         result += "\n"
@@ -356,9 +356,9 @@ extension MultiPatch: SystemExclusiveData {
         
         data.append(self.checksum)
         
-        data.append(contentsOf: common.asData())
+        data.append(contentsOf: self.common.asData())
         
-        for section in sections {
+        for section in self.sections {
             data.append(contentsOf: section.asData())
         }
         
@@ -380,10 +380,10 @@ extension MultiPatch.Common: SystemExclusiveData {
     public func asData() -> ByteArray {
         var data = ByteArray()
         
-        data.append(contentsOf: effects.asData())
-        data.append(contentsOf: geq.asData())
-        data.append(contentsOf: name.asData())
-        data.append(Byte(volume))
+        data.append(contentsOf: self.effects.asData())
+        data.append(contentsOf: self.geq.asData())
+        data.append(contentsOf: self.name.asData())
+        data.append(Byte(self.volume))
                 
         return data
     }
@@ -400,27 +400,27 @@ extension MultiPatch.Section: SystemExclusiveData {
     public func asData() -> ByteArray {
         var data = ByteArray()
         
-        data.append(contentsOf: single.asData())
+        data.append(contentsOf: self.single.asData())
         
         let effectPathOffset = descriptors[.effectPath]!.outgoingOffset
         let transposeOffset = descriptors[.transpose]!.outgoingOffset
         let tuneOffset = descriptors[.depth]!.outgoingOffset
         
         [
-            volume,
-            pan,
-            effectPath + effectPathOffset,  // adjust to 0~3
-            transpose + transposeOffset,
-            tune + tuneOffset,
-            zone.low.note,
-            zone.high.note
+            self.volume,
+            self.pan,
+            self.effectPath + effectPathOffset,  // adjust to 0~3
+            self.transpose + transposeOffset,
+            self.tune + tuneOffset,
+            self.zone.low.note,
+            self.zone.high.note
         ]
         .forEach {
             data.append(Byte($0))
         }
         
-        data.append(contentsOf: velocitySwitch.asData())
-        data.append(Byte(receiveChannel + descriptors[.midiChannel]!.outgoingOffset))  // adjust to 0~15
+        data.append(contentsOf: self.velocitySwitch.asData())
+        data.append(Byte(self.receiveChannel + descriptors[.midiChannel]!.outgoingOffset))  // adjust to 0~15
         
         return data
     }

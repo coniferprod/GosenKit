@@ -7,8 +7,8 @@ public struct Morf {
         public var sourceNumber: Int  // 0~11 (0~5:soft, 6~11:loud)
         
         public init() {
-            patchNumber = 0
-            sourceNumber = 0
+            self.patchNumber = 0
+            self.sourceNumber = 0
         }
         
         public static func parse(from data: ByteArray) -> Result<CopyParameters, ParseError> {
@@ -35,11 +35,11 @@ public struct Morf {
         public var loopKind: HarmonicEnvelope.LoopKind
         
         public init() {
-            time1 = 0
-            time2 = 0
-            time3 = 0
-            time4 = 0
-            loopKind = .off
+            self.time1 = 0
+            self.time2 = 0
+            self.time3 = 0
+            self.time4 = 0
+            self.loopKind = .off
         }
         
         public static func parse(from data: ByteArray) -> Result<Envelope, ParseError> {
@@ -74,11 +74,11 @@ public struct Morf {
     public var envelope: Envelope
     
     public init() {
-        copy1 = CopyParameters()
-        copy2 = CopyParameters()
-        copy3 = CopyParameters()
-        copy4 = CopyParameters()
-        envelope = Envelope()
+        self.copy1 = CopyParameters()
+        self.copy2 = CopyParameters()
+        self.copy3 = CopyParameters()
+        self.copy4 = CopyParameters()
+        self.envelope = Envelope()
     }
     
     public static func parse(from data: ByteArray) -> Result<Morf, ParseError> {
@@ -135,8 +135,8 @@ public struct Morf {
 extension Morf.CopyParameters: SystemExclusiveData {
     public func asData() -> ByteArray {
         [
-            Byte(patchNumber),
-            Byte(sourceNumber)
+            Byte(self.patchNumber),
+            Byte(self.sourceNumber)
         ]
     }
     
@@ -150,16 +150,16 @@ extension Morf: SystemExclusiveData {
         var data = ByteArray()
         
         [ 
-            copy1,
-            copy2,
-            copy3,
-            copy4
+            self.copy1,
+            self.copy2,
+            self.copy3,
+            self.copy4
         ]
         .forEach {
             data.append(contentsOf: $0.asData())
         }
         
-        data.append(contentsOf: envelope.asData())
+        data.append(contentsOf: self.envelope.asData())
         
         return data
     }
@@ -174,11 +174,11 @@ extension Morf.Envelope: SystemExclusiveData {
         var data = ByteArray()
         
         [
-            time1,
-            time2,
-            time3,
-            time4,
-            loopKind.index
+            self.time1,
+            self.time2,
+            self.time3,
+            self.time4,
+            self.loopKind.index
         ]
         .forEach {
             data.append(Byte($0))

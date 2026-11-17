@@ -18,11 +18,11 @@ public struct Source {
             
             /// Initialize the modulation with default settings.
             public init() {
-                pressure = MacroController()
-                wheel = MacroController()
-                expression = MacroController()
-                assignable1 = AssignableController()
-                assignable2 = AssignableController()
+                self.pressure = MacroController()
+                self.wheel = MacroController()
+                self.expression = MacroController()
+                self.assignable1 = AssignableController()
+                self.assignable2 = AssignableController()
             }
             
             /// Parse this modulation from MIDI System Exclusive data.
@@ -101,14 +101,8 @@ public struct Source {
             public var kind: Kind
             public var value: Int  // only when kind=.normal
             
-            /// Initializes default pan settings.
-            public init() {
-                self.kind = .normal
-                self.value = 0
-            }
-            
             /// Initializes pan settings from kind and value.
-            public init(kind: Kind, value: Int) {
+            public init(kind: Kind = .normal, value: Int = 0) {
                 self.kind = kind
                 self.value = value
             }
@@ -143,22 +137,21 @@ public struct Source {
         
         /// Initializes default control settings.
         public init() {
-            zone = Zone(low: Key(note: 0), high: Key(note: 127))
-            velocitySwitch = VelocitySwitch(kind: .off, threshold: 4)
-            effectPath = 1
-            volume = 120
-            benderPitch = 0
-            benderCutoff = 0
-            modulation = Modulation()
-            keyOnDelay = 0
-            pan = PanSettings(kind: .normal, value: 0)
+            self.zone = Zone(low: Key(note: 0), high: Key(note: 127))
+            self.velocitySwitch = VelocitySwitch(kind: .off, threshold: 4)
+            self.effectPath = 1
+            self.volume = 120
+            self.benderPitch = 0
+            self.benderCutoff = 0
+            self.modulation = Modulation()
+            self.keyOnDelay = 0
+            self.pan = PanSettings(kind: .normal, value: 0)
         }
         
         /// Parse the control settings from MIDI System Exclusive data.
         public static func parse(from data: ByteArray) -> Result<Control, ParseError> {
             var offset: Int = 0
             var b: Byte = 0     // last byte read (will be reused)
-            var value: Int = 0  // tentative calue (will be reused)
             
             var temp = Control()
             
@@ -188,7 +181,7 @@ public struct Source {
             b = data.next(&offset)
             temp.benderCutoff = Int(b)
             
-            var size = Modulation.dataSize
+            let size = Modulation.dataSize
             switch Modulation.parse(from: data.slice(from: offset, length: size)) {
             case .success(let modulation):
                 temp.modulation = modulation
@@ -219,11 +212,11 @@ public struct Source {
 
     /// Initializes a source with default settings.
     public init() {
-        oscillator = Oscillator()
-        filter = Filter()
-        amplifier = Amplifier()
-        lfo = LFO()
-        control = Control()
+        self.oscillator = Oscillator()
+        self.filter = Filter()
+        self.amplifier = Amplifier()
+        self.lfo = LFO()
+        self.control = Control()
     }
     
     /// Parse the source from MIDI System Exclusive data.
@@ -287,11 +280,11 @@ extension Source.Control.Modulation: SystemExclusiveData {
     public func asData() -> ByteArray {
         var data = ByteArray()
         
-        data.append(contentsOf: pressure.asData())
-        data.append(contentsOf: wheel.asData())
-        data.append(contentsOf: expression.asData())
-        data.append(contentsOf: assignable1.asData())
-        data.append(contentsOf: assignable2.asData())
+        data.append(contentsOf: self.pressure.asData())
+        data.append(contentsOf: self.wheel.asData())
+        data.append(contentsOf: self.expression.asData())
+        data.append(contentsOf: self.assignable1.asData())
+        data.append(contentsOf: self.assignable2.asData())
         
         return data
     }
@@ -306,8 +299,8 @@ extension Source.Control.PanSettings: SystemExclusiveData {
     public func asData() -> ByteArray {
         var data = ByteArray()
         
-        data.append(Byte(kind.index))
-        data.append(Byte(value + descriptors[.pan]!.outgoingOffset))
+        data.append(Byte(self.kind.index))
+        data.append(Byte(self.value + descriptors[.pan]!.outgoingOffset))
         
         return data
     }
@@ -322,16 +315,16 @@ extension Source.Control: SystemExclusiveData {
     public func asData() -> ByteArray {
         var data = ByteArray()
         
-        data.append(Byte(zone.low.note))
-        data.append(Byte(zone.high.note))
-        data.append(contentsOf: velocitySwitch.asData())
-        data.append(Byte(effectPath + descriptors[.effectPath]!.outgoingOffset))  // adjust to 0~3
-        data.append(Byte(volume))
-        data.append(Byte(benderPitch + descriptors[.benderPitch]!.outgoingOffset))  // adjust -12...+12 to 0...24
-        data.append(Byte(benderCutoff))
-        data.append(contentsOf: modulation.asData())
-        data.append(Byte(keyOnDelay))
-        data.append(contentsOf: pan.asData())
+        data.append(Byte(self.zone.low.note))
+        data.append(Byte(self.zone.high.note))
+        data.append(contentsOf: self.velocitySwitch.asData())
+        data.append(Byte(self.effectPath + descriptors[.effectPath]!.outgoingOffset))  // adjust to 0~3
+        data.append(Byte(self.volume))
+        data.append(Byte(self.benderPitch + descriptors[.benderPitch]!.outgoingOffset))  // adjust -12...+12 to 0...24
+        data.append(Byte(self.benderCutoff))
+        data.append(contentsOf: self.modulation.asData())
+        data.append(Byte(self.keyOnDelay))
+        data.append(contentsOf: self.pan.asData())
 
         return data
     }
@@ -346,11 +339,11 @@ extension Source: SystemExclusiveData {
     public func asData() -> ByteArray {
         var data = ByteArray()
         
-        data.append(contentsOf: control.asData())
-        data.append(contentsOf: oscillator.asData())
-        data.append(contentsOf: filter.asData())
-        data.append(contentsOf: amplifier.asData())
-        data.append(contentsOf: lfo.asData())
+        data.append(contentsOf: self.control.asData())
+        data.append(contentsOf: self.oscillator.asData())
+        data.append(contentsOf: self.filter.asData())
+        data.append(contentsOf: self.amplifier.asData())
+        data.append(contentsOf: self.lfo.asData())
 
         return data
     }
@@ -366,11 +359,11 @@ extension Source: CustomStringConvertible {
     public var description: String {
         var s = ""
         
-        s += "Control:\n\(control)\n"
-        s += "Oscillator:\n\(oscillator)\n"
-        s += "Filter:\n\(filter)\n"
-        s += "Amplifier:\n\(amplifier)\n"
-        s += "LFO:\n\(lfo)\n"
+        s += "Control:\n\(self.control)\n"
+        s += "Oscillator:\n\(self.oscillator)\n"
+        s += "Filter:\n\(self.filter)\n"
+        s += "Amplifier:\n\(self.amplifier)\n"
+        s += "LFO:\n\(self.lfo)\n"
 
         /*
         if self.oscillator.waveType == .additive {
@@ -386,14 +379,14 @@ extension Source: CustomStringConvertible {
 extension Source.Control: CustomStringConvertible {
     public var description: String {
         var s = ""
-        s += "Zone = \(zone.low.name) ... \(zone.high.name)\n"
-        s += "Velocity Switch: \(velocitySwitch)\n"
-        s += "Effect Path = \(effectPath)\n"
-        s += "Volume = \(volume)\n"
-        s += "Bender: pitch = \(benderPitch), cutoff = \(benderCutoff)\n"
-        s += "Modulation:\n\(modulation)\n"
-        s += "Key On Delay = \(keyOnDelay)\n"
-        s += "Pan Settings: \(pan)\n"
+        s += "Zone = \(self.zone.low.name) ... \(self.zone.high.name)\n"
+        s += "Velocity Switch: \(self.velocitySwitch)\n"
+        s += "Effect Path = \(self.effectPath)\n"
+        s += "Volume = \(self.volume)\n"
+        s += "Bender: pitch = \(self.benderPitch), cutoff = \(self.benderCutoff)\n"
+        s += "Modulation:\n\(self.modulation)\n"
+        s += "Key On Delay = \(self.keyOnDelay)\n"
+        s += "Pan Settings: \(self.pan)\n"
         return s
     }
 }
@@ -401,11 +394,11 @@ extension Source.Control: CustomStringConvertible {
 extension Source.Control.Modulation: CustomStringConvertible {
     public var description: String {
         var s = ""
-        s += "pressure: \(pressure)\n"
-        s += "wheel: \(wheel)\n"
-        s += "expression: \(expression)\n"
-        s += "assignable1: \(assignable1)\n"
-        s += "assignable2: \(assignable2)"
+        s += "pressure: \(self.pressure)\n"
+        s += "wheel: \(self.wheel)\n"
+        s += "expression: \(self.expression)\n"
+        s += "assignable1: \(self.assignable1)\n"
+        s += "assignable2: \(self.assignable2)"
         return s
     }
 }
@@ -413,7 +406,7 @@ extension Source.Control.Modulation: CustomStringConvertible {
 extension Source.Control.PanSettings: CustomStringConvertible {
     public var description: String {
         var s = ""
-        s += "kind=\(kind), value=\(value)"
+        s += "kind=\(self.kind), value=\(self.value)"
         return s
     }
 }

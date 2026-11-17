@@ -378,12 +378,12 @@ public struct ParameterChange {
 extension SystemExclusive.Header: SystemExclusiveData {
     public func asData() -> ByteArray {
         return [
-            Byte(channel + descriptors[.midiChannel]!.outgoingOffset),
-            function.rawValue,
+            Byte(self.channel + descriptors[.midiChannel]!.outgoingOffset),
+            self.function.rawValue,
             SystemExclusive.groupIdentifier,
             SystemExclusive.machineIdentifier,
-            substatus1,
-            substatus2,
+            self.substatus1,
+            self.substatus2,
         ]
     }
     
@@ -430,7 +430,8 @@ extension ParameterChange: SystemExclusiveData {
             SystemExclusive.Function.parameterSend.rawValue,
             SystemExclusive.groupIdentifier,
             SystemExclusive.machineIdentifier,
-            sub1, sub2, sub3, sub4, sub5, dataHigh, dataLow,
+            self.sub1, self.sub2, self.sub3, self.sub4, self.sub5,
+            self.dataHigh, self.dataLow,
         ]
     }
     

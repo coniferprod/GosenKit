@@ -122,10 +122,10 @@ public struct MacroController {
     public var depth2: Int // -31...31
     
     public init() {
-        destination1 = .cutoffOffset
-        depth1 = 0
-        destination2 = .cutoffOffset
-        depth2 = 0
+        self.destination1 = .cutoffOffset
+        self.depth1 = 0
+        self.destination2 = .cutoffOffset
+        self.depth2 = 0
     }
     
     public init(
@@ -212,14 +212,7 @@ public struct SwitchControl: Codable {
     public var footSwitch1: Kind
     public var footSwitch2: Kind
     
-    public init() {
-        switch1 = .off
-        switch2 = .off
-        footSwitch1 = .off
-        footSwitch2 = .off
-    }
-    
-    public init(switch1: Kind, switch2: Kind, footSwitch1: Kind, footSwitch2: Kind) {
+    public init(switch1: Kind = .off, switch2: Kind = .off, footSwitch1: Kind = .off, footSwitch2: Kind = .off) {
         self.switch1 = switch1
         self.switch2 = switch2
         self.footSwitch1 = footSwitch1
@@ -300,9 +293,9 @@ public struct EffectControl {
         public var depth: Int  // -31...31
         
         public init() {
-            source = .bender
-            destination = .reverbDryWet1
-            depth = 0
+            self.source = .bender
+            self.destination = .reverbDryWet1
+            self.depth = 0
         }
         
         public static func parse(from data: ByteArray) -> Result<Source, ParseError> {
@@ -331,8 +324,8 @@ public struct EffectControl {
     public var source2: Source
     
     public init() {
-        source1 = Source()
-        source2 = Source()
+        self.source1 = Source()
+        self.source2 = Source()
     }
     
     public static func parse(from data: ByteArray) -> Result<EffectControl, ParseError> {
@@ -366,9 +359,9 @@ public struct AssignableController {
     public var depth: Int  // -31...31
     
     public init() {
-        source = .bender
-        destination = .cutoffOffset
-        depth = 0
+        self.source = .bender
+        self.destination = .cutoffOffset
+        self.depth = 0
     }
     
     public static func parse(from data: ByteArray) -> Result<AssignableController, ParseError> {
@@ -425,9 +418,9 @@ extension VelocitySwitch: SystemExclusiveData {
 extension EffectControl.Source: SystemExclusiveData {
     public func asData() -> ByteArray {
         [
-            Byte(source.index),
-            Byte(destination.index),
-            Byte(depth + descriptors[.controlDepth]!.outgoingOffset),
+            Byte(self.source.index),
+            Byte(self.destination.index),
+            Byte(self.depth + descriptors[.controlDepth]!.outgoingOffset),
         ]
     }
     
@@ -439,9 +432,9 @@ extension EffectControl.Source: SystemExclusiveData {
 extension AssignableController: SystemExclusiveData {
     public func asData() -> ByteArray {
         [
-            Byte(source.index),
-            Byte(destination.index),
-            Byte(depth + descriptors[.controlDepth]!.outgoingOffset),
+            Byte(self.source.index),
+            Byte(self.destination.index),
+            Byte(self.depth + descriptors[.controlDepth]!.outgoingOffset),
         ]
     }
     
@@ -454,8 +447,8 @@ extension EffectControl: SystemExclusiveData {
     public func asData() -> ByteArray {
         var data = ByteArray()
     
-        data.append(contentsOf: source1.asData())
-        data.append(contentsOf: source2.asData())
+        data.append(contentsOf: self.source1.asData())
+        data.append(contentsOf: self.source2.asData())
     
         return data
     }
@@ -468,10 +461,10 @@ extension EffectControl: SystemExclusiveData {
 extension SwitchControl: SystemExclusiveData {
     public func asData() -> ByteArray {
         [
-            switch1.index,
-            switch2.index,
-            footSwitch1.index,
-            footSwitch2.index
+            self.switch1.index,
+            self.switch2.index,
+            self.footSwitch1.index,
+            self.footSwitch2.index
         ]
         .map {
             Byte($0)
@@ -486,9 +479,9 @@ extension SwitchControl: SystemExclusiveData {
 extension AssignableController: CustomStringConvertible {
     public var description: String {
         var s = ""
-        s += "  source=\(source)\n"
-        s += "  destination=\(destination)\n"
-        s += "  depth=\(depth)"
+        s += "  source=\(self.source)\n"
+        s += "  destination=\(self.destination)\n"
+        s += "  depth=\(self.depth)"
         return s
     }
 }
@@ -496,9 +489,9 @@ extension AssignableController: CustomStringConvertible {
 extension EffectControl.Source: CustomStringConvertible {
     public var description: String {
         var s = ""
-        s += "  source=\(source)\n"
-        s += "  destination=\(destination)\n"
-        s += "  depth=\(depth)"
+        s += "  source=\(self.source)\n"
+        s += "  destination=\(self.destination)\n"
+        s += "  depth=\(self.depth)"
         return s
     }
 }
@@ -506,8 +499,8 @@ extension EffectControl.Source: CustomStringConvertible {
 extension EffectControl: CustomStringConvertible {
     public var description: String {
         var s = ""
-        s += "Source1: \(source1)\n"
-        s += "Source2: \(source2)\n"
+        s += "Source1: \(self.source1)\n"
+        s += "Source2: \(self.source2)\n"
         return s
     }
 }
@@ -515,8 +508,8 @@ extension EffectControl: CustomStringConvertible {
 extension MacroController: CustomStringConvertible {
     public var description: String {
         var s = ""
-        s += "  destination1=\(destination1), depth=\(depth1)\n"
-        s += "  destination2=\(destination2), depth=\(depth2)"
+        s += "  destination1=\(self.destination1), depth=\(self.depth1)\n"
+        s += "  destination2=\(self.destination2), depth=\(self.depth2)"
         return s
     }
 }
@@ -524,7 +517,7 @@ extension MacroController: CustomStringConvertible {
 extension VelocitySwitch: CustomStringConvertible {
     public var description: String {
         var s = ""
-        s += "\(kind.rawValue), threshold=\(threshold)"
+        s += "\(self.kind.rawValue), threshold=\(self.threshold)"
         return s
     }
 }

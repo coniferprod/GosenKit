@@ -76,26 +76,26 @@ public struct SinglePatch {
         
         /// Initializes the common part with default values.
         public init() {
-            name = PatchName("NewSound")
-            volume = 115
-            polyphony = .poly
+            self.name = PatchName("NewSound")
+            self.volume = 115
+            self.polyphony = .poly
             
-            sourceCount = 2
-            sourceMutes = [true, true, false, false, false, false]
+            self.sourceCount = 2
+            self.sourceMutes = [true, true, false, false, false, false]
             
-            portamento = .off
-            amplitudeModulation = .off
+            self.portamento = .off
+            self.amplitudeModulation = .off
             
-            macros = [MacroController]()
-            macros.append(MacroController())
-            macros.append(MacroController())
-            macros.append(MacroController())
-            macros.append(MacroController())
+            self.macros = [MacroController]()
+            self.macros.append(MacroController())
+            self.macros.append(MacroController())
+            self.macros.append(MacroController())
+            self.macros.append(MacroController())
             
-            switches = SwitchControl(switch1: .off, switch2: .off, footSwitch1: .off, footSwitch2: .off)
-            effects = EffectSettings()
-            geq = GEQ(levels: [2, 1, 0, 0, -1, -2, 1])
-            effectControl = EffectControl()
+            self.switches = SwitchControl(switch1: .off, switch2: .off, footSwitch1: .off, footSwitch2: .off)
+            self.effects = EffectSettings()
+            self.geq = GEQ(levels: [2, 1, 0, 0, -1, -2, 1])
+            self.effectControl = EffectControl()
         }
         
         /// Parse source common settings from binary data.
@@ -228,15 +228,15 @@ public struct SinglePatch {
 
     /// Initializes a single patch.
     public init() {
-        common = Common()
-        sources = [Source]()
+        self.common = Common()
+        self.sources = [Source]()
         
         // Single patches always have at least two sources
-        sources.append(Source())
-        sources.append(Source())
+        self.sources.append(Source())
+        self.sources.append(Source())
         
         // The default sources are PCM, so the additive kit dictionary is empty
-        additiveKits = AdditiveKitDictionary()
+        self.additiveKits = AdditiveKitDictionary()
     }
     
     /// Parse the single patch from MIDI System Exclusive data.
@@ -313,7 +313,7 @@ public struct SinglePatch {
         var totalSum: Int = 0
         var byteCount = 0
         
-        let commonData = common.asData()
+        let commonData = self.common.asData()
         var commonSum: Int = 0
         for d in commonData {
             commonSum += Int(d) & 0xff
@@ -323,7 +323,7 @@ public struct SinglePatch {
         
         totalSum += commonSum & 0xff
         
-        for (_, source) in sources.enumerated() {
+        for (_, source) in self.sources.enumerated() {
             var sourceSum: Int = 0
             let sourceData = source.asData()
             for d in sourceData {
@@ -355,7 +355,7 @@ extension SinglePatch: SystemExclusiveData {
     public func asData() -> ByteArray {
         var data = ByteArray()
         
-        data.append(checksum)
+        data.append(self.checksum)
 
         let commonData = self.common.asData()
         data.append(contentsOf: commonData)
@@ -390,33 +390,33 @@ extension SinglePatch.Common: SystemExclusiveData {
     public func asData() -> ByteArray {
         var data = ByteArray()
         
-        data.append(contentsOf: effects.asData())
-        data.append(contentsOf: geq.asData())
+        data.append(contentsOf: self.effects.asData())
+        data.append(contentsOf: self.geq.asData())
         data.append(0)  // drum_mark
-        data.append(contentsOf: name.asData())
+        data.append(contentsOf: self.name.asData())
 
         [
-            volume,
-            polyphony.index,
+            self.volume,
+            self.polyphony.index,
             0,
-            sourceCount
+            self.sourceCount
         ]
         .forEach {
             data.append(Byte($0))
         }
         
         var mute: Byte = 0x00
-        for (index, element) in sourceMutes.enumerated() {
+        for (index, element) in self.sourceMutes.enumerated() {
             if !element {
                 mute.setBit(index)
             }
         }
         data.append(mute)  // src_mute_1
         
-        data.append(Byte(amplitudeModulation.index))
-        data.append(contentsOf: effectControl.asData())
+        data.append(Byte(self.amplitudeModulation.index))
+        data.append(contentsOf: self.effectControl.asData())
         
-        switch portamento {
+        switch self.portamento {
         case .on(let speed):
             data.append(1)
             data.append(Byte(speed))
@@ -427,19 +427,19 @@ extension SinglePatch.Common: SystemExclusiveData {
         
         // Pick out the destinations and depths as the SysEx spec wants them.
         assert(macros.count == SinglePatch.Common.macroCount)
-        for macro in macros {
+        for macro in self.macros {
             data.append(Byte(macro.destination1.index))
             data.append(Byte(macro.destination2.index))
         }
 
         let descriptor = descriptors[.controlDepth]!
         
-        for macro in macros {
+        for macro in self.macros {
             data.append(Byte(macro.depth1 + descriptor.outgoingOffset))  // -31(33)~+31(95)
             data.append(Byte(macro.depth2 + descriptor.outgoingOffset))  // -31(33)~+31(95)
         }
         
-        data.append(contentsOf: switches.asData())
+        data.append(contentsOf: self.switches.asData())
         
         return data
     }
@@ -458,14 +458,14 @@ extension SinglePatch: CustomStringConvertible {
         var s = ""
         
         s += "\(self.common)\n"
-        for (index, element) in sources.enumerated() {
+        for (index, element) in self.sources.enumerated() {
             let sourceNumber = index + 1
             s += "SOURCE \(sourceNumber):\n\(element)\n"
         }
         
         s += "ADD Wave Kits:\n"
         // Sort the additive kits by source
-        let kits = additiveKits.sorted(by: { $0.0 < $1.0 })
+        let kits = self.additiveKits.sorted(by: { $0.0 < $1.0 })
         
         for kit in kits {
             let kitData = kit.1.asData()
@@ -481,35 +481,35 @@ extension SinglePatch.Common: CustomStringConvertible {
     /// Printable description of the patch common settings.
     public var description: String {
         var s = ""
-        s += "Name = '\(name.value)' Volume = \(volume) Polyphony = \(polyphony)\n"
+        s += "Name = '\(self.name.value)' Volume = \(self.volume) Polyphony = \(self.polyphony)\n"
         
         s += "Portamento: "
-        switch portamento {
+        switch self.portamento {
         case .on(let speed):
             s += "ON, speed \(speed)"
         case .off:
             s += "OFF"
         }
         
-        s += "\nAM = \(amplitudeModulation)\n"
-        s += "\(effects)\n"
+        s += "\nAM = \(self.amplitudeModulation)\n"
+        s += "\(self.effects)\n"
         
         s += "GEQ: "
-        for band in geq.levels {
+        for band in self.geq.levels {
             s += "\(band) "
         }
         s += "\n"
         
-        s += "Effect control:\n\(effectControl)\n"
+        s += "Effect control:\n\(self.effectControl)\n"
         
-        for (index, element) in macros.enumerated() {
+        for (index, element) in self.macros.enumerated() {
             s += "User \(index + 1):\n\(element)\n"
         }
         
-        s += "Switch1=\(switches.switch1)\n"
-        s += "Switch2=\(switches.switch2)\n"
-        s += "FootSwitch1=\(switches.footSwitch1)\n"
-        s += "FootSwitch2=\(switches.footSwitch2)\n"
+        s += "Switch1=\(self.switches.switch1)\n"
+        s += "Switch2=\(self.switches.switch2)\n"
+        s += "FootSwitch1=\(self.switches.footSwitch1)\n"
+        s += "FootSwitch2=\(self.switches.footSwitch2)\n"
 
         s += "\n"
         return s

@@ -231,12 +231,12 @@ public struct EffectSettings {
     
     /// Initializes the effect settings with defaults.
     public init() {
-        algorithm = 1
-        reverb = EffectDefinition()
-        effect1 = EffectDefinition()
-        effect2 = EffectDefinition()
-        effect3 = EffectDefinition()
-        effect4 = EffectDefinition()
+        self.algorithm = 1
+        self.reverb = EffectDefinition()
+        self.effect1 = EffectDefinition()
+        self.effect2 = EffectDefinition()
+        self.effect3 = EffectDefinition()
+        self.effect4 = EffectDefinition()
     }
     
     /// Parse the effect settings from MIDI System Exclusive data.
@@ -299,12 +299,12 @@ extension EffectDefinition: SystemExclusiveData {
     /// Gets the effect definition as MIDI System Exclusive data bytes.
     public func asData() -> ByteArray {
         [
-            kind.index, 
-            depth,
-            parameter1,
-            parameter2,
-            parameter3,
-            parameter4
+            self.kind.index,
+            self.depth,
+            self.parameter1,
+            self.parameter2,
+            self.parameter3,
+            self.parameter4
         ]
         .map {
             Byte($0)
@@ -322,12 +322,12 @@ extension EffectSettings: SystemExclusiveData {
     public func asData() -> ByteArray {
         var data = ByteArray()
         
-        data.append(Byte(algorithm + descriptors[.effectAlgorithm]!.outgoingOffset))  // offset one to make the value 0~3
-        data.append(contentsOf: reverb.asData())
-        data.append(contentsOf: effect1.asData())
-        data.append(contentsOf: effect2.asData())
-        data.append(contentsOf: effect3.asData())
-        data.append(contentsOf: effect4.asData())
+        data.append(Byte(self.algorithm + descriptors[.effectAlgorithm]!.outgoingOffset))  // offset one to make the value 0~3
+        data.append(contentsOf: self.reverb.asData())
+        data.append(contentsOf: self.effect1.asData())
+        data.append(contentsOf: self.effect2.asData())
+        data.append(contentsOf: self.effect3.asData())
+        data.append(contentsOf: self.effect4.asData())
         
         return data
     }
@@ -384,13 +384,13 @@ extension EffectSettings: CustomStringConvertible {
     /// Gets a printable representation of the effect settings.
     public var description: String {
         var s = "\nEffect Settings:\n"
-        s += "Algorithm = \(algorithm)\n"
+        s += "Algorithm = \(self.algorithm)\n"
         
-        s += getEffectString(effectDefinition: reverb, effectNumber: 0)
-        s += getEffectString(effectDefinition: effect1, effectNumber: 1)
-        s += getEffectString(effectDefinition: effect2, effectNumber: 2)
-        s += getEffectString(effectDefinition: effect3, effectNumber: 3)
-        s += getEffectString(effectDefinition: effect4, effectNumber: 4)
+        s += getEffectString(effectDefinition: self.reverb, effectNumber: 0)
+        s += getEffectString(effectDefinition: self.effect1, effectNumber: 1)
+        s += getEffectString(effectDefinition: self.effect2, effectNumber: 2)
+        s += getEffectString(effectDefinition: self.effect3, effectNumber: 3)
+        s += getEffectString(effectDefinition: self.effect4, effectNumber: 4)
 
         return s
     }
