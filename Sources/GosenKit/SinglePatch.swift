@@ -92,7 +92,7 @@ public struct SinglePatch {
             self.macros.append(MacroController())
             self.macros.append(MacroController())
             
-            self.switches = SwitchControl(switch1: .off, switch2: .off, footSwitch1: .off, footSwitch2: .off)
+            self.switches = SwitchControl()
             self.effects = EffectSettings()
             self.geq = GEQ(levels: [2, 1, 0, 0, -1, -2, 1])
             self.effectControl = EffectControl()

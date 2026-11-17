@@ -3,12 +3,16 @@ import ByteKit
 
 /// K5000S/R/W MIDI System Exclusive message.
 public enum SystemExclusive {
-    public static let groupIdentifier: Byte = 0x00    // synth group ID
-    public static let machineIdentifier: Byte = 0x0A  // K5000S/R/W machine ID
+    /// Synth group ID
+    public static let groupIdentifier: Byte = 0x00
+    
+    /// K5000S/R/W machine ID
+    public static let machineIdentifier: Byte = 0x0A
     
     /// System Exclusive header.
     public struct Header {
-        public var channel: Int // 1...16
+        /// MIDI channel (1...16)
+        public var channel: Int
         public var function: Function
         public var substatus1: Byte
         public var substatus2: Byte
@@ -83,9 +87,12 @@ public enum SystemExclusive {
     }
 }
 
-/// Represents the cardinality of the dump: one or block.
+/// Represents the cardinality of the dump.
 public enum Cardinality: Byte, CustomStringConvertible {
+    /// One
     case one = 0x20
+    
+    /// Block
     case block = 0x21
     
     /// Initialize the cardinality from a byte value.
@@ -119,9 +126,16 @@ public enum Cardinality: Byte, CustomStringConvertible {
 
 /// Represents the kind of a patch.
 public enum PatchKind: Byte, CaseIterable, CustomStringConvertible {
+    /// Single patch
     case single = 0x00
-    case drumKit = 0x10  // only on K5000W
-    case drumInstrument = 0x11  // only on K5000W
+    
+    /// Drum kit (only on K5000W)
+    case drumKit = 0x10
+    
+    /// Drum instrument (only on K5000W)
+    case drumInstrument = 0x11
+    
+    /// Multi (or combi)
     case multi = 0x20
 
     /// Initialize the patch kind from a byte value.
