@@ -1,6 +1,15 @@
 import SyxPack
 import ByteKit
 
+
+public enum GainDomain: IntegerDomain {
+    public static let first = 1
+    public static let last = 63
+    public static let defaultValue = 1
+}
+
+public typealias Gain = Integer<GainDomain>
+
 /// Common settings for harmonics.
 public struct HarmonicCommon {
     /// Harmonic group.
@@ -20,10 +29,10 @@ public struct HarmonicCommon {
 
     public var isMorfEnabled: Bool
     
-    public var totalGain: Int // 1~63
+    public var totalGain: Gain // 1~63
     
     public var group: Group
-    public var keyScalingToGain: Int // -63(1)~+63(127)
+    public var keyScalingToGain: Depth // -63(1)~+63(127)
     public var velocityCurve: Int  // 1~12 (stored in SysEx as 0~11)
     public var velocityDepth: Int  // 0~127
     

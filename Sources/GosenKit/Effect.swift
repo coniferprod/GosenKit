@@ -1,6 +1,13 @@
 import SyxPack
 import ByteKit
 
+public enum EffectDepthDomain: IntegerDomain {
+    public static let first = 0
+    public static let last = 100
+    public static let defaultValue = 0
+}
+
+public typealias EffectDepth = Integer<EffectDepthDomain>
 
 /// Effect definition.
 public struct EffectDefinition {
@@ -123,7 +130,7 @@ public struct EffectDefinition {
     }
 
     /// Effect and parameter names.
-    public static let names: [Name] = [
+    public let names: [Name] = [
         /*  0 */ Name(name: "Hall 1", parameterNames: ["Dry/Wet 2", "Reverb Time", "Predelay Time", "High Frequency Damping"]),
         /*  1 */ Name(name: "Hall 2", parameterNames: ["Dry/Wet 2", "Reverb Time", "Predelay Time", "High Frequency Damping"]),
         /*  2 */ Name(name: "Hall 3", parameterNames: ["Dry/Wet 2", "Reverb Time", "Predelay Time", "High Frequency Damping"]),
@@ -175,7 +182,7 @@ public struct EffectDefinition {
     ]
 
     public var kind: Kind  // reverb = 0...10, other effects = 11...47
-    public var depth: Int  // 0~100  // reverb dry/wet1 = depth
+    public var depth: EffectDepth  // 0~100  // reverb dry/wet1 = depth
     public var parameter1: Int  // all parameters are 0~127, except reverb param1 = 0~100
     public var parameter2: Int
     public var parameter3: Int
@@ -184,7 +191,7 @@ public struct EffectDefinition {
     /// Initializes the effect definition with default values.
     public init() {
         kind = .room1
-        depth = 0
+        depth = EffectDepth()
         parameter1 = 0
         parameter2 = 0
         parameter3 = 0
@@ -202,7 +209,7 @@ public struct EffectDefinition {
         temp.kind = Kind(index: Int(b))!
 
         b = data.next(&offset)
-        temp.depth = Int(b)
+        temp.depth = EffectDepth(Int(b))
 
         b = data.next(&offset)
         temp.parameter1 = Int(b)
@@ -220,9 +227,52 @@ public struct EffectDefinition {
     }
 }
 
+public enum EffectAlgorithmDomain: IntegerDomain {
+    public static let first = 1
+    public static let last = 4
+    public static let defaultValue = 1
+}
+
+//public typealias EffectAlgorithm = Integer<1, 4, 1>
+public typealias EffectAlgorithm = Integer<EffectAlgorithmDomain>
+
+extension EffectAlgorithmDomain: SystemExclusiveEncoding {
+    public static func decode(
+        from bytes: ArraySlice<Byte>
+    ) -> Integer<EffectAlgorithmDomain>? {
+        guard let byte = bytes.first, (0...3).contains(byte) else {
+            return nil
+        }
+
+        return Integer<EffectAlgorithmDomain>(Int(byte) + 1)  // make 1...4
+    }
+    
+    public static func encode(
+        _ value: Integer<EffectAlgorithmDomain>
+    ) -> ByteArray {
+        [Byte(value.value - 1)]  // bring to 0...3
+    }
+
+    public static func decode(from bytes: ArraySlice<Byte>) throws(ParseError) -> EffectAlgorithm {
+        guard
+            bytes.count >= 1
+        else {
+            throw ParseError.invalidLength(bytes.count, 1)
+        }
+        
+        let algorithm = EffectAlgorithm()
+        let value = Int(bytes.first!) + 1  // bring 0...3 to 1...4
+        if EffectAlgorithm.contains(value) {
+            return EffectAlgorithm(value)
+        } else {
+            throw ParseError.invalidData(0, "value \(value) for effect algorithm out of range, should be \(EffectAlgorithm.first)...\(EffectAlgorithm.last)")
+        }
+    }
+}
+
 /// Represents the effect settings for a patch.
 public struct EffectSettings {
-    public var algorithm: Int  // 1...4
+    public var algorithm: EffectAlgorithm  // 1...4
     public var reverb: EffectDefinition
     public var effect1: EffectDefinition
     public var effect2: EffectDefinition
@@ -231,7 +281,7 @@ public struct EffectSettings {
     
     /// Initializes the effect settings with defaults.
     public init() {
-        algorithm = 1
+        algorithm = EffectAlgorithm(1)
         reverb = EffectDefinition()
         effect1 = EffectDefinition()
         effect2 = EffectDefinition()
@@ -247,7 +297,11 @@ public struct EffectSettings {
         var temp = EffectSettings()  // initialize with defaults, then fill in
         
         b = data.next(&offset)
-        temp.algorithm = Int(b) + descriptors[.effectAlgorithm]!.incomingOffset  // adjust 0~3 to 1~4
+        do {
+            temp.algorithm = try EffectAlgorithmDomain.decode(from: [b])
+        } catch let error {
+            return .failure(error)
+        }
         
         let size = EffectDefinition.dataSize
         switch EffectDefinition.parse(from: data.slice(from: offset, length: size)) {
@@ -300,7 +354,7 @@ extension EffectDefinition: SystemExclusiveData {
     public func asData() -> ByteArray {
         [
             kind.index, 
-            depth,
+            depth.value,
             parameter1,
             parameter2,
             parameter3,
@@ -349,8 +403,10 @@ extension EffectSettings: CustomStringConvertible {
         else {
             result += "Effect \(effectNumber): "
         }
+        
+        let dummyDefinition = EffectDefinition()
 
-        let effectName = EffectDefinition.names[Int(effectDefinition.kind.rawValue)]
+        let effectName = dummyDefinition.names[Int(effectDefinition.kind.rawValue)]
         result += effectName.name
         
         if effectNumber == 0 {

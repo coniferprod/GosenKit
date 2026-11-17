@@ -2,6 +2,15 @@
   "object": {
     "pins": [
       {
+        "package": "AEXML",
+        "repositoryURL": "https://github.com/tadija/AEXML.git",
+        "state": {
+          "branch": null,
+          "revision": "db806756c989760b35108146381535aec231092b",
+          "version": "4.7.0"
+        }
+      },
+      {
         "package": "ByteKit",
         "repositoryURL": "https://github.com/coniferprod/ByteKit",
         "state": {
@@ -26,15 +35,6 @@
           "branch": null,
           "revision": "1b1edcf9cf3945fca4052bb68fa43bc7dbe165b4",
           "version": "0.12.3"
-        }
-      },
-      {
-        "package": "XMLCoder",
-        "repositoryURL": "https://github.com/CoreOffice/XMLCoder.git",
-        "state": {
-          "branch": null,
-          "revision": "42f62383dbcd074440cb1f6a750b9c02df9e7325",
-          "version": "0.18.2"
         }
       }
     ]

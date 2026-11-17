@@ -9,19 +9,19 @@ public struct FormantFilter {
     public struct Envelope {
         /// Formant filter envelope segment with rate and level.
         public struct Segment {
-            public var rate: Int  // 0~127
-            public var level: Int // -63(1)~+63(127)
+            public var rate: Level  // 0~127
+            public var level: SignedLevel // -63(1)~+63(127)
             
             /// Initializes a formant filter envelope segment with default values.
             public init() {
-                self.rate = 0
+                self.rate = Level(0)
                 self.level = 0
             }
             
             /// Initializes a formant filter envelope segment with specific `Int` values.
             public init(rate: Int, level: Int) {
-                self.rate = rate
-                self.level = level
+                self.rate = Level(rate)
+                self.level = SignedLevel(level)
             }
 
             /// Parses formant filter envelope segment from System Exclusive data.
@@ -32,7 +32,7 @@ public struct FormantFilter {
                 var temp = Segment()
                 
                 b = data.next(&offset)
-                temp.rate = Int(b)
+                temp.rate = Level(Int(b))
                 
                 b = data.next(&offset)
                 temp.level = Int(b) + descriptors[.filterEnvelopeLevel]!.incomingOffset
@@ -50,8 +50,8 @@ public struct FormantFilter {
         public var decay2: Segment
         public var release: Segment
         public var decayLoop: HarmonicEnvelope.LoopKind
-        public var velocityDepth: Int // -63(1)~+63(127)
-        public var keyScalingDepth: Int // -63(1)~+63(127)
+        public var velocityDepth: Depth // -63(1)~+63(127)
+        public var keyScalingDepth: Depth // -63(1)~+63(127)
         
         /// Initializes formant filter envelope with default values.
         public init() {

@@ -3,6 +3,36 @@ import Foundation
 import SyxPack
 import ByteKit
 
+public enum EffectPathDomain: IntegerDomain {
+    public static let first = 1
+    public static let last = 4
+    public static let defaultValue = 1
+}
+
+public typealias EffectPath = Integer<EffectPathDomain>
+
+extension EffectPathDomain: SystemExclusiveEncoding {
+    public static func decode(
+        from bytes: ArraySlice<UInt8>
+    ) -> Integer<EffectPathDomain>? {
+        return Integer<EffectPathDomain>(Int(bytes.first) + 1)
+    }
+    
+    public static func encode(
+        _ value: Integer<EffectPathDomain>
+    ) -> ByteArray {
+        [UInt8(value.value - 1)]
+    }
+}
+
+
+public enum TransposeDomain: IntegerDomain {
+    public static let first = -24
+    public static let last = 24
+    public static let defaultValue = 0
+}
+
+public typealias Transpose = Integer<TransposeDomain>
 
 /// A Kawai K5000 multi patch (combi on the K5000W).
 public struct MultiPatch {
@@ -13,7 +43,7 @@ public struct MultiPatch {
         public var effects: EffectSettings
         public var geq: GEQ
         public var name: PatchName
-        public var volume: Int // 0...127
+        public var volume: Level // 0...127
         public var sectionMutes: [Bool]
         public var effectControl: EffectControl
 
@@ -22,7 +52,7 @@ public struct MultiPatch {
             effects = EffectSettings()
             geq = GEQ(levels: [Int](repeating: 0, count: GEQ.bandCount))
             name = PatchName("NewMulti")
-            volume = 127
+            volume = Level(127)
             sectionMutes = [Bool](repeating: false, count: MultiPatch.sectionCount)
             effectControl = EffectControl()
         }
@@ -77,7 +107,7 @@ public struct MultiPatch {
             //print("After name parsed, offset = \(String(format: "%d", offset)) (data length = \(data.count))")
 
             b = data.next(&offset)
-            temp.volume = Int(b)
+            temp.volume = Level(Int(b))
             
             //print("After volume parsed, offset = \(String(format: "%d", offset)) (data length = \(data.count))")
 
@@ -110,26 +140,26 @@ public struct MultiPatch {
     /// One section of a multi patch.
     public struct Section {
         public var single: InstrumentNumber
-        public var volume: Int  // 0~127
-        public var pan: Int  // 0~127  // *really?*
-        public var effectPath: Int  // 0~3 in SysEx, store as 1~4
-        public var transpose: Int  // SysEx 40~88 = -24~+24
-        public var tune: Int  // SysEx 1~127 = -63~+63
+        public var volume: Level  // 0~127
+        public var pan: Level  // 0~127  // *really?*
+        public var effectPath: EffectPath  // 0~3 in SysEx, store as 1~4
+        public var transpose: Transpose  // SysEx 40~88 = -24~+24
+        public var tune: SignedLevel  // SysEx 1~127 = -63~+63
         public var zone: Zone
         public var velocitySwitch: VelocitySwitch
-        public var receiveChannel: Int  // SysEx 0~15 = 1~16
+        public var receiveChannel: MIDIChannel  // SysEx 0~15 = 1~16
         
         /// Initializes a multi section with defaults.
         public init() {
             single = InstrumentNumber(number: 0)
-            volume = 127
-            pan = 0
-            effectPath = 1
-            transpose = 0
-            tune = 0
+            volume = Level(127)
+            pan = Level(0)
+            effectPath = EffectPath(1)
+            transpose = Transpose(0)
+            tune = SignedLevel(0)
             zone = Zone(low: Key(note: 0), high: Key(note: 127))
             velocitySwitch = VelocitySwitch(kind: .off, threshold: 0)  // TODO: check these
-            receiveChannel = 1
+            receiveChannel = MIDIChannel(1)
         }
         
         /// Parses one section of a multi patch from System Exclusive data.
@@ -149,10 +179,10 @@ public struct MultiPatch {
             temp.single = InstrumentNumber(msb: instrumentMSB, lsb: instrumentLSB)
             
             b = data.next(&offset)
-            temp.volume = Int(b)
+            temp.volume = Level(Int(b))
             
             b = data.next(&offset)
-            temp.pan = Int(b)
+            temp.pan = Level(Int(b))
 
             b = data.next(&offset)
             temp.effectPath = Int(b) + descriptors[.effectPath]!.incomingOffset
@@ -265,7 +295,7 @@ public struct MultiPatch {
     /// Generates a MIDI System Exclusive message from this patch.
     /// - Parameter channel: the MIDI channel to use
     /// - Parameter instrument: 00...3F
-    public func asSystemExclusiveMessage(channel: Int, instrument: Byte) -> ByteArray {
+    public func asSystemExclusiveMessage(channel: MIDIChannel, instrument: Byte) -> ByteArray {
         var data = ByteArray()
         
         let header = SystemExclusive.Header(

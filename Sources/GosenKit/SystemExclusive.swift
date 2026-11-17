@@ -1,6 +1,65 @@
 import SyxPack
 import ByteKit
 
+public protocol SystemExclusiveEncoding: IntegerDomain {
+    static func decode(from bytes: ArraySlice<Byte>) -> Integer<Self>?
+    static func encode(_ value: Integer<Self>) -> ByteArray
+}
+
+//public typealias MIDIChannel = Integer<1, 16, 1>
+public enum MIDIChannelDomain: IntegerDomain {
+    public static let first = 1
+    public static let last = 16
+    public static let defaultValue = 1
+}
+
+public typealias MIDIChannel = Integer<MIDIChannelDomain>
+
+extension MIDIChannelDomain: SystemExclusiveEncoding {
+    public static func decode(
+        from bytes: ArraySlice<UInt8>
+    ) -> Integer<MIDIChannelDomain>? {
+        guard let byte = bytes.first, byte <= 15 else {
+            return nil
+        }
+
+        return Integer<MIDIChannelDomain>(Int(byte) + 1)
+    }
+    
+    public static func encode(
+        _ value: Integer<MIDIChannelDomain>
+    ) -> ByteArray {
+        [UInt8(value.value - 1)]  // bring to 0...15
+    }
+}
+
+
+/*
+public final class MIDIChannel: Integer {
+    override public class var bounds: ClosedRange<Int> { 1...16 }
+    override public class var defaultValue: MIDIChannel { MIDIChannel(1) }
+    
+    public static func decode(from bytes: ArraySlice<Byte>) throws(ParseError) -> MIDIChannel {
+        guard
+            bytes.count >= 1
+        else {
+            throw ParseError.invalidLength(bytes.count, 1)
+        }
+        
+        let value = Int(bytes.first!) + 1  // bring to 1...16
+        if MIDIChannel.isValid(value) {
+            return MIDIChannel(value)
+        } else {
+            throw ParseError.invalidData(0, "value \(value) for MIDI channel out of range, should be \(Volume.bounds)")
+        }
+    }
+
+    public static func encode(_ value: MIDIChannel) -> ByteArray {
+        [Byte(value.value - 1)]  // bring to 0...15
+    }
+}
+*/
+
 /// K5000S/R/W MIDI System Exclusive message.
 public enum SystemExclusive {
     public static let groupIdentifier: Byte = 0x00    // synth group ID
@@ -8,7 +67,7 @@ public enum SystemExclusive {
     
     /// System Exclusive header.
     public struct Header {
-        public var channel: Int // 1...16
+        public var channel: MIDIChannel
         public var function: Function
         public var substatus1: Byte
         public var substatus2: Byte
@@ -153,7 +212,7 @@ public enum PatchKind: Byte, CaseIterable, CustomStringConvertible {
 /// Dump command header for various patch types.
 public struct DumpCommand {
     /// MIDI channel (1...16)
-    public var channel: Int
+    public var channel: MIDIChannel
     
     /// Cardinality of the patch
     public var cardinality: Cardinality
@@ -169,12 +228,12 @@ public struct DumpCommand {
     
     /// Initialize a default dump command
     public init() {
-        self.init(channel: 1, cardinality: .one, bank: .a, kind: .single)
+        self.init(channel: MIDIChannel(1), cardinality: .one, bank: .a, kind: .single)
     }
     
     /// Initialize a dump command with all values. 
     /// The sub-bytes array can be, and defaults to, empty.
-    public init(channel: Int, cardinality: Cardinality, bank: BankIdentifier, kind: PatchKind, subBytes: ByteArray = []) {
+    public init(channel: MIDIChannel, cardinality: Cardinality, bank: BankIdentifier, kind: PatchKind, subBytes: ByteArray = []) {
         self.channel = channel
         self.cardinality = cardinality
         self.bank = bank
@@ -184,14 +243,27 @@ public struct DumpCommand {
     
     /// Parse the dump command from MIDI System Exclusive data.
     public static func parse(from data: ByteArray) -> Result<DumpCommand, ParseError> {
-        let channel = Int(data[0]) + descriptors[.midiChannel]!.incomingOffset
-        guard
-            (1...16).contains(channel)
-        else {
-            return .failure(.invalidData(0, "Invalid MIDI channel byte: \(data[0].toHexString())H"))
+        let channel: MIDIChannel
+        do throws(ParseError) {
+            try channel = MIDIChannelDomain.decode(from: data[0...0])
+        } catch {
+            switch error {
+            default:
+                return .failure(error)
+            }
         }
+
+        /*
+        let channelValue = Int(data[0] + 1)
+        guard
+            MIDIChannel.bounds.contains(channelValue)
+        else {
+            return .failure(.invalidData(0, "Invalid MIDI channel: \(data[0].toHexString()) (expected \(MIDIChannel.bounds))"))
+        }
+        let channel = MIDIChannel(channelValue)
+        */
         
-        guard 
+        guard
             Cardinality.isValid(value: data[1])
         else {
             return .failure(.invalidData(1, "Invalid cardinality byte: \(data[1].toHexString())H"))
@@ -360,7 +432,7 @@ extension DumpCommand: Equatable {
 
 public struct ParameterChange {
     /// MIDI channel (1...16)
-    public var channel: Int
+    public var channel: MIDIChannel
     
     // Function is always 0x10 for parameter send
     
@@ -377,14 +449,19 @@ public struct ParameterChange {
 
 extension SystemExclusive.Header: SystemExclusiveData {
     public func asData() -> ByteArray {
-        return [
-            Byte(channel + descriptors[.midiChannel]!.outgoingOffset),
+        var result = ByteArray()
+        
+        result.append(contentsOf: MIDIChannelDomain.encode(self.channel))
+        
+        result.append(contentsOf: [
             function.rawValue,
             SystemExclusive.groupIdentifier,
             SystemExclusive.machineIdentifier,
             substatus1,
             substatus2,
-        ]
+        ])
+        
+        return result
     }
     
     public var dataLength: Int { 6 }
@@ -392,13 +469,15 @@ extension SystemExclusive.Header: SystemExclusiveData {
 
 extension DumpCommand: SystemExclusiveData {
     private func collectData() -> ByteArray {
-        var result: ByteArray = [
-            Byte(self.channel + descriptors[.midiChannel]!.outgoingOffset),   // adjust 1~16 to 0~15
+        var result = ByteArray()
+        
+        result.append(contentsOf: MIDIChannelDomain.encode(self.channel))
+        result.append(contentsOf: [
             self.cardinality.rawValue,  // either 0x20 or 0x21
             SystemExclusive.groupIdentifier,
             SystemExclusive.machineIdentifier,
             self.kind.rawValue,  // single, multi, drum kit, drum instrument
-        ]
+        ])
         
         // Only single patches need a bank
         if self.kind == .single {
@@ -425,13 +504,18 @@ extension DumpCommand: SystemExclusiveData {
 
 extension ParameterChange: SystemExclusiveData {
     public func asData() -> ByteArray {
-        return [
-            Byte(self.channel + descriptors[.midiChannel]!.outgoingOffset),   // adjust 1~16 to 0~15
+        var result = ByteArray()
+        
+        result.append(contentsOf: MIDIChannelDomain.encode(self.channel))
+        
+        result.append(contentsOf: [
             SystemExclusive.Function.parameterSend.rawValue,
             SystemExclusive.groupIdentifier,
             SystemExclusive.machineIdentifier,
             sub1, sub2, sub3, sub4, sub5, dataHigh, dataLow,
-        ]
+        ])
+        
+        return result
     }
     
     public var dataLength: Int { 11 }

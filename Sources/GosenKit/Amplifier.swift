@@ -1,36 +1,58 @@
 import SyxPack
 import ByteKit
 
+public enum EnvelopeLevelDomain: IntegerDomain {
+    public static let first = 0
+    public static let last = 127
+    public static let defaultValue = 0
+}
+
+public enum EnvelopeTimeDomain: IntegerDomain {
+    public static let first = 0
+    public static let last = 127
+    public static let defaultValue = 0
+}
+
+public enum VelocityCurveDomain: IntegerDomain {
+    public static let first = 1
+    public static let last = 12
+    public static let defaultValue = 1
+}
+
+public typealias EnvelopeLevel = Integer<EnvelopeLevelDomain>
+public typealias EnvelopeTime = Integer<EnvelopeTimeDomain>
+public typealias VelocityCurve = Integer<VelocityCurveDomain>
+
 /// Amplifier (DCA)
 public struct Amplifier {
     /// Amplifier envelope
     public struct Envelope: Equatable {
         // All values are 0...127
-        public var attackTime: Int
-        public var decay1Time: Int
-        public var decay1Level: Int
-        public var decay2Time: Int
-        public var decay2Level: Int
-        public var releaseTime: Int
+        public var attackTime: EnvelopeTime
+        public var decay1Time: EnvelopeTime
+        public var decay1Level: EnvelopeLevel
+        public var decay2Time: EnvelopeTime
+        public var decay2Level: EnvelopeLevel
+        public var releaseTime: EnvelopeTime
         
         /// Initialize amplifier envelope with default values.
         public init() {
-            attackTime = 0
-            decay1Time = 0
-            decay1Level = 127
-            decay2Time = 0
-            decay2Level = 127
-            releaseTime = 0
+            attackTime = EnvelopeTime()
+            decay1Time = EnvelopeTime()
+            decay1Level = EnvelopeLevel(127)
+            decay2Time = EnvelopeTime()
+            decay2Level = EnvelopeLevel(127)
+            releaseTime = EnvelopeTime()
         }
         
         /// Initialize amplifier envelope with explicit values.
         public init(attackTime: Int, decay1Time: Int, decay1Level: Int, decay2Time: Int, decay2Level: Int, releaseTime: Int) {
-            self.attackTime = attackTime
-            self.decay1Time = decay1Time
-            self.decay1Level = decay1Level
-            self.decay2Time = decay2Time
-            self.decay2Level = decay2Level
-            self.releaseTime = releaseTime
+            self.attackTime = EnvelopeTime(attackTime)
+            self.decay1Time = EnvelopeTime(decay1Time)
+            self.decay1Level = EnvelopeLevel(decay1Level)
+            self.decay2Time = EnvelopeTime(decay2Time)
+            self.decay2Level = EnvelopeLevel(decay2Level)
+            self.releaseTime = EnvelopeTime(releaseTime)
         }
         
         /// Parse the amplifier envelope from MIDI System Exclusive data.
@@ -41,22 +63,22 @@ public struct Amplifier {
             var temp = Envelope()
             
             b = data.next(&offset)
-            temp.attackTime = Int(b)
+            temp.attackTime = EnvelopeTime(Int(b))
             
             b = data.next(&offset)
-            temp.decay1Time = Int(b)
+            temp.decay1Time = EnvelopeTime(Int(b))
             
             b = data.next(&offset)
-            temp.decay1Level = Int(b)
+            temp.decay1Level = EnvelopeLevel(Int(b))
             
             b = data.next(&offset)
-            temp.decay2Time = Int(b)
+            temp.decay2Time = EnvelopeTime(Int(b))
             
             b = data.next(&offset)
-            temp.decay2Level = Int(b)
+            temp.decay2Level = EnvelopeLevel(Int(b))
             
             b = data.next(&offset)
-            temp.releaseTime = Int(b)
+            temp.releaseTime = EnvelopeTime(Int(b))
             
             return .success(temp)
         }
@@ -67,25 +89,25 @@ public struct Amplifier {
         /// Key scaling control for amplifier modulation.
         public struct KeyScalingControl {
             // All values are -63...+63
-            public var level: Int
-            public var attackTime: Int
-            public var decay1Time: Int
-            public var release: Int
+            public var level: SignedLevel
+            public var attackTime: SignedLevel
+            public var decay1Time: SignedLevel
+            public var release: SignedLevel
             
             /// Initializes key scaling control with default values.
             public init() {
-                level = 0
-                attackTime = 0
-                decay1Time = 0
-                release = 0
+                level = SignedLevel(0)
+                attackTime = SignedLevel(0)
+                decay1Time = SignedLevel(0)
+                release = SignedLevel(0)
             }
             
             /// Initializes key scaling control with specific `Int` values.
             public init(level: Int, attackTime: Int, decay1Time: Int, release: Int) {
-                self.level = level
-                self.attackTime = attackTime
-                self.decay1Time = decay1Time
-                self.release = release
+                self.level = SignedLevel(level)
+                self.attackTime = SignedLevel(attackTime)
+                self.decay1Time = SignedLevel(decay1Time)
+                self.release = SignedLevel(release)
             }
             
             /// Parse the key scaling control value from MIDI System Exclusive data.
@@ -120,27 +142,27 @@ public struct Amplifier {
         /// not as top-level package types.
         public struct VelocityControl {
             // Level is 0...63
-            public var level: Int
+            public var level: UnsignedLevel
             
             // Times are -63...63
-            public var attackTime: Int
-            public var decay1Time: Int
-            public var release: Int
+            public var attackTime: SignedLevel
+            public var decay1Time: SignedLevel
+            public var release: SignedLevel
             
             /// Initializes a velocity control with default values.
             public init() {
-                level = 0
-                attackTime = 0
-                decay1Time = 0
-                release = 0
+                self.level = UnsignedLevel(0)
+                self.attackTime = SignedLevel(0)
+                self.decay1Time = SignedLevel(0)
+                self.release = SignedLevel(0)
             }
             
             /// Initializes a velocity control with specific `Int` values.
             public init(level: Int, attackTime: Int, decay1Time: Int, release: Int) {
-                self.level = level
-                self.attackTime = attackTime
-                self.decay1Time = decay1Time
-                self.release = release
+                self.level = UnsignedLevel(level)
+                self.attackTime = SignedLevel(attackTime)
+                self.decay1Time = SignedLevel(decay1Time)
+                self.release = SignedLevel(release)
             }
             
             /// Parse the velocity control from MIDI System Exclusive data.
@@ -153,7 +175,7 @@ public struct Amplifier {
                 var temp = VelocityControl()
                 
                 b = data.next(&offset)
-                temp.level = Int(b)
+                temp.level = UnsignedLevel(Int(b))
                 
                 b = data.next(&offset)
                 temp.attackTime = Int(b) + descriptor.incomingOffset
@@ -172,8 +194,8 @@ public struct Amplifier {
         public var velocityToEnvelope: VelocityControl
 
         public init() {
-            keyScalingToEnvelope = KeyScalingControl()
-            velocityToEnvelope = VelocityControl()
+            self.keyScalingToEnvelope = KeyScalingControl()
+            self.velocityToEnvelope = VelocityControl()
         }
         
         /// Parse the modulation from MIDI System Exclusive data.
@@ -204,12 +226,12 @@ public struct Amplifier {
         }
     }
 
-    public var velocityCurve: Int  // 1...12
+    public var velocityCurve: VelocityCurve  // 1...12
     public var envelope: Envelope
     public var modulation: Modulation
     
     public init() {
-        velocityCurve = 1
+        velocityCurve = VelocityCurve(1)
         envelope = Envelope()
         modulation = Modulation()
     }
@@ -223,7 +245,7 @@ public struct Amplifier {
         var temp = Amplifier()
         
         b = data.next(&offset)
-        temp.velocityCurve = Int(b) + descriptor.incomingOffset  // 0~11 to 1~12
+        temp.velocityCurve = VelocityCurve(Int(b) + 1) // 0~11 to 1~12
 
         var size = Envelope.dataSize
         switch Envelope.parse(from: data.slice(from: offset, length: size)) {

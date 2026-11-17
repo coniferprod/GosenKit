@@ -21,13 +21,13 @@ public struct Filter {
     /// Filter envelope. The times for attack, decay1, and decay2 are
     /// package-level Time values (0...127), but level is -63...63.
     public struct Envelope {
-        public var attackTime: Int  // 0...127
+        public var attackTime: Level  // 0...127
         public var decay1Time: Int
-        public var decay1Level: Int  // -63...63
+        public var decay1Level: SignedLevel  // -63...63
         public var decay2Time: Int
         public var decay2Level: Int
         public var releaseTime: Int
-        public var keyScalingToAttack: Int  // -63...63
+        public var keyScalingToAttack: SignedLevel  // -63...63
         public var keyScalingToDecay1: Int
         public var velocityToEnvelope: Int
         public var velocityToAttack: Int

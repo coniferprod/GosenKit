@@ -1,6 +1,28 @@
 import SyxPack
 import ByteKit
 
+public enum DepthDomain: IntegerDomain {
+    public static let first = -63
+    public static let last = 63
+    public static let defaultValue = 0
+}
+
+extension DepthDomain: SystemExclusiveEncoding {
+    public static func decode(
+        from bytes: ArraySlice<UInt8>
+    ) -> Integer<DepthDomain>? {
+        return Integer<DepthDomain>(Int(bytes.first) - 63)
+    }
+    
+    public static func encode(
+        _ value: Integer<DepthDomain>
+    ) -> ByteArray {
+        [UInt8(value.value + 63)]
+    }
+}
+
+public typealias Depth = Integer<DepthDomain>
+
 /// LFO (Low Frequency Oscillator) settings.
 public struct LFO {
     /// LFO waveform.
@@ -26,8 +48,8 @@ public struct LFO {
 
     /// LFO control settings.
     public struct Control {
-        public var depth: Int  // -63...63
-        public var keyScaling: Int  // -63...63
+        public var depth: Depth  // -63...63
+        public var keyScaling: Depth  // -63...63
         
         /// Initialize the LFO control settings with default values.
         public init() {
@@ -37,33 +59,33 @@ public struct LFO {
         
         /// Initialize the LFO control settings from given values.
         public init(depth: Int, keyScaling: Int) {
-            self.depth = depth
-            self.keyScaling = keyScaling
+            self.depth = Depth(depth)
+            self.keyScaling = Depth(keyScaling)
         }
         
         /// Parse the LFO control settings from MIDI System Exclusive data.
         public static func parse(from data: ByteArray) -> Result<Control, ParseError> {
             var offset: Int = 0
             var b: Byte = 0
-            var descriptor = descriptors[.depth]!
+            //var descriptor = descriptors[.depth]!
 
             var temp = Control()
             
             b = data.next(&offset)
-            temp.depth = Int(b) + descriptor.incomingOffset
+            temp.depth = DepthDomain.decode(Int(b))
 
             b = data.next(&offset)
-            temp.keyScaling = Int(b) + descriptor.incomingOffset
+            temp.keyScaling = DepthDomain.decode(Int(b))
 
             return .success(temp)
         }
     }
     
     public var waveform: Waveform
-    public var speed: Int   // 0...127
-    public var fadeInTime: Int  // 0...127
-    public var fadeInToSpeed: Int  // -63...63
-    public var delayOnset: Int  // 0...127
+    public var speed: Level   // 0...127
+    public var fadeInTime: Level  // 0...127
+    public var fadeInToSpeed: SignedLevel  // -63...63
+    public var delayOnset: Level  // 0...127
     
     public var vibrato: Control
     public var growl: Control

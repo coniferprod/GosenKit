@@ -3,7 +3,7 @@ import Foundation
 import SyxPack
 import ByteKit
 import CaseAnything
-
+import AEXML
 
 /// Velocity switch settings.
 public struct VelocitySwitch: Codable {
@@ -115,53 +115,157 @@ public enum ControlDestination: String, Codable, CaseIterable {
     }
 }
 
-public struct MacroController {
-    public var destination1: ControlDestination
-    public var depth1: Int // -31...31
-    public var destination2: ControlDestination
-    public var depth2: Int // -31...31
-    
-    public init() {
-        destination1 = .cutoffOffset
-        depth1 = 0
-        destination2 = .cutoffOffset
-        depth2 = 0
+public enum ControlDepthDomain: IntegerDomain {
+    public static let first = -31
+    public static let last = 31
+    public static let defaultValue = 0
+}
+
+public typealias ControlDepth = Integer<ControlDepthDomain>
+
+extension ControlDepthDomain: SystemExclusiveEncoding {
+    public static func decode(
+        from bytes: ArraySlice<UInt8>
+    ) -> Integer<ControlDepthDomain>? {
+        return Integer<ControlDepthDomain>(Int(byte) - 31)
     }
     
-    public init(
-        destination1: ControlDestination,
-        depth1: Int,
-        destination2: ControlDestination,
-        depth2: Int) {
-        self.destination1 = destination1
-        self.depth1 = depth1
-        self.destination2 = destination2
-        self.depth2 = depth2
+    public static func encode(
+        _ value: Integer<ControlDepthDomain>
+    ) -> ByteArray {
+        [Byte(value.value + 31)]
+    }
+}
+
+/*
+public struct ControlDepthParameter: Parameter {
+    public static let name = "control-depth"
+    
+    public static func decode(from bytes: ArraySlice<Byte>) throws -> ControlDepth {
+        guard
+            bytes.count >= 1
+        else {
+            throw ParseError.invalidLength(bytes.count, 1)
+        }
+        
+        let value = Int(bytes.first!) - 31
+        if ControlDepth.isValid(value) {
+            return ControlDepth(value)
+        } else {
+            throw ParseError.invalidData(0, "value \(value) for \(Self.name) out of range, should be \(ControlDepth.bounds)")
+        }
+    }
+    
+    public static func encode(_ value: ControlDepth) -> ByteArray {
+        [Byte(value.value + 31)]
+    }
+    
+    public let value: ControlDepth
+    
+    public init(_ value: ControlDepth = .defaultValue) {
+        self.value = value
+    }
+}
+*/
+
+public struct UserMacro {
+    public var destination: ControlDestination
+    public var depth: ControlDepth // -31...31
+}
+
+
+/*
+extension UserMacro {
+    public var asXMLElement: XMLElement {
+        XMLElement(name: "user",
+                   attributes: [
+                    "destination": kebabCase(self.destination.rawValue),
+                    "depth": "\(self.depth)"
+                   ])
+    }
+}
+*/
+
+public struct MacroController {
+    public var user1: UserMacro
+    public var user2: UserMacro
+    
+    public init() {
+        //let descriptor = descriptors[.controlDepth]!
+        self.user1 = UserMacro(
+            destination: .cutoffOffset,
+            depth: ControlDepthParameter(ControlDepth(0)))
+        self.user2 = UserMacro(
+            destination: .cutoffOffset,
+            depth: ControlDepthParameter(ControlDepth(0)))
+    }
+    
+    public init(user1: UserMacro, user2: UserMacro) {
+        self.user1 = user1
+        self.user2 = user2
     }
     
     public static func parse(from data: ByteArray) -> Result<MacroController, ParseError> {
         var offset: Int = 0
         var b: Byte = 0
-        
+
+        //let descriptor = descriptors[.controlDepth]!
+        let depthParameter1 = ControlDepthParameter(ControlDepth(0))
+
         var temp = MacroController()  // initialize with defaults, then fill in
+        var tempUser1 = UserMacro(
+            destination: .attackTimeOffset,
+            depth: depthParameter1)
         
         b = data.next(&offset)
-        temp.destination1 = ControlDestination(index: Int(b))!
-
-        let descriptor = descriptors[.controlDepth]!
-
-        b = data.next(&offset)
-        temp.depth1 = Int(b) + descriptor.incomingOffset
+        tempUser1.destination = ControlDestination(index: Int(b))!
+        temp.user1 = tempUser1
         
         b = data.next(&offset)
-        temp.destination2 = ControlDestination(index: Int(b))!
+        var depthValue1 = try ControlDepthParameter.decode(from: [b])
+        
+        // TODO: Check that the decoded value is valid
+        /*
+        if ControlDepth.isValid(depthValue.value) {
+            tempUser1.depth = depthValue
+        } else {
+            return .failure(
+        }
+         */
+        tempUser1.depth = ControlDepthParameter(depthValue1)
+        //tempUser1.depth = Parameter(value: depthValue, descriptor: descriptor)
 
         b = data.next(&offset)
-        temp.depth2 = Int(b) + descriptor.outgoingOffset
+        tempUser1.destination = ControlDestination(index: Int(b))!
 
+        let depthParameter2 = ControlDepthParameter(ControlDepth(0))
+
+        var tempUser2 = UserMacro(
+            destination: .attackTimeOffset,
+            depth: depthParameter2)
+
+        b = data.next(&offset)
+        //depthValue = descriptor.decode(b)
+        //tempUser2.depth = Parameter(value: depthValue, descriptor: descriptor)
+        var depthValue2 = try ControlDepthParameter.decode(from: [b])
+        tempUser2.depth = ControlDepthParameter(depthValue2)
+
+        temp.user2 = tempUser2
         return .success(temp)
     }
 }
+
+/*
+extension MacroController {
+    public var asXMLElement: XMLElement {
+        XMLElement(name: "macros",
+                   children: [
+                    user1.asXMLElement,
+                    user2.asXMLElement
+                   ])
+    }
+}
+*/
 
 public struct SwitchControl: Codable {
     public enum Kind: String, Codable, CaseIterable {
@@ -226,6 +330,20 @@ public struct SwitchControl: Codable {
         self.footSwitch2 = footSwitch2
     }
 }
+
+/*
+extension SwitchControl {
+    public var asXMLElement: XMLElement {
+        XMLElement(name: "switches",
+                   children: [
+                    XMLElement(name: "switch-1", value: kebabCase(switch1.rawValue)),
+                    XMLElement(name: "switch-2", value: kebabCase(switch2.rawValue)),
+                    XMLElement(name: "foot-switch-1", value: kebabCase(footSwitch1.rawValue)),
+                    XMLElement(name: "foot-switch-2", value: kebabCase(footSwitch2.rawValue)),
+                    ])
+    }
+}
+*/
 
 public enum ControlSource: Int, Codable, CaseIterable {
     case bender
@@ -395,13 +513,16 @@ public struct AssignableController {
 
 extension MacroController: SystemExclusiveData {
     public func asData() -> ByteArray {
-        let descriptor = descriptors[.controlDepth]!
-        return [
-            self.destination1.index,
-            self.depth1 + descriptor.outgoingOffset,
-            self.destination2.index,
-            self.depth2 + descriptor.outgoingOffset,
-        ].map { Byte($0) }
+        //let descriptor = descriptors[.controlDepth]!
+        let values = [
+            Byte(self.user1.destination.index),
+            //descriptor.encode(self.user1.depth.value),
+            ControlDepthParameter.encode(self.user1.depth.value),
+            Byte(self.user2.destination.index),
+            //descriptor.encode(self.user2.depth.value),
+            ControlDepthParameter.encode(self.user2.depth.value),
+        ]
+        return values
     }
 
     public var dataLength: Int { MacroController.dataSize }
@@ -515,8 +636,8 @@ extension EffectControl: CustomStringConvertible {
 extension MacroController: CustomStringConvertible {
     public var description: String {
         var s = ""
-        s += "  destination1=\(destination1), depth=\(depth1)\n"
-        s += "  destination2=\(destination2), depth=\(depth2)"
+        s += "  destination1=\(self.user1.destination), depth=\(self.user1.depth)\n"
+        s += "  destination2=\(self.user2.destination), depth=\(self.user2.depth)"
         return s
     }
 }
@@ -717,10 +838,10 @@ extension MacroController: XMLRepresentable {
     public var xml: String {
 """
 <macro-controller>
-    <destination1>\(self.destination1.xml)</destination1>
-    <depth1>\(self.depth1)</depth1>
-    <destination2>\(self.destination2.xml)</destination2>
-    <depth2>\(self.depth2)</depth2>
+    <destination1>\(self.user1.destination.xml)</destination1>
+    <depth1>\(self.user1.depth)</depth1>
+    <destination2>\(self.user2.destination.xml)</destination2>
+    <depth2>\(self.user2.depth)</depth2>
 </macro-controller>
 """
     }

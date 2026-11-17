@@ -2,7 +2,47 @@ import Foundation
 
 import SyxPack
 import ByteKit
+import AEXML
 
+/// Volume of patch (0...127, default 0).
+/// SysEx storage: one byte, no adjustment.
+/*
+public final class Volume: Integer {
+    public override class var bounds: ClosedRange<Int> { 0...127 }
+    public override class var defaultValue: Volume { Volume(Self.bounds.lowerBound) }
+}
+*/
+
+/*
+public struct VolumeParameter: Parameter {
+    public static let name = "volume"
+    
+    public static func decode(from bytes: ArraySlice<Byte>) throws -> Volume {
+        guard
+            bytes.count >= 1
+        else {
+            throw ParseError.invalidLength(bytes.count, 1)
+        }
+        
+        let value = Int(bytes.first!)
+        if Volume.isValid(value) {
+            return Volume(value)
+        } else {
+            throw ParseError.invalidData(0, "value \(value) for \(Self.name) out of range, should be \(Volume.bounds)")
+        }
+    }
+    
+    public static func encode(_ value: Volume) -> ByteArray {
+        [Byte(value.value)]
+    }
+    
+    public let value: Volume
+    
+    public init(_ value: Volume = .defaultValue) {
+        self.value = value
+    }
+}
+*/
 
 /// Additive kits keyed by source ("s1": ... etc.)
 public typealias AdditiveKitDictionary = [String: AdditiveKit]
@@ -51,15 +91,15 @@ public struct SinglePatch {
     }
 
     /// Portamento setting.
-    public enum Portamento {
-        case off
-        case on(speed: Int)
+    public struct Portamento {
+        public var enabled: Bool
+        public var speed: Int
     }
     
     /// Single patch common settings.
     public struct Common {
         public var name: PatchName
-        public var volume: Int
+        public var volume: Volume
         public var polyphony: Polyphony
         public var sourceCount: Int
         public var sourceMutes: [Bool]
@@ -83,7 +123,7 @@ public struct SinglePatch {
             sourceCount = 2
             sourceMutes = [true, true, false, false, false, false]
             
-            portamento = .off
+            portamento = Portamento(enabled: false, speed: 0)
             amplitudeModulation = .off
             
             macros = [MacroController]()
@@ -137,7 +177,9 @@ public struct SinglePatch {
             offset += size
             
             b = data.next(&offset)
-            temp.volume = Int(b)
+            let volumeDescriptor = descriptors[.volume]!
+            let volumeValue = volumeDescriptor.decode(b)
+            temp.volume = Volume(volumeValue)
             
             b = data.next(&offset)
             temp.polyphony = Polyphony(index: Int(b))!
@@ -173,12 +215,12 @@ public struct SinglePatch {
             offset += size
 
             b = data.next(&offset)
-            let isPortamentoActive = (b == 1)
+            let isPortamentoEnabled = (b == 1)
             
             b = data.next(&offset)
             let portamentoSpeed = Int(b)
 
-            temp.portamento = isPortamentoActive ? .on(speed: portamentoSpeed) : .off
+            temp.portamento = Portamento(enabled: isPortamentoEnabled, speed: portamentoSpeed)
             
             var macroDestinations = [Int]()
             for _ in 0..<8 {
@@ -195,11 +237,13 @@ public struct SinglePatch {
 
             temp.macros = [MacroController]()
             for i in stride(from: 0, to: 8, by: 2) {
-                temp.macros.append(MacroController(
-                    destination1: ControlDestination(index: macroDestinations[i])!,
-                    depth1: macroDepths[i + 1],
-                    destination2: ControlDestination(index: macroDestinations[i])!,
-                    depth2: macroDepths[i + 1]))
+                let user1 = UserMacro(
+                    destination: ControlDestination(index: macroDestinations[i])!,
+                    depth: Parameter(macroDepths[i + 1]))
+                let user2 = UserMacro(
+                    destination: ControlDestination(index: macroDestinations[i])!,
+                    depth: macroDepths[i + 1])
+                temp.macros.append(MacroController(user1: user1, user2: user2))
             }
             
             b = data.next(&offset)
@@ -295,7 +339,7 @@ public struct SinglePatch {
         var data = ByteArray()
         
         let header = SystemExclusive.Header(
-            channel: channel,
+            channel: MIDIChannel(channel),
             function: .oneBlockDump,
             substatus1: 0x00,
             substatus2: bank.rawValue)
@@ -416,27 +460,22 @@ extension SinglePatch.Common: SystemExclusiveData {
         data.append(Byte(amplitudeModulation.index))
         data.append(contentsOf: effectControl.asData())
         
-        switch portamento {
-        case .on(let speed):
-            data.append(1)
-            data.append(Byte(speed))
-        case .off:
-            data.append(0)
-            data.append(0)
-        }
+        // Portamento settings
+        data.append(self.portamento.enabled ? 1 : 0)
+        data.append(Byte(self.portamento.speed))
         
         // Pick out the destinations and depths as the SysEx spec wants them.
         assert(macros.count == SinglePatch.Common.macroCount)
         for macro in macros {
-            data.append(Byte(macro.destination1.index))
-            data.append(Byte(macro.destination2.index))
+            data.append(Byte(macro.user1.destination.index))
+            data.append(Byte(macro.user2.destination.index))
         }
 
         let descriptor = descriptors[.controlDepth]!
         
         for macro in macros {
-            data.append(Byte(macro.depth1 + descriptor.outgoingOffset))  // -31(33)~+31(95)
-            data.append(Byte(macro.depth2 + descriptor.outgoingOffset))  // -31(33)~+31(95)
+            data.append(Byte(macro.user1.depth + descriptor.outgoingOffset))  // -31(33)~+31(95)
+            data.append(Byte(macro.user2.depth + descriptor.outgoingOffset))  // -31(33)~+31(95)
         }
         
         data.append(contentsOf: switches.asData())
@@ -558,5 +597,37 @@ extension SinglePatch: XMLRepresentable {
     \(self.common.xml)
 </single>
 """
+    }
+}
+
+extension SinglePatch {
+    public var asXML: String {
+        let document = AEXMLDocument()
+        
+        let single = document.addChild(
+            name: "single",
+            attributes: [
+                "name": self.common.name.value,
+                "volume": "\(self.common.volume)",
+                "polyphony-mode": self.common.polyphony.rawValue,
+            ]
+        )
+        
+        let portamentoElement = single.addChild(
+            name: "portamento",
+            attributes: [
+                "enabled": self.common.portamento.enabled,
+                "speed": self.common.portamento.speed
+            ]
+        )
+        
+        let amElement = single.addChild(
+            name: "amplitude-modulation",
+            value: \(self.common.amplitudeModulation.rawValue)
+        )
+        
+        let macroElement = single.addChild(self.common.macros.asXMLElement())
+        
+        return document.xml
     }
 }

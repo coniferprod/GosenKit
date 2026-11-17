@@ -4,6 +4,28 @@ import SyxPack
 import ByteKit
 
 
+public enum BenderPitchDomain: IntegerDomain {
+    public static let first = -12
+    public static let last = 12
+    public static let defaultValue = 0
+}
+
+public typealias BenderPitch = Integer<BenderPitchDomain>
+
+extension BenderPitchDomain: SystemExclusiveEncoding {
+    public static func decode(
+        from bytes: ArraySlice<UInt8>
+    ) -> Integer<BenderPitchDomain>? {
+        return Integer<BenderPitchDomain>(Int(bytes.first!) - 12)
+    }
+    
+    public static func encode(
+        _ value: Integer<BenderPitchDomain>
+    ) -> ByteArray {
+        [UInt8(value.value + 12)]
+    }
+}
+
 /// Represents a source in a singe patch.
 public struct Source {
     /// Represents the control settings of a source.
@@ -135,7 +157,7 @@ public struct Source {
         public var velocitySwitch: VelocitySwitch
         public var effectPath: Int
         public var volume: Int
-        public var benderPitch: Int
+        public var benderPitch: BenderPitch
         public var benderCutoff: Int
         public var modulation: Modulation
         public var keyOnDelay: Int
@@ -177,13 +199,13 @@ public struct Source {
             }
             
             b = data.next(&offset)
-            temp.effectPath = Int(b) + descriptors[.effectPath]!.incomingOffset
+            temp.effectPath = EffectPathDomain.decode(Int(b))
             
             b = data.next(&offset)
             temp.volume = Int(b)
                         
             b = data.next(&offset)
-            temp.benderPitch = Int(b) + descriptors[.benderPitch]!.incomingOffset
+            temp.benderPitch = BenderPitchDomain.decode(Int(b))
             
             b = data.next(&offset)
             temp.benderCutoff = Int(b)
